@@ -73,10 +73,11 @@ test('a sample is the 32 by 32 RGBA of the decoder, a failed or a slow decode gi
   const closed = [];
   const asked = [];
   let mode = 'ok';
+  let release;
   globalThis.createImageBitmap = async (blob, options) => {
     asked.push(options);
     if (mode === 'fail') throw new Error('The source image could not be decoded');
-    if (mode === 'slow') await new Promise((r) => setTimeout(r, 60));
+    if (mode === 'slow') await new Promise((r) => { release = r; });
     const bitmap = { close: () => closed.push(bitmap) };
     return bitmap;
   };
@@ -100,7 +101,8 @@ test('a sample is the 32 by 32 RGBA of the decoder, a failed or a slow decode gi
     mode = 'slow';
     assert.equal(await sampleImage(png, 'image/png', 10), null);
     assert.equal(closed.length, 1);
-    await new Promise((r) => setTimeout(r, 100));
+    release();
+    await new Promise((r) => setTimeout(r, 20));
     assert.equal(closed.length, 2);
   } finally {
     globalThis.createImageBitmap = saved.c;
