@@ -1,0 +1,89 @@
+name: Bug report
+description: Something in Tintly does not work as expected.
+title: "[Bug]: "
+labels: ["bug", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please do **not** post passwords, private pages or screenshots with private data.
+        If a page only looks wrong (colors, a white box, unreadable text), use the **Page looks wrong** form instead.
+        For security problems, use the private link on the issue chooser instead of this form.
+  - type: input
+    id: version
+    attributes:
+      label: Tintly version
+      description: Shown in the toolbar window, in the About dialog and on the extensions page of your browser.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome
+        - Edge
+        - Firefox
+        - Another Chromium browser
+    validations:
+      required: true
+  - type: input
+    id: browser-version
+    attributes:
+      label: Browser version and operating system
+      placeholder: "Chrome 150 on Windows 11"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where does the problem happen?
+      options:
+        - Toolbar window
+        - Settings page
+        - Fix editor
+        - Site rules
+        - Schedule
+        - Presets, import, export or sync
+        - Keyboard shortcut
+        - Translations or layout
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe what you saw and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the toolbar window
+        2. Choose ...
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: language
+    attributes:
+      label: Interface language
+      description: Only if the problem looks language-specific.
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or console errors
+      description: Crop or hide anything private.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and did not find this problem.
+          required: true
+        - label: I did not include passwords, tokens or other private data.
+          required: true

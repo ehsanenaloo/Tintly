@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>A shadow component whose text changes all the time</title>
+<style>body { margin: 20px; font: 16px sans-serif; background: #fff; color: #222; }</style></head>
+<body>
+<div id="host"></div>
+<script>
+  const root = document.getElementById('host').attachShadow({ mode: 'open' });
+  root.innerHTML = '<style id="s">.card { background: #ffffff; color: #111111; padding: 8px; }</style><div class="card"><span id="t">0</span></div>';
+  const text = root.getElementById('t').firstChild;
+  let n = 0;
+  // A clock: the text node changes on every frame, nothing about the styles does.
+  window.tick = (on) => {
+    window.ticking = on;
+    const step = () => {
+      if (!window.ticking) return;
+      text.data = String(++n);
+      requestAnimationFrame(step);
+    };
+    if (on) requestAnimationFrame(step);
+  };
+  window.cardBackground = () => getComputedStyle(root.querySelector('.card')).backgroundColor;
+  window.editStyleText = () => {
+    root.getElementById('s').firstChild.data = '.card { background: #ffffff; color: #111111; padding: 8px; border: 2px solid #f0f0f0; } .card span { color: #0000ee; }';
+  };
+  window.spanColor = () => getComputedStyle(root.getElementById('t')).color;
+</script>
+</body></html>

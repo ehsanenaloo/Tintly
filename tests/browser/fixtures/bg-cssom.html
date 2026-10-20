@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Rules added through the style object</title>
+<style id="live"></style>
+<style>
+body { margin: 0; background: #fff; color: #111; font: 16px system-ui; }
+.i { display: inline-block; width: 32px; height: 32px; margin: 8px; vertical-align: top; }
+</style></head>
+<body>
+<span class="i mk fb" id="mask-css"></span><span class="i st" id="set-css"></span><span class="i fb" id="plain-css"></span>
+<script>
+// A sheet whose rules were made with insertRule has no text: the engine reads it through the style object.
+const sheet = document.getElementById('live').sheet;
+sheet.insertRule('.mk{mask:url(/img/black-icon.svg) center/contain no-repeat;-webkit-mask:url(/img/black-icon.svg) center/contain no-repeat}');
+sheet.insertRule('.fb{background-color:#000}');
+sheet.insertRule('.st{background:image-set(url(/gen/img/dark-logo-7.png) 1x, url(/gen/img/photo-7.png) 2x) center/contain no-repeat}');
+</script>
+</body></html>

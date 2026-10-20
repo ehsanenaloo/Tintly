@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Readability net</title>
+<style>body{margin:0;background:#fff;color:#222;font:16px system-ui}.row{margin:8px;padding:6px}</style></head>
+<body><p>Page text</p>
+<!-- The bubble's text color comes from a style that the test injects with the scripting API: it is not in the CSSOM. -->
+<div id="bubble" class="row" style="background:#ffffff">Translated text with a dark color</div>
+<div id="fine" class="row" style="background:#ffffff;color:#222222">Readable text on a light box</div>
+<div id="photo" class="row" style="background:linear-gradient(#ffffff,#eeeeee)">Text on a gradient</div>
+<div id="editor" class="row" contenteditable="true" style="background:#ffffff">Typed text in an editor</div>
+<div id="pm" class="row ProseMirror" style="background:#ffffff">Text in an editor marked by a class</div>
+<div id="host-open"></div>
+<div id="host-closed"></div>
+<div id="later-parent"></div>
+<script>
+  const HTML = '<div part="label" id="label" style="background:#ffffff;padding:6px">Text in a shadow root</div>';
+  const open = document.getElementById('host-open').attachShadow({ mode: 'open' });
+  open.innerHTML = HTML;
+  const closed = document.getElementById('host-closed').attachShadow({ mode: 'closed' });
+  closed.innerHTML = HTML;
+  window.__open = open;
+  window.__closed = closed;
+  window.addLater = () => {
+    const d = document.createElement('div');
+    d.id = 'later';
+    d.className = 'row';
+    d.setAttribute('style', 'background:#ffffff');
+    d.textContent = 'Added later with a dark color';
+    document.getElementById('later-parent').append(d);
+  };
+</script></body></html>

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Sheets that script switches on and off</title>
+<style>body{background:#fff;color:#111;margin:0;font:16px system-ui}div.box{height:30px;margin:4px;padding:4px}</style>
+<style id="s1">.a{background:#00ffff}</style>
+<style id="s2">.b{background:#ff00ff}</style>
+<link id="alt" rel="alternate stylesheet" title="Wide" href="/css/switch-alt.css">
+<link id="plain" rel="stylesheet" href="/css/switch-plain.css">
+</head>
+<body>
+<button id="go" type="button">go</button>
+<div class="box a" id="a">a</div>
+<div class="box b" id="b">b</div>
+<div class="box alt" id="alt-box">alt</div>
+<div class="box plain" id="plain-box">plain</div>
+<div class="box d" id="d">d</div>
+<script>
+const constructed = new CSSStyleSheet();
+constructed.replaceSync('.d{background:#00ff00}');
+document.adoptedStyleSheets = [constructed];
+window.constructed = constructed;
+window.op = null;
+document.getElementById('go').addEventListener('click', () => { const run = window.op; window.op = null; if (run) run(); });
+</script>
+</body></html>

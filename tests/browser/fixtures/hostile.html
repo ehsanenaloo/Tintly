@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hostile fixture</title>
+<style>body { background: #fff; color: #222; font: 16px system-ui; } .a { color: #111; background: #eee; }</style>
+
+</head>
+<body>
+<script>
+window.__nativeDispatch = EventTarget.prototype.dispatchEvent;
+</script>
+<p class="a">Hostile</p>
+<p class="b">Late rule</p>
+<script>
+// Fake hints, a lot of them, on nodes of every kind.
+const kinds = ['dk:shadow', 'dk:adopt', 'dk:sheet', 'dk:constructed'];
+const targets = [document, document.documentElement, document.body, document.querySelector('.a'), document.head, document.querySelector('style:not([data-dk])')];
+window.sabotage = () => {
+  // The page changes the built-ins that a careless script would use.
+  const noop = () => { throw new Error('page patch'); };
+  try { EventTarget.prototype.dispatchEvent = noop; } catch {}
+  try { window.CustomEvent = function () { throw new Error('page patch'); }; } catch {}
+  try { window.queueMicrotask = noop; } catch {}
+  try { Reflect.apply = noop; } catch {}
+  try { Object.defineProperty = noop; } catch {}
+  try { window.Proxy = noop; } catch {}
+  try { window.WeakSet = noop; } catch {}
+};
+window.spam = (n) => {
+  for (let i = 0; i < n; i++) {
+    const kind = kinds[i % kinds.length];
+    const t = targets[i % targets.length];
+    window.__nativeDispatch.call(t, new Event(kind, { bubbles: true, composed: true }));
+  }
+};
+window.addRule = () => { const s = document.querySelector('style:not([data-dk])').sheet; s.insertRule('.b { color: #123456; background: #fafafa; }', s.cssRules.length); };
+</script>
+</body>
+</html>

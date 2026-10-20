@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Site dark: script that reads the scheme</title>
+<style>
+body { margin: 0; background: #ffffff; color: #20242a; font: 16px/1.5 system-ui, sans-serif; }
+body.js-dark { background: #12161b; color: #e8eaed; }
+</style>
+<script>
+  window.events = [];
+  window.dark = matchMedia('(prefers-color-scheme: dark)');
+  window.light = matchMedia('(prefers-color-scheme: light)');
+  window.wide = matchMedia('(min-width: 100px)');
+  window.motion = matchMedia('(prefers-reduced-motion: reduce)');
+  window.dark.addEventListener('change', (e) => window.events.push(['dark', e.matches, window.dark.matches]));
+  window.light.addEventListener('change', (e) => window.events.push(['light', e.matches, window.light.matches]));
+  window.wide.addEventListener('change', (e) => window.events.push(['wide', e.matches]));
+</script></head>
+<body><p id="text">Script page.</p></body></html>

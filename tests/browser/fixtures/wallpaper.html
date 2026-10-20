@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Dark wallpaper tiles</title>
+<style>
+body { margin: 0; background: #fff; color: #1a1a1a; font: 16px system-ui; }
+.panel { background: #ffffff; color: #1a1a1a; padding: 12px; border-bottom: 1px solid #ddd; }
+.wall { position: relative; height: 140px; padding: 12px; }
+.wall .bubble { display: inline-block; padding: 8px 12px; background: #d9fdd3; color: #111; border-radius: 8px; }
+#w-color { background: #0b141a url(/gen/img/wall-dark.png); }
+#w-bare { background-image: url(/gen/img/wall-dark.png); }
+#w-svg { background: #0b141a url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='64' height='64' fill='%230b141a'/><circle cx='20' cy='20' r='9' fill='none' stroke='%23e9edef' stroke-width='1.5'/><path d='M46 38v18M37 47h18' stroke='%23e9edef' stroke-width='1.5'/></svg>"); }
+#w-alone { height: 100px; background-image: url(/gen/img/wall-dark.png); }
+#w-canvas-wrap { position: relative; height: 140px; }
+#w-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+#w-canvas-wrap .bubble { position: relative; margin: 12px; display: inline-block; padding: 8px 12px; background: #d9fdd3; color: #111; border-radius: 8px; }
+#w-pattern { display: block; width: 100%; height: 140px; }
+</style></head>
+<body>
+<div class="panel">Chats</div>
+<div class="wall" id="w-color"><span class="bubble">Own color and tile</span></div>
+<div class="wall" id="w-bare"><span class="bubble">Tile only</span></div>
+<div class="wall" id="w-svg"><span class="bubble">Vector tile</span></div>
+<div id="w-alone"></div>
+<div id="w-canvas-wrap"><canvas id="w-canvas" width="400" height="140"></canvas><span class="bubble">Canvas wallpaper</span></div>
+<svg id="w-pattern" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="p" width="64" height="64" patternUnits="userSpaceOnUse"><rect width="64" height="64" fill="#0b141a"/><circle cx="20" cy="20" r="9" fill="none" stroke="#e9edef" stroke-width="1.5"/><path d="M46 38v18M37 47h18" stroke="#e9edef" stroke-width="1.5"/></pattern></defs><rect width="100%" height="100%" fill="url(#p)"/></svg>
+<div class="panel">Composer</div>
+<script>
+const c = document.getElementById('w-canvas').getContext('2d');
+c.fillStyle = '#0b141a'; c.fillRect(0, 0, 400, 140);
+c.strokeStyle = '#e9edef'; c.lineWidth = 1.5;
+for (let x = 0; x < 400; x += 64) for (let y = 0; y < 140; y += 64) { c.beginPath(); c.arc(x + 20, y + 20, 9, 0, 7); c.moveTo(x + 46, y + 38); c.lineTo(x + 46, y + 56); c.moveTo(x + 37, y + 47); c.lineTo(x + 55, y + 47); c.stroke(); }
+</script>
+</body></html>

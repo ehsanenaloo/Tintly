@@ -1,0 +1,32 @@
+name: Question
+description: Ask how to use Tintly.
+title: "[Question]: "
+labels: ["question", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please read the user guide first (https://enaloo.com/apps/tintly/) and search the existing issues and discussions.
+        This is a volunteer project, so replies are best effort. Do not include personal data or private pages.
+  - type: textarea
+    id: question
+    attributes:
+      label: What do you want to do?
+      description: Say what you are trying to do and what you tried so far.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Tintly version and browser
+      description: The version is shown in the toolbar window and in the About tab of the settings.
+      placeholder: "0.3.2, Firefox 128"
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I read the user guide and searched existing issues.
+          required: true
+        - label: I did not include personal data or private pages.
+          required: true

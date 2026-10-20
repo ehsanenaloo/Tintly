@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Many web components, one shared sheet</title>
+<style>body{background:#fff;color:#111;margin:0;font:14px system-ui}</style></head>
+<body>
+<main id="host"></main>
+<script>
+// The number of components comes from the address: #200 makes 200.
+const count = Number(location.hash.slice(1)) || 50;
+let css = '';
+for (let i = 0; i < 300; i++) css += `.r${i}{color:#${((i * 37) % 200 + 20).toString(16).padStart(2, '0')}3030;background:#f${(i % 10).toString(16)}f${((i * 3) % 10).toString(16)}ff;border:1px solid #cc${(i % 10).toString(16)}${(i % 10).toString(16)}dd}`;
+const shared = new CSSStyleSheet();
+shared.replaceSync(css);
+class Card extends HTMLElement {
+  constructor() {
+    super();
+    const root = this.attachShadow({ mode: 'open' });
+    root.adoptedStyleSheets = [shared];
+    root.innerHTML = '<div class="r1">card</div><div class="r150">two</div>';
+  }
+}
+customElements.define('x-card', Card);
+const host = document.getElementById('host');
+for (let i = 0; i < count; i++) host.append(document.createElement('x-card'));
+window.__done = true;
+</script>
+</body></html>

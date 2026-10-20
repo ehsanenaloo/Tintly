@@ -1,0 +1,669 @@
+/* Toolbar window. A fixed size in every state: nothing in here may change the width or height. */
+
+html {
+  inline-size: 360px;
+  block-size: 600px;
+  margin-inline: auto;
+  overflow: hidden;
+}
+
+/* Zoomed in, the browser gives the window less than 600 CSS px of height: the window scrolls instead of cutting the footer off. */
+@media (max-height: 599px) {
+  html,
+  body.popup {
+    overflow-y: auto;
+  }
+}
+
+body.popup {
+  inline-size: 360px;
+  block-size: 600px;
+  overflow: hidden;
+}
+
+/* A phone page narrower than the window (Firefox for Android opens the popup as a page) takes the width it has; a wider one centers the window.
+   The touch condition keeps this off the desktop toolbar window: Chrome lays the popup out first in a tiny viewport and sizes the window from
+   that layout, so a width rule alone locks the window to a few pixels. */
+@media (max-width: 359px) and (hover: none) and (pointer: coarse) {
+  html,
+  body.popup {
+    inline-size: 100%;
+  }
+}
+
+.app {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  block-size: 100%;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  block-size: 48px;
+  padding-inline: var(--s-3);
+}
+
+.mark {
+  flex: none;
+  border-radius: 9px;
+  box-shadow: 0 0 0 1px var(--line), var(--shadow-1);
+}
+
+.brand-text {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  gap: 6px;
+  min-inline-size: 0;
+}
+
+.head h1 {
+  font-size: var(--fs-lg);
+  letter-spacing: 0.01em;
+}
+
+.ver {
+  padding-inline: 7px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink-3);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 18px;
+}
+
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+#themeMount {
+  margin-inline-end: var(--s-1);
+}
+
+/* A column: the mode box above may change height, the meta row is pushed to the bottom edge and never moves. */
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  padding: 0 var(--s-3) 4px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.main > * {
+  flex: none;
+}
+
+.main > .controls {
+  flex: 1 1 auto;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+}
+
+.controls[data-off] {
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .controls {
+    transition: opacity var(--dur) var(--ease);
+  }
+}
+
+.card {
+  padding: 10px var(--s-3);
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  block-size: 68px;
+  padding-block: 8px;
+  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.hero[data-on] {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  background: var(--hero-wash);
+}
+
+.hero-tile {
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: var(--r-md);
+}
+
+.hero[data-on] .hero-tile {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.2), 0 2px 6px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.hero-text {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.hero-title {
+  display: block;
+  font-size: var(--fs-md);
+  font-weight: 650;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.status-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-block-start: 2px;
+}
+
+.status-line .dot {
+  margin-block-start: 6px;
+}
+
+#status {
+  display: -webkit-box;
+  overflow: hidden;
+  /* Two lines are always reserved: a change of the status never moves what is below it. */
+  min-block-size: 2.7em;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+  color: var(--ink-2);
+}
+
+/* The error notice floats over the bottom row of the main area, so showing it never moves a control. */
+.notice-slot {
+  position: absolute;
+  inset-inline: var(--s-3);
+  inset-block-end: 4px;
+  z-index: 6;
+}
+
+.notice {
+  display: -webkit-box;
+  padding-block: var(--s-2);
+  padding-inline: var(--s-3) var(--s-8);
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  border: 1px solid var(--danger);
+  border-radius: var(--r-sm);
+  background: var(--danger-soft);
+  box-shadow: var(--shadow-2);
+  color: var(--ink);
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+}
+
+.notice-x {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-end: 2px;
+  inline-size: 28px;
+  block-size: 28px;
+}
+
+.site {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding-block: 8px;
+}
+
+/* The mode of this page is fixed by a site rule, a fix or a schedule: the notice and its button take the place of the mode control, which would change nothing here. */
+.pin {
+  display: flex;
+  align-items: center;
+  gap: 6px var(--s-2);
+  block-size: 52px;
+  padding-inline: var(--s-2);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+
+.pin[hidden] {
+  display: none;
+}
+
+/* The notice takes the place of the mode buttons, so it has their height and the sliders below do not move. */
+#pin {
+  block-size: 36px;
+}
+
+#mode[hidden] {
+  display: none;
+}
+
+.pin-icon {
+  flex: none;
+  color: var(--ink-3);
+}
+
+.pin-text {
+  display: -webkit-box;
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  font-size: var(--fs-xs);
+  line-height: 1.25;
+  color: var(--ink-2);
+}
+
+.pin .btn {
+  flex: none;
+  max-inline-size: 118px;
+  min-block-size: 28px;
+  padding-inline: var(--s-2);
+  font-size: var(--fs-xs);
+  line-height: 1.15;
+  text-align: center;
+  text-decoration: none;
+}
+
+.site .tile {
+  inline-size: 32px;
+  block-size: 32px;
+}
+
+.site .tile.has-icon {
+  background: var(--surface-2, transparent);
+}
+
+.site-icon {
+  inline-size: 20px;
+  block-size: 20px;
+  border-radius: 4px;
+  object-fit: contain;
+}
+
+.site-text {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+/* Where the changes of the window go: all sites or this site. It takes the place of the word Mode, so the window keeps its height. */
+.sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.scope {
+  flex: none;
+}
+
+.scope[hidden] {
+  display: none;
+}
+
+.scope {
+  padding: 1px;
+  margin-block: -3px;
+}
+
+.scope > button {
+  min-block-size: 18px;
+  padding: 0 7px;
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+
+.site-text label {
+  display: block;
+  font-size: var(--fs-xs);
+  line-height: 1.3;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+/* Where Tintly works: all sites but the ones turned off, or only the ones turned on. It sits on the line of a label, so the card keeps its height. */
+.site-text .list-mode {
+  display: block;
+  max-inline-size: 100%;
+  min-block-size: 0;
+  block-size: 1.3em;
+  field-sizing: content;
+  margin: 0;
+  margin-inline-start: -2px;
+  padding-block: 0;
+  padding-inline: 2px 16px;
+  background-position: right 2px center;
+  background-size: 10px 10px;
+  border-color: transparent;
+  border-radius: var(--r-sm);
+  background-color: transparent;
+  color: var(--ink-3);
+  font-size: var(--fs-xs);
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+[dir="rtl"] .site-text .list-mode {
+  background-position: left 2px center;
+}
+
+.site-text .list-mode:hover {
+  border-color: var(--control-line);
+}
+
+.host {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.theme {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.theme > .presets-box {
+  margin-block-start: auto;
+}
+
+/* The engine select is a cell of the slider grid (the sixth one) in Dark and Light, and the third in Paper and E-ink. Its label is set like the slider labels, the select takes the place of the track. */
+.field.engine-cell {
+  gap: 1px;
+  align-content: center;
+}
+
+.engine-cell .label {
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.3;
+  color: var(--ink-2);
+}
+
+.field.engine-cell select {
+  min-block-size: 25px;
+  padding-block: 0;
+  padding-inline: 10px 28px;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+}
+
+.eink-box .engine-cell {
+  grid-column: 1 / -1;
+}
+
+/* The color vision select shares the line of the mode label. Its negative margin keeps the line, and so the window, at its height. */
+.mode-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  min-inline-size: 0;
+}
+
+.cvd-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-inline-size: 0;
+  font-size: var(--fs-xs);
+  color: var(--ink-2);
+}
+
+.cvd-cell label {
+  white-space: nowrap;
+}
+
+.mode-head .cvd-cell select {
+  min-inline-size: 0;
+  max-inline-size: 150px;
+  min-block-size: 22px;
+  block-size: 22px;
+  margin-block: -3px;
+  padding-block: 0;
+  padding-inline: 8px 26px;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+  text-overflow: ellipsis;
+}
+
+/* Five choices in one row: a small icon and a tight gap leave room for the words. */
+/* The thumb is 1 px narrower than its share, so a rounded width never puts it over the edge of the control (it did, by 1 px, in right-to-left Edge). */
+.seg-modes::before {
+  inline-size: calc((100% - 4px) / var(--seg-n, 4) - 1px);
+}
+
+.seg-block.seg-modes > button {
+  padding-inline: 1px;
+  gap: 2px;
+  font-size: var(--fs-xs);
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+  align-content: start;
+}
+
+.label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+}
+
+.field select {
+  inline-size: 100%;
+  min-block-size: 34px;
+}
+
+.seg-block > button {
+  min-block-size: 30px;
+  min-inline-size: 0;
+  padding-inline: var(--s-1);
+  gap: 4px;
+}
+
+.seg-block > button > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eink-box {
+  display: grid;
+  gap: 8px;
+}
+
+.sliders {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px var(--s-4);
+}
+
+.slider {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.slider label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
+
+.slider input {
+  grid-column: 1 / -1;
+  block-size: 20px;
+}
+
+.slider.wide {
+  grid-column: 1 / -1;
+}
+
+.presets-box {
+  display: grid;
+  gap: 6px;
+}
+
+.presets-box[hidden] {
+  display: none;
+}
+
+.presets {
+  display: flex;
+  gap: var(--s-2);
+  /* Room for the focus ring, which the scrolling row would cut off. */
+  margin-block: -4px;
+  padding-block: 4px;
+  padding-inline-end: var(--s-4);
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* A fade at the far edge shows that the row scrolls. The padding keeps the last chip clear of it. */
+  mask-image: linear-gradient(to right, #000 calc(100% - var(--s-4)), transparent);
+}
+
+[dir="rtl"] .presets {
+  mask-image: linear-gradient(to left, #000 calc(100% - var(--s-4)), transparent);
+}
+
+.presets:empty {
+  display: none;
+}
+
+.presets li {
+  flex: none;
+}
+
+.presets button {
+  min-block-size: 28px;
+  max-inline-size: 180px;
+  padding-inline: var(--s-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+
+.presets button:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.presets button:active {
+  transform: scale(0.96);
+}
+
+.presets-none {
+  padding: 4px var(--s-3);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-sm);
+  text-align: center;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  block-size: 30px;
+  padding-inline: var(--s-1);
+  font-size: var(--fs-sm);
+}
+
+.schedule {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-inline-size: 0;
+  color: var(--ink-3);
+}
+
+.schedule span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.links {
+  display: flex;
+  flex: none;
+  gap: var(--s-1);
+}
+
+.links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  block-size: 26px;
+  padding-inline: 9px;
+  border-radius: var(--r-pill);
+  color: var(--ink-2);
+  font-weight: 550;
+  text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.links a .icon {
+  color: var(--ink-3);
+}
+
+.links a:hover {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.links a:hover .icon {
+  color: inherit;
+}
+
+.dock {
+  padding: 0 var(--s-3) var(--s-3);
+}
+
+.nudge-slot {
+  position: absolute;
+  inset-inline: var(--s-3);
+  inset-block-end: var(--s-3);
+  z-index: 10;
+}
+
+.nudge-slot:empty {
+  display: none;
+}

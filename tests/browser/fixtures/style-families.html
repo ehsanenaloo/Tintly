@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Style families</title>
+<style>
+body{margin:0;padding:12px;background:#fff;color:#0f0f0f;font:20px/1.2 system-ui}
+.case{position:relative;width:230px;height:44px;margin:0 0 8px;padding:0 8px;box-sizing:border-box;display:flex;align-items:center;gap:8px}
+:root{--defined-icon:#606060;--surface-var:#f2f2f2}
+#var-fallback{color:var(--missing-text,#111);background:var(--missing-bg,#fff)}
+#var-fallback-light{color:var(--missing-text,#111);background:var(--missing-bg,#f9f9f9)}
+#mix{background:color-mix(in srgb,#fff 88%,#000);color:color-mix(in srgb,#000 85%,#fff)}
+#mix-alpha{background:#fff;color:color-mix(in srgb,#000 80%,transparent)}
+#relative{background:rgb(from #f0f0f0 r g b);color:rgb(from #222 r g b / .92)}
+#relative-hsl{background:hsl(from #ececec h s l);color:hsl(from #111 h s l)}
+#current svg{width:24px;height:24px;fill:currentColor}
+#current{color:#0f0f0f}
+#current-border{color:#111;border:2px solid currentColor}
+#svg-var svg{width:24px;height:24px}
+#svg-var path{fill:var(--missing-icon,#0f0f0f)}
+#svg-var-defined path{fill:var(--defined-icon)}
+#svg-var-defined svg{width:24px;height:24px}
+#mask .m{width:24px;height:24px;background:#0f0f0f;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 3h18v18H3z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 3h18v18H3z'/%3E%3C/svg%3E") center/contain no-repeat}
+#mask-current .m{width:24px;height:24px;background:currentColor;color:#222;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 3h18v18H3z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 3h18v18H3z'/%3E%3C/svg%3E") center/contain no-repeat}
+#before::before{content:"";width:22px;height:22px;background:#0f0f0f;display:inline-block;border-radius:50%}
+#before-glyph::before{content:"\25B6";color:#111;font-size:22px}
+#clip-text span{font-weight:700;font-size:26px;background:linear-gradient(90deg,#111,#444);-webkit-background-clip:text;background-clip:text;color:transparent}
+#fill-color span{-webkit-text-fill-color:#111;font-weight:700;font-size:26px}
+#gradient-alpha{background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.96));color:#0f0f0f}
+#backdrop{background:rgba(255,255,255,.7);backdrop-filter:blur(8px);color:#0f0f0f}
+#chip{background:rgba(0,0,0,.05);color:#0f0f0f;border-radius:8px}
+#light-dark{color:light-dark(#111,#eee);background:light-dark(#fff,#111);color-scheme:light dark}
+#surface-var{background:var(--surface-var);color:#111}
+#overlay-black{background:rgba(0,0,0,.8);color:#fff}
+#overlay-solid{background:#212121;color:#fff}
+#important{color:#111!important;background:#f9f9f9!important}
+#scripted{background:#fff;color:#111}
+#shadow-host{padding:0}
+#dot-gray::before{content:"";width:12px;height:12px;border-radius:50%;background:#606060;display:inline-block}
+
+#skeleton{background:linear-gradient(90deg,#e0e0e0 25%,#f0f0f0 50%,#e0e0e0 75%);color:#0f0f0f}
+#ring{box-shadow:0 0 0 2px #0f0f0f inset;color:#0f0f0f;border-radius:8px}
+#underline{color:#0f0f0f;text-decoration:underline;text-decoration-color:#0f0f0f}
+#use-symbol svg{width:24px;height:24px}
+#placeholder input{border:1px solid #ccc;background:#fff;color:#111;font:inherit;width:200px;height:30px}
+#placeholder input::placeholder{color:#606060}
+#control select{background:#fff;color:#111;font:inherit}
+#control button{background:#f2f2f2;color:#0f0f0f;border:0;font:inherit;border-radius:18px;padding:6px 12px}
+#invert-icon img{width:24px;height:24px;filter:invert(1)}
+#img-icon img{width:24px;height:24px}
+#bar-fill{background:#e5e5e5;color:#0f0f0f}
+#bar-fill i{position:absolute;left:0;bottom:0;height:3px;width:60%;background:#0f0f0f}
+</style></head>
+<body>
+<div class="case" id="var-fallback">var fallback</div>
+<div class="case" id="var-fallback-light">var fallback light</div>
+<div class="case" id="mix">color-mix</div>
+<div class="case" id="mix-alpha">color-mix alpha</div>
+<div class="case" id="relative">relative rgb</div>
+<div class="case" id="relative-hsl">relative hsl</div>
+<div class="case" id="current"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/></svg></div>
+<div class="case" id="current-border">current border</div>
+<div class="case" id="svg-var"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/></svg></div>
+<div class="case" id="svg-var-defined"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/></svg></div>
+<div class="case" id="mask"><div class="m"></div></div>
+<div class="case" id="mask-current"><div class="m"></div></div>
+<div class="case" id="before"></div>
+<div class="case" id="before-glyph"></div>
+<div class="case" id="clip-text"><span>Clip text</span></div>
+<div class="case" id="fill-color"><span>Fill color</span></div>
+<div class="case" id="gradient-alpha">gradient alpha</div>
+<div class="case" id="backdrop">backdrop panel</div>
+<div class="case" id="chip">chip</div>
+<div class="case" id="light-dark">light-dark()</div>
+<div class="case" id="surface-var">surface var</div>
+<div class="case" id="overlay-black">overlay black</div>
+<div class="case" id="overlay-solid">overlay solid</div>
+<div class="case" id="important">important</div>
+<div class="case" id="scripted">scripted style</div>
+<div class="case" id="dot-gray"></div>
+<div class="case" id="skeleton">skeleton</div>
+<div class="case" id="ring">inset ring</div>
+<div class="case" id="underline">underlined</div>
+<div class="case" id="use-symbol"><svg viewBox="0 0 24 24"><use href="#sym"/></svg></div>
+<div class="case" id="placeholder"><input placeholder="Search here"></div>
+<div class="case" id="control"><select><option>Option A</option></select><button>Button</button></div>
+<div class="case" id="invert-icon"><img alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 3h18v18H3z' fill='%23fff'/%3E%3C/svg%3E"></div>
+<div class="case" id="img-icon"><img alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 3h18v18H3z' fill='%230f0f0f'/%3E%3C/svg%3E"></div>
+<div class="case" id="bar-fill">progress<i></i></div>
+<svg width="0" height="0" style="position:absolute"><symbol id="sym" viewBox="0 0 24 24"><path d="M3 3h18v18H3z" fill="#0f0f0f"/></symbol></svg>
+<div class="case" id="shadow-host"></div>
+<div class="case" id="adopted-host"></div>
+<script>
+const sheet = new CSSStyleSheet();
+sheet.replaceSync(':host{display:block;width:100%}.box{box-sizing:border-box;padding:0 8px;height:44px;display:flex;align-items:center;background:#fff;color:#111}');
+const host = document.getElementById('adopted-host');
+const root = host.attachShadow({ mode: 'open' });
+root.adoptedStyleSheets = [sheet];
+root.innerHTML = '<div class="box">adopted sheet</div>';
+const host2 = document.getElementById('shadow-host');
+const root2 = host2.attachShadow({ mode: 'open' });
+root2.innerHTML = '<style>.box{box-sizing:border-box;padding:0 8px;height:44px;display:flex;align-items:center;background:#f9f9f9;color:#0f0f0f;width:230px}</style><div class="box">shadow style</div>';
+setTimeout(() => {
+  const el = document.getElementById('scripted');
+  el.style.background = '#fff';
+  el.style.color = '#111';
+  el.textContent = 'scripted style';
+  const late = document.createElement('div');
+  late.className = 'case';
+  late.id = 'late';
+  late.setAttribute('style', 'background:#fff;color:#0f0f0f');
+  late.textContent = 'late element';
+  document.body.appendChild(late);
+}, 300);
+</script>
+</body></html>

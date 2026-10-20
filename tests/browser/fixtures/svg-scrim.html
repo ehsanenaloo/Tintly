@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>SVG scrim</title>
+<style>
+  body { margin: 20px; background: #fff; color: #111; font: 14px sans-serif; }
+  .scrim { fill: rgba(0, 0, 0, 0.5); }
+  .shadow { fill: rgba(0, 0, 0, 0.3) !important; }
+  .mark { fill: rgba(0, 0, 0, 0.6); }
+  .solid { fill: #000000; }
+  .bluish { fill: rgba(10, 10, 200, 0.5); }
+</style></head>
+<body>
+<svg width="320" height="120">
+  <rect x="0" y="0" width="320" height="120" fill="#eeeeee"></rect>
+  <rect id="scrim" class="scrim" x="0" y="0" width="100" height="40"></rect>
+  <circle id="circle" class="scrim" cx="150" cy="20" r="15"></circle>
+  <ellipse id="ellipse" class="shadow" cx="200" cy="20" rx="20" ry="10"></ellipse>
+  <polygon id="polygon" class="scrim" points="240,0 300,0 270,40"></polygon>
+  <path id="path" class="mark" d="M10 60 L40 60 L25 90 Z"></path>
+  <rect id="solid" class="solid" x="60" y="60" width="40" height="30"></rect>
+  <rect id="bluish" class="bluish" x="120" y="60" width="40" height="30"></rect>
+</svg>
+</body></html>

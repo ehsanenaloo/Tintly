@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tintly</title>
+<link rel="stylesheet" href="../../shared/ui.css">
+<link rel="stylesheet" href="popup.css">
+</head>
+<body class="popup" data-loading>
+<div class="app">
+  <header class="head">
+    <img class="mark" src="../../icons/icon-48.png" width="30" height="30" alt="">
+    <div class="brand-text">
+      <h1 data-i18n="popup.title"></h1>
+      <span id="ver" class="ver" dir="ltr"></span>
+    </div>
+    <div class="head-actions">
+      <div id="themeMount"></div>
+      <button id="supportBtn" class="icon-btn icon-btn-heart" type="button" data-icon="heart" data-i18n-aria-label="menu.support" data-i18n-title="menu.support" hidden></button>
+      <div class="menu-wrap">
+        <button id="overflowBtn" class="icon-btn" type="button" data-icon="more" data-i18n-aria-label="menu.open" data-i18n-title="menu.open"></button>
+        <div id="overflowMenu" class="menu" role="menu" data-i18n-aria-label="menu.open" hidden></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <section id="hero" class="card hero" aria-labelledby="master-label">
+      <span id="hero-tile" class="tile hero-tile" data-icon="moon" data-icon-size="20"></span>
+      <div class="hero-text">
+        <label id="master-label" class="hero-title" for="master" data-i18n="popup.master"></label>
+        <div class="status-line"><span id="status-dot" class="dot"></span><p id="status" role="status"></p></div>
+      </div>
+      <input id="master" class="toggle toggle-lg" type="checkbox" role="switch">
+    </section>
+
+    <div id="controls" class="controls">
+      <section class="card site">
+        <span class="tile" id="siteTile" data-icon="globe" data-icon-size="17"></span>
+        <div class="site-text">
+          <label for="site" class="sr-only" data-i18n="popup.site"></label>
+          <select id="listMode" class="list-mode" data-i18n-aria-label="opt.listMode">
+            <option value="allExcept" data-i18n="popup.listAll"></option>
+            <option value="onlyListed" data-i18n="popup.listOnly"></option>
+          </select>
+          <p id="host" class="host" dir="auto"></p>
+        </div>
+        <input id="site" class="toggle" type="checkbox" role="switch">
+      </section>
+
+      <section class="card theme">
+        <div id="modeField" class="field">
+          <div class="mode-head">
+            <span id="mode-label" class="sr-only" data-i18n="popup.mode"></span>
+            <div id="scope" class="seg scope" role="radiogroup" data-i18n-aria-label="popup.scope">
+              <button id="scope-all" type="button" role="radio" aria-checked="true" data-value="all" data-i18n="popup.scopeAll"></button>
+              <button id="scope-site" type="button" role="radio" aria-checked="false" data-value="site" data-i18n="popup.scopeSite"></button>
+            </div>
+            <span id="cvdField" class="cvd-cell">
+              <label for="cvd" data-i18n="popup.cvd"></label>
+              <select id="cvd">
+                <option value="none" data-i18n="cvd.none"></option>
+                <option value="protan" data-i18n="cvd.protan"></option>
+                <option value="deutan" data-i18n="cvd.deutan"></option>
+                <option value="tritan" data-i18n="cvd.tritan"></option>
+                <option value="grayscale" data-i18n="cvd.grayscale"></option>
+                <option value="grayscaleInverted" data-i18n="cvd.grayscaleInverted"></option>
+                <option value="inverted" data-i18n="cvd.inverted"></option>
+              </select>
+            </span>
+          </div>
+          <div id="pin" class="pin" hidden>
+            <span class="pin-icon" data-icon="info" data-icon-size="15"></span>
+            <p id="pin-text" class="pin-text" role="status"></p>
+            <button id="pin-use" class="btn btn-sm" type="button" data-i18n="popup.pinUse"></button>
+            <a id="pin-schedule" class="btn btn-sm" href="../options/options.html#schedule" target="_blank" rel="noopener" data-i18n="popup.pinOpenSchedule" hidden></a>
+          </div>
+          <div id="mode" class="seg seg-slide seg-block seg-modes" role="radiogroup" aria-labelledby="mode-label">
+            <button id="mode-dark" type="button" role="radio" aria-checked="false" data-value="dark" data-icon="moon" data-icon-size="13"><span data-i18n="mode.dark"></span></button>
+            <button id="mode-light" type="button" role="radio" aria-checked="false" data-value="light" data-icon="sun" data-icon-size="13"><span data-i18n="mode.light"></span></button>
+            <button id="mode-paper" type="button" role="radio" aria-checked="false" data-value="paper" data-icon="book" data-icon-size="13"><span data-i18n="eink.presetPaper"></span></button>
+            <button id="mode-eink" type="button" role="radio" aria-checked="false" data-value="eink" data-icon="tablet" data-icon-size="13"><span data-i18n="mode.eink"></span></button>
+            <button id="mode-original" type="button" role="radio" aria-checked="false" data-value="original" data-icon="drop" data-icon-size="13"><span data-i18n="popup.modeOriginal"></span></button>
+          </div>
+        </div>
+        <div id="einkBox" class="eink-box" hidden>
+          <div class="sliders">
+            <div class="slider"><label for="whiteCap" data-i18n="eink.whiteCap"></label><output id="whiteCap-out" for="whiteCap"></output><input id="whiteCap" type="range" step="1"></div>
+            <div class="slider"><label for="einkBlue" data-i18n="eink.blue"></label><output id="einkBlue-out" for="einkBlue"></output><input id="einkBlue" type="range" step="1"></div>
+          </div>
+        </div>
+        <div id="sliders" class="sliders">
+          <div class="slider"><label for="brightness" data-i18n="theme.brightness"></label><output id="brightness-out" for="brightness"></output><input id="brightness" type="range" step="1"></div>
+          <div class="slider"><label for="contrast" data-i18n="theme.contrast"></label><output id="contrast-out" for="contrast"></output><input id="contrast" type="range" step="1"></div>
+          <div class="slider"><label for="sepia" data-i18n="theme.sepia"></label><output id="sepia-out" for="sepia"></output><input id="sepia" type="range" step="1"></div>
+          <div class="slider"><label for="grayscale" data-i18n="theme.grayscale"></label><output id="grayscale-out" for="grayscale"></output><input id="grayscale" type="range" step="1"></div>
+          <div class="slider"><label for="warmth" data-i18n="popup.warmth"></label><output id="warmth-out" for="warmth"></output><input id="warmth" type="range" step="1"></div>
+          <div id="engineField" class="field engine-cell">
+            <label class="label" for="engine" data-i18n="popup.engine"></label>
+            <select id="engine">
+              <option value="auto" data-i18n="engine.auto"></option>
+              <option value="dynamic" data-i18n="engine.dynamic"></option>
+              <option value="filter" data-i18n="engine.filter"></option>
+              <option value="filterPlus" data-i18n="engine.filterPlus"></option>
+              <option value="static" data-i18n="engine.static"></option>
+            </select>
+          </div>
+        </div>
+        <div id="originalBox" class="sliders" hidden></div>
+        <div id="stheme" class="pin stheme" hidden>
+          <span class="pin-icon" data-icon="info" data-icon-size="15"></span>
+          <p id="stheme-text" class="pin-text" role="status"></p>
+          <button id="stheme-btn" class="btn btn-sm" type="button" data-i18n="popup.siteThemeOff"></button>
+        </div>
+        <div id="presets-box" class="presets-box">
+          <h2 id="presets-title" class="label" data-i18n="popup.presets"></h2>
+          <ul id="presets" class="presets" aria-labelledby="presets-title"></ul>
+          <p id="presets-none" class="hint presets-none" data-i18n="popup.presetsNone"></p>
+        </div>
+      </section>
+    </div>
+
+    <div class="meta">
+      <p id="schedule" class="schedule"><span class="schedule-icon" data-icon="clock" data-icon-size="15"></span><span id="schedule-text"></span></p>
+      <nav class="links">
+        <a href="../options/options.html" target="_blank" rel="noopener" data-icon="sliders" data-icon-size="14"><span data-i18n="popup.openSettings"></span></a>
+        <a href="../fixes/fixes.html" target="_blank" rel="noopener" data-icon="wand" data-icon-size="14"><span data-i18n="popup.openFixes"></span></a>
+      </nav>
+    </div>
+
+    <div class="notice-slot">
+      <p id="notice" class="notice" role="alert" hidden></p>
+      <button id="notice-x" class="icon-btn notice-x" type="button" data-icon="close" data-icon-size="16" data-i18n-aria-label="nudge.close" data-i18n-title="nudge.close" hidden></button>
+    </div>
+  </main>
+
+  <div id="footerMount" class="dock"></div>
+  <div id="nudgeMount" class="nudge-slot"></div>
+</div>
+
+<dialog id="about" aria-label="Tintly"></dialog>
+<script type="module" src="popup.js"></script>
+</body>
+</html>

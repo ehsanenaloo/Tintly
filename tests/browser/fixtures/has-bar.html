@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Moving bar under has rules</title>
+<script>
+  // An application box with `:has()` rules in its sheets and a player bar, 12 levels down, that moves in every frame through inline
+  // styles. The sheets hold many rules with colors, so the engine's copies are large.
+  const params = new URLSearchParams(location.search);
+  const sheets = Number(params.get('sheets') ?? 4);
+  const per = Number(params.get('rules') ?? 500);
+  const withHas = params.get('has') !== '0';
+  const hex = (n) => '#' + ((n * 2654435761 >>> 8) & 0xffffff).toString(16).padStart(6, '0');
+  for (let s = 0; s < sheets; s++) {
+    let css = '';
+    for (let i = 0; i < per; i++) {
+      const k = s * per + i;
+      css += `.k${k}{color:${hex(k)};background:${hex(k + 5)};border:1px solid ${hex(k + 9)}}\n`;
+      if (i % 25 === 0) css += `.k${k}:hover,.k${k}:focus-within{background:${hex(k + 3)}}\n`;
+      if (withHas && i % 50 === 0) css += `app-box[masthead-hidden]:not(:has(.watch[fullscreen])) .k${k}{color:${hex(k + 1)}}\n`;
+      if (withHas && i % 90 === 0) css += `app-box:not([scrolling]):has(.watch[theater]) .k${k}{background:${hex(k + 2)}}\n`;
+      if (withHas && i % 120 === 0) css += `html:not(.x):has(#movie[mini]) .k${k}{border-color:${hex(k + 4)}}\n`;
+    }
+    if (s === 0) css += `input[type=range]::-webkit-slider-thumb{background:${hex(77)};border:1px solid ${hex(78)}}input[type=range]::-webkit-slider-runnable-track{background:${hex(79)}}app-box:not(:has(> .watch[fullscreen])) #movie{color:${hex(80)}}html:has(app-box[masthead-hidden]) #list{background:${hex(81)}}
+`;
+    document.write('<style>' + css + '</style>');
+  }
+</script>
+<style>
+  html, body { margin: 0; background: #fff; color: #222; font: 13px system-ui; }
+  app-box, page-manager, .watch, #columns, #primary, #inner, #player, #outer, #in, #container, #movie { display: block; }
+  .bar { position: relative; height: 5px; background: #ddd; width: 800px; }
+  .bar > div { position: absolute; left: 0; top: 0; height: 5px; width: 100%; transform-origin: 0 0; }
+  .load { background: #bbb; }
+  .play { background: #f00; }
+  #thumb { width: 13px; height: 13px; border-radius: 7px; background: #f00; top: -4px !important; }
+  [fullscreen].watch { outline: 1px solid red; }
+</style>
+</head>
+<body>
+<div id="mount"></div>
+<template id="tpl"><app-box masthead-hidden>
+  <page-manager>
+    <div class="watch">
+      <div id="columns"><div id="primary"><div id="inner"><div id="player"><div id="outer"><div id="in"><div id="container">
+        <div id="movie">
+          <div class="bar"><div class="load" style="transform: scaleX(0)"></div><div class="play" style="transform: scaleX(0)"></div><div id="thumb" style="transform: translateX(0)"></div></div>
+        </div>
+      </div></div></div></div></div></div></div>
+    </div>
+  </page-manager>
+  <input type="range" min="0" max="10"><div id="list"></div>
+</app-box></template>
+<script>
+  const mount = () => { document.getElementById('mount').append(document.getElementById('tpl').content.cloneNode(true)); start(); };
+  if (params.get('late') === '1') setTimeout(mount, 400); else mount();
+  function start() {
+  let list = '';
+  for (let i = 0; i < 300; i++) list += `<div class="k${(i * 37) % (sheets * per)}">Row ${i}</div>`;
+  document.getElementById('list').innerHTML = list;
+  const load = document.querySelector('.load'), play = document.querySelector('.play'), thumb = document.getElementById('thumb');
+  let n = 0, stopped = false;
+  window.stopChurn = () => { stopped = true; };
+  window.frames = () => n;
+  (function tick() {
+    if (stopped) return;
+    n++;
+    const x = (n % 600) / 600;
+    load.style.transform = `scaleX(${Math.min(1, x + 0.1)})`;
+    play.style.transform = `scaleX(${x})`;
+    thumb.style.transform = `translateX(${Math.round(x * 800)}px)`;
+    requestAnimationFrame(tick);
+  })();
+  }
+</script>
+</body>
+</html>

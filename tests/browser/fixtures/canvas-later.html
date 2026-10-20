@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>A canvas drawn late</title>
+<style>
+body { margin: 0; background: #fff; color: #1a1a1a; font: 16px system-ui; }
+.box { position: relative; height: 90px; }
+canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.bubble { position: relative; display: inline-block; padding: 6px 10px; background: #d9fdd3; color: #111; border-radius: 8px; }
+</style></head>
+<body>
+<div class="box"><canvas id="c-late" width="400" height="90"></canvas><span class="bubble">Drawn after 12 s</span></div>
+<div class="box"><canvas id="c-now" width="400" height="90"></canvas><span class="bubble">Drawn at once</span></div>
+<script>
+function art(id) {
+  const c = document.getElementById(id).getContext('2d');
+  c.fillStyle = '#0b141a'; c.fillRect(0, 0, 400, 90);
+  c.strokeStyle = '#e9edef'; c.lineWidth = 1.5;
+  for (let x = 0; x < 400; x += 64) for (let y = 0; y < 90; y += 64) { c.beginPath(); c.arc(x + 20, y + 20, 9, 0, 7); c.moveTo(x + 46, y + 38); c.lineTo(x + 46, y + 56); c.moveTo(x + 37, y + 47); c.lineTo(x + 55, y + 47); c.stroke(); }
+}
+art('c-now');
+setTimeout(() => art('c-late'), 12000);
+</script>
+</body></html>

@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>color-mix with a variable</title>
+<style>
+  :root { --bg: #f7f8f9; --ink: #202122; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px sans-serif; }
+  .site-header { position: sticky; top: 0; height: 69px; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: saturate(1.4) blur(14px); }
+  main { padding: 24px; }
+</style>
+</head>
+<body>
+<header class="site-header" id="head"><a href="#">about</a></header>
+<main><p id="p">Text</p></main>
+</body>
+</html>

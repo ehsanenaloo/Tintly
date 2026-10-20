@@ -1,0 +1,22 @@
+# Code owners are asked to review pull requests that touch the files they own.
+# Tintly has one maintainer, so every rule names the same person.
+# The last matching pattern wins, so keep the specific paths after the default.
+
+* @ehsanenaloo
+
+# Manifest and permissions.
+/extension/manifest.json @ehsanenaloo
+
+# Interface text.
+/extension/shared/locales/ @ehsanenaloo
+/extension/_locales/ @ehsanenaloo
+
+# Site data.
+/data-src/ @ehsanenaloo
+
+# Privacy policy and public docs.
+/docs/ @ehsanenaloo
+
+# Build, validation and release automation.
+/scripts/ @ehsanenaloo
+/.github/ @ehsanenaloo

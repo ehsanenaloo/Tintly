@@ -1,0 +1,20 @@
+{
+  "extName": {
+    "message": "Tintly - داكن، فاتح، ورق، E-ink ورؤية الألوان"
+  },
+  "extDescription": {
+    "message": "أوضاع داكن وفاتح وورق وE-ink ومرشحات رؤية الألوان لجميع المواقع. سريع وخاص وبدون جمع بيانات."
+  },
+  "cmdToggleExtension": {
+    "message": "تشغيل Tintly أو إيقافه"
+  },
+  "cmdToggleSite": {
+    "message": "تشغيل Tintly أو إيقافه لهذا الموقع"
+  },
+  "cmdSwitchEngine": {
+    "message": "تبديل محرك السمة"
+  },
+  "menuToggleSite": {
+    "message": "تشغيل Tintly أو إيقافه لهذا الموقع"
+  }
+}

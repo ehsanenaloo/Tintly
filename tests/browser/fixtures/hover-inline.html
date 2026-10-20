@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Inline style that changes on hover</title>
+<style>
+  body { margin: 20px; font: 16px sans-serif; background: #fff; color: #111; }
+  .chip { display: inline-block; padding: 6px 10px; margin: 4px; border: 1px solid #ccc; }
+  .hv:hover { background: #fff3cd; }
+</style></head>
+<body>
+<div id="legend"></div>
+<script>
+  const legend = document.getElementById('legend');
+  for (let i = 0; i < 40; i++) {
+    const c = document.createElement('span');
+    c.className = 'chip hv';
+    c.id = 'c' + i;
+    c.textContent = 'Series ' + i;
+    legend.appendChild(c);
+  }
+  // Like a chart legend: the page writes an inline color when the pointer moves over it.
+  window.paint = (i, color) => { const c = document.getElementById('c' + i); c.style.backgroundColor = color; c.style.color = '#222'; };
+  window.sample = () => new Promise((resolve) => requestAnimationFrame(() => {
+    const out = [];
+    for (let i = 0; i < 40; i++) out.push(getComputedStyle(document.getElementById('c' + i)).backgroundColor);
+    resolve(out);
+  }));
+</script>
+</body></html>

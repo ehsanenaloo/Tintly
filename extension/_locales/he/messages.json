@@ -1,0 +1,20 @@
+{
+  "extName": {
+    "message": "Tintly - כהה, בהיר, נייר, E-ink וראיית צבעים"
+  },
+  "extDescription": {
+    "message": "מצבי כהה, בהיר, נייר ו-E-ink ומסנני ראיית צבעים לכל האתרים. מהיר ופרטי, ללא איסוף נתונים."
+  },
+  "cmdToggleExtension": {
+    "message": "הפעלה או כיבוי של Tintly"
+  },
+  "cmdToggleSite": {
+    "message": "הפעלה או כיבוי של Tintly באתר זה"
+  },
+  "cmdSwitchEngine": {
+    "message": "החלפת מנוע ערכת הנושא"
+  },
+  "menuToggleSite": {
+    "message": "הפעלה או כיבוי של Tintly באתר זה"
+  }
+}

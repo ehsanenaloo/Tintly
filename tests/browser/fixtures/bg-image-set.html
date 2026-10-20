@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>image-set backgrounds</title>
+<style>
+body { margin: 0; background: #fff; color: #111; font: 16px system-ui; }
+.i { display: inline-block; width: 32px; height: 32px; margin: 8px; background-repeat: no-repeat; background-size: contain; vertical-align: top; }
+#set-class { background-image: image-set(url(/gen/img/dark-logo-0.png) 1x, url(/gen/img/photo-0.png) 2x); }
+#set-string { background-image: image-set("/gen/img/dark-logo-1.png" 1x, "/gen/img/photo-1.png" 2x); }
+#set-webkit { background-image: -webkit-image-set(url(/gen/img/dark-logo-2.png) 1x, url(/gen/img/photo-2.png) 2x); }
+#set-type { background-image: image-set(url(/gen/img/photo-3.png) type("image/jxl"), url(/gen/img/dark-logo-3.png) type("image/png")); }
+#set-only3 { background-image: image-set(url(/gen/img/dark-logo-4.png) 3x); }
+#set-layers { background-image: linear-gradient(rgba(255, 255, 255, .5), rgba(255, 255, 255, .5)), image-set(url(/gen/img/dark-logo-5.png) 1x); }
+</style></head>
+<body>
+<div id="row">
+<span class="i" id="set-class"></span><span class="i" id="set-string"></span><span class="i" id="set-webkit"></span><span class="i" id="set-type"></span><span class="i" id="set-only3"></span><span class="i" id="set-layers"></span><span class="i" id="set-inline" style="background-image:image-set('/gen/img/dark-logo-6.png' 1x, '/gen/img/photo-6.png' 2x)"></span>
+</div>
+</body></html>

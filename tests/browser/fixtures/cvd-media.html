@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Color vision pictures fixture</title>
+<style>
+body { margin: 0; padding: 16px; font: 16px/1.5 system-ui, sans-serif; background: #ffffff; color: #222222; }
+.row { display: flex; gap: 16px; align-items: center; margin-block: 8px; }
+.box { width: 64px; height: 64px; }
+img.box { display: block; }
+.icon { width: 24px; height: 24px; display: block; }
+.ic { fill: #cc3333; }
+.bg-icon { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Crect width='24' height='24' fill='%23cc3333'/%3E%3C/svg%3E") center / cover no-repeat; }
+.mask-icon { background-color: #cc3333; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Crect width='24' height='24'/%3E%3C/svg%3E") center / cover no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Crect width='24' height='24'/%3E%3C/svg%3E") center / cover no-repeat; }
+.bg-hero { width: 200px; height: 64px; padding: 4px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Crect width='10' height='10' fill='%23cc3333'/%3E%3C/svg%3E") left / 64px 64px no-repeat; color: #222222; }
+</style>
+</head>
+<body>
+<div class="row">
+  <img id="photo" class="box" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%23cc3333'/%3E%3Ccircle cx='32' cy='32' r='12' fill='%2333aa33'/%3E%3C/svg%3E">
+  <img id="icon-img" class="icon" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Crect width='24' height='24' fill='%23992222'/%3E%3C/svg%3E">
+  <svg id="svg-attr" class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" fill="#cc3333"/></svg>
+  <svg id="svg-css" class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect class="ic" width="24" height="24"/></svg>
+  <span id="bg-icon" class="icon bg-icon"></span>
+  <img id="mark-icon" class="icon" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M4 4h16v4H4zM4 12h16v4H4z' fill='%23441111'/%3E%3C/svg%3E">
+  <span id="mask-icon" class="icon mask-icon"></span>
+  <div id="bg-hero" class="bg-hero"><span style="margin-inline-start: 80px">Text over a picture</span></div>
+</div>
+</body>
+</html>

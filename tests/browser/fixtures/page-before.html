@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>A page that uses html::before</title>
+<style>
+  /* A script reads the layout name from this pseudo-element. */
+  html::before { content: "wide"; display: none; }
+  body { margin: 20px; font: 16px sans-serif; }
+</style></head>
+<body><p id="box">A short page.</p></body></html>

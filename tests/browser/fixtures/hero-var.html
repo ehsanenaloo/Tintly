@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Pictures and sections through a custom property</title>
+<style>
+body { margin: 0; background: #fafaff; color: #1a1a1a; font: 16px system-ui; }
+section, footer { padding: 24px; min-height: 140px; }
+a { color: inherit; }
+:root{--hex-i:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJhIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIiB3aWR0aD0iMjkiIGhlaWdodD0iNTAuMTE1IiBwYXR0ZXJuVHJhbnNmb3JtPSJzY2FsZSgyKSI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iaHNsYSgwLDAlLDEwMCUsMSkiLz48cGF0aCBkPSJNMTQuNDk4IDE2Ljg1OCAwIDguNDg4LjAwMi04LjI1N2wxNC41LTguMzc0TDI5LTguMjZsLS4wMDIgMTYuNzQ1em0wIDUwLjA2TDAgNTguNTQ4bC4wMDItMTYuNzQ1IDE0LjUtOC4zNzNMMjkgNDEuOGwtLjAwMiAxNi43NDR6TTI4Ljk5NiA0MS44bC0xNC40OTgtOC4zNy4wMDItMTYuNzQ0TDI5IDguMzEybDE0LjQ5OCA4LjM3LS4wMDIgMTYuNzQ1em0tMjkgMC0xNC40OTgtOC4zNy4wMDItMTYuNzQ0TDAgOC4zMTJsMTQuNDk4IDguMzctLjAwMiAxNi43NDV6IiBzdHJva2Utd2lkdGg9Ii41IiBzdHJva2U9ImhzbGEoMjU5LCAwJSwgOTAlLCAxKSIgZmlsbD0ibm9uZSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjgwMCUiIGhlaWdodD0iODAwJSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTM4IC02LjQ2KSIgZmlsbD0idXJsKCNhKSIvPjwvc3ZnPg==")}
+
+.hero-i{background:linear-gradient(180deg,rgba(251,251,255,0) 79.36%,#f4f4fd 100%),linear-gradient(180deg,#fafaff 0,rgba(250,250,255,.678) 24.48%,rgba(250,250,255,0) 77.6%,#fafaff 100%),var(--hex-i),#fafaff;background-position:-190px;background-size:100%}
+.cta-i{background:linear-gradient(180deg,#271b72 0,rgba(39,27,114,0) 48.1%,#271b72 100%),linear-gradient(0deg,#271b72,#271b72),var(--hex-i);background-position:-190px;background-size:100%;color:#fff}
+.foot-i{background:#190f5c;color:#e1ebff}
+</style>
+<script>
+  // The linked sheet comes from the other test server, named in the address after the hash.
+  var link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = location.hash.slice(1) + "/css/hero-var.css";
+  document.head.appendChild(link);
+</script></head>
+<body>
+<section class="hero-i" id="hero-i"><h2>Inline sheet</h2><p>Text on a hexagon pattern.</p></section>
+<section class="cta-i" id="cta-i"><h2>Deep band</h2><p>Light text.</p></section>
+<footer class="foot-i" id="foot-i"><p>Deep footer</p></footer>
+<section class="hero-x" id="hero-x"><h2>Linked sheet from another origin</h2><p>Text on a hexagon pattern.</p></section>
+<section class="cta-x" id="cta-x"><h2>Deep band</h2><p>Light text.</p></section>
+<footer class="foot-x" id="foot-x"><p>Deep footer</p></footer>
+</body></html>

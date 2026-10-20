@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Inline styles inside shadow roots</title>
+<style>body{margin:0;background:#fff;color:#222;font:16px system-ui}</style></head>
+<body><p>Page text</p>
+<div id="open-host"></div>
+<div id="closed-host"></div>
+<script>
+  const HTML = '<style>.box{background:#fff;padding:6px}</style>' +
+    '<div class="box" id="a" style="color:#222222">rule background, inline color</div>' +
+    '<div id="b" style="background:#fff;color:#333">inline background and color</div>' +
+    '<select id="sel"><option>one</option></select>' +
+    '<svg width="100" height="100"><rect id="shape" width="100" height="100" fill="#ffffff"></rect></svg>';
+  const open = document.getElementById('open-host').attachShadow({ mode: 'open' });
+  open.innerHTML = HTML;
+  const closed = document.getElementById('closed-host').attachShadow({ mode: 'closed' });
+  closed.innerHTML = HTML;
+  window.__root = closed;
+  window.__open = open;
+  window.changeLater = (root) => { root.getElementById('b').setAttribute('style', 'background:#eeeeee;color:#444444'); };
+  window.addLater = (root) => {
+    const d = document.createElement('div');
+    d.id = 'late';
+    d.setAttribute('style', 'background:#ffffff;color:#111111');
+    d.textContent = 'added later';
+    root.append(d);
+  };
+  window.rebuild = (root) => { root.innerHTML = HTML; };
+</script></body></html>

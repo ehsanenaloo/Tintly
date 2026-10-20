@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Font, stroke, scrollbar and selection</title>
+<style>
+  body{margin:0;background:#fff;color:#222;font:16px "Times New Roman",serif}
+  .icon-font{font-family:"Icon Test Font",monospace}
+  .fa{font-family:"Awesome Test"}
+  .deco{font-family:"Deco Test",serif}
+  #scroller{height:80px;overflow:auto;width:200px}
+  #scroller div{height:300px}
+</style></head>
+<body>
+<h1 id="title">Title text</h1>
+<p id="para">Paragraph with <span id="inner">inner text</span> and <i id="italic" class="fa fa-home">x</i>.</p>
+<span id="iconish" class="icon-font my-icon">y</span>
+<pre id="pre"><span id="in-pre">code line</span></pre>
+<code id="code">inline code</code>
+<span id="hidden" class="deco" aria-hidden="true">decorative</span>
+<svg width="120" height="30"><text id="svgtext" x="0" y="20">svg text</text></svg>
+<div id="scroller"><div>tall</div></div>
+</body></html>

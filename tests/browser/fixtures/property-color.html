@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Registered colors</title>
+<style>
+@property --bg { syntax: '<color>'; inherits: false; initial-value: #ffffff; }
+@property --fg { syntax: '<color>'; inherits: false; initial-value: #000000; }
+@property --edge { syntax: "<color>"; inherits: true; initial-value: #cccccc; }
+@property --size { syntax: '<length>'; inherits: false; initial-value: 4px; }
+body { margin: 8px; background: #fff; color: #222; font: 14px sans-serif; }
+.a { background: var(--bg); color: var(--fg); padding: 6px; border: 2px solid var(--edge); }
+.g { background: linear-gradient(var(--bg), #eeeeee); color: var(--fg); padding: 6px; }
+.card { --bg: #ffeecc; --fg: #003366; padding: 8px; }
+.card .a2 { background: var(--bg); color: var(--fg); padding: 6px; }
+.set { --edge: #aa3333; }
+.set .e { border: 2px solid var(--edge); padding: 4px; }
+</style>
+</head>
+<body>
+<div class="a" id="a">initial values</div>
+<div class="g" id="g">gradient</div>
+<div class="card"><div class="a2" id="a2">not inherited: the initial value again</div></div>
+<div class="set"><div class="e" id="e">inherited edge</div></div>
+</body>
+</html>

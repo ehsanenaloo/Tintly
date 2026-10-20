@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Site dark: variables, media query and a theme switch</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script>
+(function () {
+  var t = null;
+  try { t = localStorage.getItem('fixture-theme'); } catch (e) {}
+  if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+<link rel="stylesheet" href="/css/site-dark-toggle.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><strong id="brand">site.example</strong>
+<div class="theme-switch"><label><input type="radio" name="theme" value="auto" checked> auto</label><label><input type="radio" name="theme" value="light"> light</label><label><input type="radio" name="theme" value="dark"> dark</label></div></header>
+<main id="main">
+<section class="hero"><h1 id="title">Site</h1><p class="lead" id="lead">A page whose dark theme is a set of variables on the root, in a media query and in a state of the root.</p></section>
+<div class="panel" id="panel"><p id="text">Panel text.</p><p class="muted" id="muted">Muted text.</p><a id="link" href="#x">link</a> <button class="btn" id="btn" type="button">Action</button></div>
+</main>
+<footer id="foot">Footer</footer>
+<script>
+document.querySelectorAll('.theme-switch input').forEach(function (i) {
+  i.addEventListener('change', function () {
+    var v = i.value;
+    if (v === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', v);
+    try { localStorage.setItem('fixture-theme', v); } catch (e) {}
+  });
+});
+</script>
+</body></html>

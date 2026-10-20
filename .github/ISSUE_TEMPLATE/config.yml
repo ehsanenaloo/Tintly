@@ -1,0 +1,17 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability (private)
+    url: https://github.com/ehsanenaloo/Tintly/security/advisories/new
+    about: Please report security problems privately. Do not open a public issue.
+  - name: Ask a question
+    url: https://github.com/ehsanenaloo/Tintly/discussions
+    about: Ask how to do something, or talk about an idea, in Discussions.
+  - name: User guide
+    url: https://enaloo.com/apps/tintly/
+    about: Check the guide for common tasks and troubleshooting before you open an issue.
+  - name: Support and where to ask
+    url: https://github.com/ehsanenaloo/Tintly/blob/main/.github/SUPPORT.md
+    about: Find out where to ask a question, report a problem or request a change, and what help to expect.
+  - name: Contributing guide
+    url: https://github.com/ehsanenaloo/Tintly/blob/main/.github/CONTRIBUTING.md
+    about: Learn how to send a pull request, add a fix or fix a translation.

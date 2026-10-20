@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Site dark: gradient, nested and border variables the dark theme leaves light</title>
+<style>
+:root { --card: #ffffff; --card2: var(--card); --edge: #e6e6e6; --pic: linear-gradient(#ffffff, #eeeeee); --pic2: linear-gradient(90deg, #fafafa 0%, #f0f0f0 100%); --dark-pic: linear-gradient(#101418, #1b2128); }
+body { margin: 0; background: #ffffff; color: #1d2127; font: 16px/1.5 system-ui, sans-serif; }
+section { box-sizing: border-box; padding: 24px; height: 160px; color: #222; }
+#a { background: var(--pic); }
+#b { background-image: var(--pic2); }
+#c { background: var(--card2); }
+#d { background: transparent; border: 8px solid var(--edge); }
+#e { background: var(--dark-pic); color: #e8eaed; }
+#f { background: var(--pic); --pic: linear-gradient(#10141a, #1b2128); color: #e8eaed; }
+.fill { height: 1800px; background: #1b2128; color: #e8eaed; }
+@media (prefers-color-scheme: dark) {
+  :root { --dark-pic: linear-gradient(#0c1014, #151a20); }
+  body { background: #101418; color: #e8eaed; }
+}
+</style></head>
+<body>
+<section id="a">A: a gradient in a variable.</section>
+<section id="b">B: a gradient in a variable, background-image.</section>
+<section id="c">C: a variable of a variable.</section>
+<section id="d">D: a border color from a variable.</section>
+<section id="e">E: the dark theme sets the gradient.</section>
+<section id="f">F: a deeper scope gives its own dark gradient.</section>
+<div class="fill"></div>
+</body></html>

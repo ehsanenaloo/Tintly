@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tintly</title>
+<link rel="stylesheet" href="../../shared/ui.css">
+<link rel="stylesheet" href="../options/options.css">
+</head>
+<body class="fixes" data-loading>
+<header class="topbar topbar-simple">
+  <div class="brand">
+    <img class="mark" src="../../icons/icon-48.png" width="32" height="32" alt="">
+    <h1 data-i18n="fixes.title"></h1>
+  </div>
+  <div class="top-actions">
+    <a class="head-link" href="../options/options.html" target="_blank" rel="noopener" data-i18n="popup.openSettings"></a>
+  </div>
+</header>
+<p id="message" role="status"></p>
+
+<main class="page">
+<section class="card panel">
+  <h2 data-i18n="fx.sites"></h2>
+  <div class="item"><label for="fix-site" data-i18n="fx.choose"></label><select id="fix-site"></select></div>
+  <div class="item"><label for="fix-pattern" data-i18n="opt.sitePattern"></label>
+    <span class="pair"><input id="fix-pattern" type="text" maxlength="300" dir="ltr"><button id="fix-add" class="btn btn-primary" type="button" data-i18n="opt.siteAdd"></button></span></div>
+  <p id="fix-none" class="hint" data-i18n="fx.none"></p>
+</section>
+
+<section id="editor" class="card panel" hidden>
+  <h2 id="editor-title" dir="ltr"></h2>
+  <div class="item"><label for="note" data-i18n="fx.note"></label><input id="note" type="text" maxlength="300" dir="auto"></div>
+  <div class="grid2">
+    <div class="item"><label for="engine" data-i18n="popup.engine"></label>
+      <select id="engine">
+        <option value="" data-i18n="opt.siteDefault"></option>
+        <option value="auto" data-i18n="engine.auto"></option>
+        <option value="dynamic" data-i18n="engine.dynamic"></option>
+        <option value="filter" data-i18n="engine.filter"></option>
+        <option value="filterPlus" data-i18n="engine.filterPlus"></option>
+        <option value="static" data-i18n="engine.static"></option>
+      </select>
+      <p id="engine-hint" class="select-hint"></p></div>
+    <div class="item"><label for="mode" data-i18n="popup.mode"></label>
+      <select id="mode">
+        <option value="" data-i18n="opt.siteDefault"></option>
+        <option value="dark" data-i18n="mode.dark"></option>
+        <option value="light" data-i18n="mode.light"></option>
+        <option value="eink" data-i18n="mode.eink"></option>
+        <option value="original" data-i18n="mode.original"></option>
+      </select></div>
+    <div class="item"><label for="einkPreset" data-i18n="eink.preset"></label>
+      <select id="einkPreset">
+        <option value="" data-i18n="opt.siteDefault"></option>
+        <option value="eink" data-i18n="eink.presetEink"></option>
+        <option value="paper" data-i18n="eink.presetPaper"></option>
+      </select></div>
+    <div class="item"><label for="brightness" data-i18n="theme.brightness"></label><input id="brightness" type="number" dir="ltr" aria-describedby="brightness-range"><p id="brightness-range" class="select-hint"></p></div>
+    <div class="item"><label for="contrast" data-i18n="theme.contrast"></label><input id="contrast" type="number" dir="ltr" aria-describedby="contrast-range"><p id="contrast-range" class="select-hint"></p></div>
+    <div class="item"><label for="sepia" data-i18n="theme.sepia"></label><input id="sepia" type="number" dir="ltr" aria-describedby="sepia-range"><p id="sepia-range" class="select-hint"></p></div>
+    <div class="item"><label for="grayscale" data-i18n="theme.grayscale"></label><input id="grayscale" type="number" dir="ltr" aria-describedby="grayscale-range"><p id="grayscale-range" class="select-hint"></p></div>
+    <div class="item"><label for="warmth" data-i18n="theme.warmth"></label><input id="warmth" type="number" dir="ltr" aria-describedby="warmth-range"><p id="warmth-range" class="select-hint"></p></div>
+  </div>
+  <div class="item block"><label for="css" data-i18n="fx.css"></label>
+    <textarea id="css" rows="6" spellcheck="false" dir="ltr" aria-describedby="css-error"></textarea>
+    <p class="hint" data-i18n="opt.cssWarn"></p>
+    <p id="css-error" class="error" role="alert" hidden data-i18n="opt.cssError"></p></div>
+  <div class="item block"><label for="invert" data-i18n="fx.invert"></label>
+    <textarea id="invert" rows="3" spellcheck="false" dir="ltr" data-list></textarea></div>
+  <div class="item block"><label for="ignoreInline" data-i18n="fx.ignoreInline"></label>
+    <textarea id="ignoreInline" rows="3" spellcheck="false" dir="ltr" data-list></textarea></div>
+  <div class="item block"><label for="ignoreImage" data-i18n="fx.ignoreImage"></label>
+    <textarea id="ignoreImage" rows="3" spellcheck="false" dir="ltr" data-list></textarea></div>
+  <div class="item block"><label for="ignoreCssUrl" data-i18n="fx.ignoreCssUrl"></label>
+    <textarea id="ignoreCssUrl" rows="3" spellcheck="false" dir="ltr" data-list></textarea></div>
+  <div class="item"><label class="check"><span data-i18n="fx.notDark"></span><input class="toggle" role="switch" id="notDark" type="checkbox"></label></div>
+  <h3 data-i18n="fx.staticTitle"></h3>
+  <div class="item block"><label for="sBg" data-i18n="fx.staticBg"></label>
+    <textarea id="sBg" rows="3" spellcheck="false" dir="ltr" data-static="bg"></textarea></div>
+  <div class="item block"><label for="sFg" data-i18n="fx.staticFg"></label>
+    <textarea id="sFg" rows="3" spellcheck="false" dir="ltr" data-static="fg"></textarea></div>
+  <div class="item block"><label for="sBorder" data-i18n="fx.staticBorder"></label>
+    <textarea id="sBorder" rows="3" spellcheck="false" dir="ltr" data-static="border"></textarea></div>
+  <div class="item block"><label for="sSkip" data-i18n="fx.staticSkip"></label>
+    <textarea id="sSkip" rows="3" spellcheck="false" dir="ltr" data-static="skip"></textarea></div>
+  <p id="selector-error" class="error" role="alert" hidden></p>
+  <div class="actions">
+    <button id="copy" class="btn" type="button" data-i18n="fx.copy"></button>
+    <button id="delete" class="btn btn-danger" type="button" data-i18n="fx.delete"></button>
+  </div>
+</section>
+
+<section class="card panel">
+  <h2 data-i18n="fx.paste"></h2>
+  <div class="item block"><label for="pasted" data-i18n="fx.pasteLabel"></label>
+    <textarea id="pasted" rows="5" spellcheck="false" dir="ltr"></textarea></div>
+  <div class="actions"><button id="paste-apply" class="btn btn-primary" type="button" data-i18n="fx.pasteApply"></button></div>
+</section>
+</main>
+<script type="module" src="fixes.js"></script>
+</body>
+</html>

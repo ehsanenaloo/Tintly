@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Style churn</title>
+<style>
+  body { margin: 0; font: 14px system-ui; background: #fff; color: #111; }
+  #grid { display: flex; flex-wrap: wrap; width: 1200px; }
+  .cell { box-sizing: border-box; width: 100px; height: 40px; margin: 2px; padding: 4px; background: #eef; border: 1px solid #99c; overflow: hidden; }
+  .declared { transition: background-color .3s, transform .3s, width .3s; }
+</style>
+</head>
+<body>
+<div id="grid"></div>
+<script>
+  // What a busy page does on every frame: a player bar, a clock, hover states and a feed that moves.
+  // Every fifth cell declares transitions as a site does and changes now and then; the rest do not and change every frame.
+  const grid = document.getElementById('grid');
+  const cells = [];
+  for (let i = 0; i < 300; i++) {
+    const d = document.createElement('div');
+    d.className = 'cell' + (i % 5 === 0 ? ' declared' : '');
+    d.textContent = 'Item ' + i;
+    grid.append(d);
+    cells.push(d);
+  }
+  let n = 0;
+  let stopped = false;
+  window.stopChurn = () => { stopped = true; };
+  (function tick() {
+    if (stopped) return;
+    n++;
+    if (n % 20 === 0) for (let i = 0; i < 60; i += 5) cells[i].style.backgroundColor = (n / 20) % 2 ? '#fdd' : '#dfd';
+    for (let i = 0; i < 20; i++) {
+      const c = cells[1 + i * 7 + (i % 3)];
+      c.style.color = (n + i) % 2 ? '#111' : '#222';
+      c.style.transform = 'translateX(' + ((n + i) % 3) + 'px)';
+      c.style.backgroundColor = (n + i) % 2 ? '#eef' : '#eaf';
+    }
+    requestAnimationFrame(tick);
+  })();
+  window.setWide = () => {};
+</script>
+</body>
+</html>

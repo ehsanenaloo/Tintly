@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tintly</title>
+<link rel="stylesheet" href="../../shared/ui.css">
+<link rel="stylesheet" href="options.css">
+</head>
+<body class="options" data-loading>
+<header class="topbar">
+  <div class="brand">
+    <img class="mark" src="../../icons/icon-48.png" width="32" height="32" alt="">
+    <h1 data-i18n="options.title"></h1>
+  </div>
+  <div class="search-box">
+    <span class="search-icon" data-icon="search" data-icon-size="16"></span>
+    <input id="search" type="search" autocomplete="off">
+  </div>
+  <div class="top-actions">
+    <div id="themeMount"></div>
+    <button id="supportBtn" class="icon-btn icon-btn-heart" type="button" data-icon="heart" data-i18n-aria-label="menu.support" data-i18n-title="menu.support" hidden></button>
+    <div class="menu-wrap">
+      <button id="overflowBtn" class="icon-btn" type="button" data-icon="more" data-i18n-aria-label="menu.open" data-i18n-title="menu.open"></button>
+      <div id="overflowMenu" class="menu" role="menu" data-i18n-aria-label="menu.open" hidden></div>
+    </div>
+  </div>
+</header>
+<p id="message" role="status"></p>
+
+<div class="layout">
+<nav class="side" data-i18n-aria-label="options.title">
+  <div id="tabs" class="tabs" role="tablist" aria-orientation="vertical">
+    <button id="tab-general" class="tab" type="button" role="tab" aria-controls="panel-general" data-tab="general" data-icon="toggle"><span data-i18n="tab.general"></span></button>
+    <button id="tab-appearance" class="tab" type="button" role="tab" aria-controls="panel-appearance" data-tab="appearance" data-icon="drop"><span data-i18n="tab.appearance"></span></button>
+    <button id="tab-sites" class="tab" type="button" role="tab" aria-controls="panel-sites" data-tab="sites" data-icon="globe"><span data-i18n="tab.sites"></span></button>
+    <button id="tab-schedule" class="tab" type="button" role="tab" aria-controls="panel-schedule" data-tab="schedule" data-icon="clock"><span data-i18n="tab.schedule"></span></button>
+    <button id="tab-advanced" class="tab" type="button" role="tab" aria-controls="panel-advanced" data-tab="advanced" data-icon="code"><span data-i18n="tab.advanced"></span></button>
+    <button id="tab-data" class="tab" type="button" role="tab" aria-controls="panel-data" data-tab="data" data-icon="database"><span data-i18n="tab.data"></span></button>
+    <button id="tab-about" class="tab" type="button" role="tab" aria-controls="panel-about" data-tab="about" data-icon="info"><span data-i18n="tab.about"></span></button>
+  </div>
+</nav>
+
+<main id="settings" class="content">
+<p id="search-empty" class="empty card" role="status" hidden data-i18n="opt.searchEmpty"></p>
+
+<section id="css-hold" class="card hold" hidden aria-labelledby="css-hold-title">
+  <h2 id="css-hold-title" data-i18n="opt.holdTitle"></h2>
+  <p class="hint" data-i18n="opt.holdText"></p>
+  <ul id="hold-list" class="cards"></ul>
+</section>
+
+<div id="panel-general" class="panel" role="tabpanel" aria-labelledby="tab-general" hidden>
+<section class="card" data-section>
+  <h2 data-i18n="opt.general"></h2>
+  <div class="item"><label class="check"><span data-i18n="opt.enabled"></span><input class="toggle" role="switch" type="checkbox" data-setting="enabled"></label></div>
+  <div class="item"><label for="listMode" data-i18n="opt.listMode"></label>
+    <select id="listMode" data-setting="listMode">
+      <option value="allExcept" data-i18n="opt.listAll"></option>
+      <option value="onlyListed" data-i18n="opt.listOnly"></option>
+    </select></div>
+  <div class="item"><label for="engine" data-i18n="popup.engine"></label>
+    <select id="engine" data-setting="engine">
+      <option value="auto" data-i18n="engine.auto"></option>
+      <option value="dynamic" data-i18n="engine.dynamic"></option>
+      <option value="filter" data-i18n="engine.filter"></option>
+      <option value="filterPlus" data-i18n="engine.filterPlus"></option>
+      <option value="static" data-i18n="engine.static"></option>
+    </select>
+    <p id="engine-hint" class="select-hint"></p></div>
+  <div class="item"><label class="check"><span data-i18n="opt.detectDark"></span><input class="toggle" role="switch" type="checkbox" data-setting="detectDark"></label></div>
+  <div class="item"><label class="check"><span data-i18n="opt.respectOnlyLight"></span><input class="toggle" role="switch" type="checkbox" data-setting="respectOnlyLight"></label></div>
+  <div class="item"><label class="check"><span data-i18n="opt.useSiteDark"></span><input class="toggle" role="switch" type="checkbox" data-setting="theme.useSiteDark"></label></div>
+  <div class="item"><label class="check"><span data-i18n="opt.holdPaint"></span><input class="toggle" role="switch" type="checkbox" data-setting="holdPaint"></label></div>
+  <div class="item"><label class="check"><span data-i18n="opt.contextMenu"></span><input class="toggle" role="switch" id="contextMenu" type="checkbox"></label></div>
+</section>
+
+<section class="card" data-section>
+  <h2 data-i18n="opt.language"></h2>
+  <div class="item"><label for="locale" data-i18n="opt.locale"></label>
+    <select id="locale">
+      <option value="auto" data-i18n="opt.localeAuto"></option>
+      <option value="fa" lang="fa">فارسی</option>
+      <option value="en" lang="en">English</option>
+      <option value="ar" lang="ar">العربية</option>
+      <option value="he" lang="he">עברית</option>
+    </select></div>
+  <div class="item"><label for="uiTheme" data-i18n="opt.uiTheme"></label>
+    <select id="uiTheme">
+      <option value="system" data-i18n="opt.uiSystem"></option>
+      <option value="light" data-i18n="mode.light"></option>
+      <option value="dark" data-i18n="mode.dark"></option>
+    </select></div>
+  <div class="item"><label class="check"><span data-i18n="opt.nudge"></span><input class="toggle" role="switch" id="supportNudge" type="checkbox"></label></div>
+</section>
+
+<section class="card" data-section>
+  <h2 data-i18n="opt.shortcuts"></h2>
+  <ul id="shortcut-list" class="plain"></ul>
+  <div class="item"><button id="shortcut-open" class="btn" type="button" data-i18n="opt.shortcutsOpen"></button></div>
+</section>
+</div>
+
+<div id="panel-appearance" class="panel" role="tabpanel" aria-labelledby="tab-appearance" hidden>
+<section class="card" data-section>
+  <h2 data-i18n="opt.theme"></h2>
+  <div class="item"><label for="mode" data-i18n="popup.mode"></label>
+    <select id="mode" data-setting="theme.mode">
+      <option value="dark" data-i18n="mode.dark"></option>
+      <option value="light" data-i18n="mode.light"></option>
+      <option value="eink" data-i18n="mode.eink"></option>
+      <option value="original" data-i18n="mode.original"></option>
+    </select></div>
+  <div class="item range not-eink"><label for="brightness" data-i18n="theme.brightness"></label><output for="brightness"></output><input id="brightness" type="range" data-setting="theme.brightness"></div>
+  <div class="item range not-eink"><label for="contrast" data-i18n="theme.contrast"></label><output for="contrast"></output><input id="contrast" type="range" data-setting="theme.contrast"></div>
+  <div class="item range not-eink"><label for="sepia" data-i18n="theme.sepia"></label><output for="sepia"></output><input id="sepia" type="range" data-setting="theme.sepia"></div>
+  <div class="item range not-eink"><label for="grayscale" data-i18n="theme.grayscale"></label><output for="grayscale"></output><input id="grayscale" type="range" data-setting="theme.grayscale"></div>
+  <div class="item range not-eink"><label for="warmth" data-i18n="theme.warmth"></label><output for="warmth"></output><input id="warmth" type="range" data-setting="theme.warmth"></div>
+</section>
+
+<section class="card only-eink" data-section id="eink-section">
+  <h2 data-i18n="opt.einkTitle"></h2>
+  <p class="hint" data-i18n="opt.einkText"></p>
+  <div class="item"><label for="einkPreset" data-i18n="eink.preset"></label>
+    <select id="einkPreset">
+      <option value="eink" data-i18n="eink.presetEink"></option>
+      <option value="paper" data-i18n="eink.presetPaper"></option>
+    </select></div>
+  <div class="item"><label for="paperColor" data-i18n="eink.paperColor"></label>
+    <span class="pair"><input id="paperColor" type="color" data-eink="paperColor">
+    <span class="swatches" role="group" data-i18n-aria-label="eink.swatches">
+      <button class="swatch" type="button" data-color="#f4f1ea" data-i18n-aria-label="eink.swatchCream" data-i18n-title="eink.swatchCream"></button>
+      <button class="swatch" type="button" data-color="#f6efd0" data-i18n-aria-label="eink.swatchYellow" data-i18n-title="eink.swatchYellow"></button>
+      <button class="swatch" type="button" data-color="#e8e8e6" data-i18n-aria-label="eink.swatchGray" data-i18n-title="eink.swatchGray"></button>
+      <button class="swatch" type="button" data-color="#ffffff" data-i18n-aria-label="eink.swatchWhite" data-i18n-title="eink.swatchWhite"></button>
+    </span></span></div>
+  <div class="item range"><label for="whiteCap" data-i18n="eink.whiteCap"></label><output for="whiteCap"></output><input id="whiteCap" type="range" data-eink="whiteCap"></div>
+  <div class="item range"><label for="einkBlue" data-i18n="eink.blue"></label><output for="einkBlue"></output><input id="einkBlue" type="range" data-eink="einkBlue"></div>
+  <div class="item range"><label for="einkContrast" data-i18n="theme.contrast"></label><output for="einkContrast"></output><input id="einkContrast" type="range" data-eink="einkContrast"></div>
+  <div class="item range"><label for="einkColorAmount" data-i18n="eink.color"></label><output for="einkColorAmount"></output><input id="einkColorAmount" type="range" data-eink="einkColorAmount"></div>
+  <div class="item"><label for="einkImages" data-i18n="eink.images"></label>
+    <select id="einkImages" data-eink="einkImages">
+      <option value="follow" data-i18n="eink.imagesFollow"></option>
+      <option value="gray" data-i18n="eink.imagesGray"></option>
+      <option value="dim" data-i18n="eink.imagesDim"></option>
+      <option value="off" data-i18n="eink.imagesOff"></option>
+    </select></div>
+  <details id="einkAdvanced" class="more">
+    <summary data-i18n="eink.advanced"></summary>
+    <div class="item"><label for="inkColor" data-i18n="eink.inkColor"></label><input id="inkColor" type="color" data-eink="inkColor"></div>
+    <div class="item"><label class="check"><span data-i18n="eink.grayAll"></span><input class="toggle" role="switch" type="checkbox" data-eink="einkGrayAll"></label></div>
+    <div class="item"><label for="einkLevels" data-i18n="eink.levels"></label>
+      <select id="einkLevels" data-eink="einkLevels" data-type="int">
+        <option value="0" data-i18n="eink.levelsOff"></option>
+        <option value="2">2</option>
+        <option value="4">4</option>
+        <option value="8">8</option>
+        <option value="16">16</option>
+      </select></div>
+    <div class="item range"><label for="einkImageContrast" data-i18n="eink.imageContrast"></label><output for="einkImageContrast"></output><input id="einkImageContrast" type="range" data-eink="einkImageContrast"></div>
+    <div class="item"><label class="check"><span data-i18n="eink.borders"></span><input class="toggle" role="switch" type="checkbox" data-eink="einkBorders"></label></div>
+    <div class="item"><label class="check"><span data-i18n="eink.noAnimation"></span><input class="toggle" role="switch" type="checkbox" data-eink="noAnimation"></label></div>
+    <div class="item"><label class="check"><span data-i18n="eink.noTransition"></span><input class="toggle" role="switch" type="checkbox" data-eink="noTransition"></label></div>
+    <div class="item"><label class="check"><span data-i18n="eink.noSmoothScroll"></span><input class="toggle" role="switch" type="checkbox" data-eink="noSmoothScroll"></label></div>
+    <div class="item"><label class="check"><span data-i18n="eink.noShadow"></span><input class="toggle" role="switch" type="checkbox" data-eink="noShadow"></label></div>
+    <div class="item"><label class="check"><span data-i18n="eink.reducedMotion"></span><input class="toggle" role="switch" type="checkbox" data-eink="reducedMotionHint"></label></div>
+    <div class="item"><label for="einkFont" data-i18n="opt.font"></label>
+      <select id="einkFont">
+        <option value="keep" data-i18n="eink.fontKeep"></option>
+        <option value="serif" data-i18n="eink.fontSerif"></option>
+        <option value="sans" data-i18n="eink.fontSans"></option>
+        <option value="custom" data-i18n="eink.fontCustom"></option>
+      </select></div>
+    <div class="item" id="einkFontNameRow"><label for="einkFontName" data-i18n="opt.fontFamily"></label><input id="einkFontName" type="text" maxlength="100" dir="auto"></div>
+    <div class="item range"><label for="einkWeight" data-i18n="eink.weight"></label><output for="einkWeight"></output><input id="einkWeight" type="range" data-eink="einkWeight"></div>
+    <div class="item"><button id="einkReset" class="btn" type="button" data-i18n="eink.reset"></button></div>
+  </details>
+</section>
+
+<section class="card" data-section id="cvd-section">
+  <h2 data-i18n="cvd.title"></h2>
+  <p class="hint" data-i18n="cvd.text"></p>
+  <div class="item"><label for="cvdType" data-i18n="cvd.type"></label>
+    <select id="cvdType" data-setting="theme.cvdType" aria-describedby="cvdNoColor cvdOriginalOnly">
+      <option value="none" data-i18n="cvd.none"></option>
+      <option value="protan" data-i18n="cvd.protan"></option>
+      <option value="deutan" data-i18n="cvd.deutan"></option>
+      <option value="tritan" data-i18n="cvd.tritan"></option>
+      <option value="grayscale" data-i18n="cvd.grayscale"></option>
+      <option value="grayscaleInverted" data-i18n="cvd.grayscaleInverted"></option>
+      <option value="inverted" data-i18n="cvd.inverted"></option>
+    </select>
+    <p id="cvdNoColor" class="select-hint" hidden data-i18n="cvd.noColor"></p>
+    <p id="cvdOriginalOnly" class="select-hint" hidden data-i18n="cvd.originalOnly"></p></div>
+  <div class="item range"><label for="cvdSeverity" data-i18n="cvd.severity"></label><output for="cvdSeverity"></output><input id="cvdSeverity" type="range" data-setting="theme.cvdSeverity"></div>
+  <div id="cvdBoostItem" class="item range"><label for="cvdBoost" data-i18n="cvd.boost"></label><output for="cvdBoost"></output><input id="cvdBoost" type="range" data-setting="theme.cvdBoost"></div>
+  <div class="item"><button id="cvdReset" class="btn" type="button" data-i18n="cvd.reset"></button></div>
+  <div id="cvdPreview" class="item block cvd-preview" role="group" aria-labelledby="cvdPreviewLabel">
+    <span id="cvdPreviewLabel" class="palette-label" data-i18n="cvd.preview"></span>
+    <div class="cvd-row" data-row="page"><span class="cvd-name" data-i18n="cvd.rowPage"></span><span class="cvd-band" aria-hidden="true"></span></div>
+    <div class="cvd-row" data-row="seen"><span class="cvd-name" data-i18n="cvd.rowSeen"></span><span class="cvd-band" aria-hidden="true"></span></div>
+    <div class="cvd-row" data-row="corrected"><span class="cvd-name" data-i18n="cvd.rowCorrected"></span><span class="cvd-band" aria-hidden="true"></span></div>
+    <div class="cvd-row" data-row="correctedSeen"><span class="cvd-name" data-i18n="cvd.rowCorrectedSeen"></span><span class="cvd-band" aria-hidden="true"></span></div>
+  </div>
+  <div class="item"><label class="check"><span data-i18n="cvd.media"></span><input class="toggle" role="switch" type="checkbox" data-setting="theme.cvdMedia" aria-describedby="cvdMediaHint"></label><p id="cvdMediaHint" class="select-hint" data-i18n="cvd.mediaHint"></p></div>
+  <div class="item"><label class="check"><span data-i18n="cvd.linkUnderline"></span><input id="linkUnderline" class="toggle" role="switch" type="checkbox"></label></div>
+</section>
+
+<section class="card not-eink" data-section>
+  <h2 data-i18n="opt.colors"></h2>
+  <p class="hint" data-i18n="opt.paletteHint"></p>
+  <div class="item block"><span id="paletteDarkLabel" class="palette-label" data-i18n="opt.paletteDark"></span><div id="paletteDark" class="palettes" role="radiogroup" aria-labelledby="paletteDarkLabel"></div></div>
+  <div class="item block"><span id="paletteLightLabel" class="palette-label" data-i18n="opt.paletteLight"></span><div id="paletteLight" class="palettes" role="radiogroup" aria-labelledby="paletteLightLabel"></div></div>
+  <div class="item"><label for="darkBackground" data-i18n="opt.darkBackground"></label><input id="darkBackground" type="color" data-setting="theme.darkBackground"></div>
+  <div class="item"><label for="darkText" data-i18n="opt.darkText"></label><input id="darkText" type="color" data-setting="theme.darkText"></div>
+  <div class="item"><label for="lightBackground" data-i18n="opt.lightBackground"></label><input id="lightBackground" type="color" data-setting="theme.lightBackground"></div>
+  <div class="item"><label for="lightText" data-i18n="opt.lightText"></label><input id="lightText" type="color" data-setting="theme.lightText"></div>
+  <div class="item"><label for="scrollbar" data-i18n="opt.scrollbar"></label>
+    <span class="pair"><input id="scrollbar" type="color" data-setting="theme.scrollbar" data-auto="scrollbar-auto"><label class="check check-inline"><input id="scrollbar-auto" type="checkbox"><span data-i18n="opt.auto"></span></label></span></div>
+  <div class="item"><label for="selection" data-i18n="opt.selection"></label>
+    <span class="pair"><input id="selection" type="color" data-setting="theme.selection" data-auto="selection-auto"><label class="check check-inline"><input id="selection-auto" type="checkbox"><span data-i18n="opt.auto"></span></label></span></div>
+  <div class="item"><label class="check"><span data-i18n="opt.systemControls"></span><input class="toggle" role="switch" type="checkbox" data-setting="theme.systemControls"></label></div>
+  <div class="item"><label class="check"><span data-i18n="opt.fade"></span><input class="toggle" role="switch" type="checkbox" data-setting="theme.fade"></label></div>
+</section>
+
+<section class="card not-eink" data-section>
+  <h2 data-i18n="opt.font"></h2>
+  <div class="item"><label class="check"><span data-i18n="opt.fontEnabled"></span><input class="toggle" role="switch" type="checkbox" data-setting="theme.fontEnabled"></label></div>
+  <div class="item"><label for="fontFamily" data-i18n="opt.fontFamily"></label><input id="fontFamily" type="text" maxlength="100" dir="auto" data-setting="theme.fontFamily" aria-describedby="fontFamilyHint"><p id="fontFamilyHint" class="select-hint" data-i18n="opt.fontOff"></p></div>
+  <div class="item range"><label for="textStroke" data-i18n="opt.textStroke"></label><output for="textStroke"></output><input id="textStroke" type="range" data-setting="theme.textStroke"></div>
+</section>
+
+<section class="card" data-section>
+  <h2 data-i18n="opt.presets"></h2>
+  <div class="item"><label for="preset-name" data-i18n="opt.presetName"></label>
+    <span class="pair"><input id="preset-name" type="text" maxlength="60" dir="auto"><button id="preset-save" class="btn btn-primary" type="button" data-i18n="opt.presetSave"></button></span></div>
+  <ul id="preset-list" class="cards"></ul>
+  <p id="preset-none" class="hint" data-empty data-i18n="popup.presetsNone"></p>
+</section>
+</div>
+
+<div id="panel-sites" class="panel" role="tabpanel" aria-labelledby="tab-sites" hidden>
+<section class="card" data-section>
+  <h2 data-i18n="opt.sites"></h2>
+  <div class="item"><label for="site-pattern" data-i18n="opt.sitePattern"></label>
+    <span class="pair"><input id="site-pattern" type="text" maxlength="300" dir="ltr"><button id="site-add" class="btn btn-primary" type="button" data-i18n="opt.siteAdd"></button></span></div>
+  <ul id="site-list" class="cards"></ul>
+  <button id="site-more" class="btn btn-sm site-more" type="button" hidden></button>
+  <p id="site-none" class="hint" data-empty data-i18n="opt.siteNone"></p>
+</section>
+</div>
+
+<div id="panel-schedule" class="panel" role="tabpanel" aria-labelledby="tab-schedule" hidden>
+<section class="card" data-section>
+  <h2 data-i18n="opt.automation"></h2>
+  <div class="item"><label for="autoMode" data-i18n="opt.autoMode"></label>
+    <select id="autoMode" data-setting="automation.mode">
+      <option value="none" data-i18n="opt.autoNone"></option>
+      <option value="time" data-i18n="opt.autoTime"></option>
+      <option value="system" data-i18n="opt.autoSystem"></option>
+      <option value="location" data-i18n="opt.autoLocation"></option>
+    </select></div>
+  <div class="item"><label for="autoBehavior" data-i18n="opt.autoBehavior"></label>
+    <select id="autoBehavior" data-setting="automation.behavior">
+      <option value="onOff" data-i18n="opt.behOnOff"></option>
+      <option value="scheme" data-i18n="opt.behScheme"></option>
+    </select></div>
+  <div class="item" data-behavior="scheme"><label for="autoActive" data-i18n="opt.autoActive"></label>
+    <select id="autoActive" data-setting="automation.activeMode">
+      <option value="dark" data-i18n="mode.dark"></option>
+      <option value="light" data-i18n="mode.light"></option>
+      <option value="eink" data-i18n="mode.eink"></option>
+      <option value="original" data-i18n="mode.original"></option>
+    </select></div>
+  <div class="item" data-behavior="scheme"><label for="autoIdle" data-i18n="opt.autoIdle"></label>
+    <select id="autoIdle" data-setting="automation.idleMode">
+      <option value="dark" data-i18n="mode.dark"></option>
+      <option value="light" data-i18n="mode.light"></option>
+      <option value="eink" data-i18n="mode.eink"></option>
+      <option value="original" data-i18n="mode.original"></option>
+    </select></div>
+  <div class="item" data-for="time"><label for="timeFrom" data-i18n="opt.timeFrom"></label><input id="timeFrom" type="time" dir="ltr" data-setting="automation.time.from"></div>
+  <div class="item" data-for="time"><label for="timeTo" data-i18n="opt.timeTo"></label><input id="timeTo" type="time" dir="ltr" data-setting="automation.time.to"></div>
+  <div class="item" data-for="location"><label for="lat" data-i18n="opt.lat"></label><input id="lat" type="number" min="-90" max="90" step="any" dir="ltr" data-setting="automation.location.lat"></div>
+  <div class="item" data-for="location"><label for="lon" data-i18n="opt.lon"></label><input id="lon" type="number" min="-180" max="180" step="any" dir="ltr" data-setting="automation.location.lon"></div>
+  <div id="alarm-box" class="item block" role="group" aria-labelledby="alarm-text" hidden>
+    <p id="alarm-text" class="hint" data-i18n="opt.schedPermText"></p>
+    <p id="alarm-status" class="hint" role="status"></p>
+    <div class="actions">
+      <button id="alarm-allow" class="btn" type="button" data-i18n="opt.schedPermAllow" hidden></button>
+      <button id="alarm-remove" class="btn" type="button" data-i18n="opt.schedPermRemove" hidden></button>
+    </div>
+  </div>
+</section>
+</div>
+
+<div id="panel-advanced" class="panel" role="tabpanel" aria-labelledby="tab-advanced" hidden>
+<section class="card" data-section>
+  <h2 data-i18n="opt.cssTitle"></h2>
+  <div class="item block"><label for="css" data-i18n="opt.css"></label>
+    <textarea id="css" rows="8" spellcheck="false" dir="ltr" data-setting="theme.css" aria-describedby="css-error"></textarea>
+    <p class="hint" data-i18n="opt.cssWarn"></p>
+    <p id="css-held" class="hint held" hidden data-i18n="opt.cssHeld"></p>
+    <p id="css-error" class="error" role="alert" hidden data-i18n="opt.cssError"></p></div>
+</section>
+<section class="card" data-section>
+  <h2 data-i18n="opt.fixesTitle"></h2>
+  <p class="hint" data-i18n="opt.fixesText"></p>
+  <div class="item"><a id="fixes-open" class="btn" href="../fixes/fixes.html" target="_blank" rel="noopener" data-i18n="opt.fixesOpen"></a></div>
+</section>
+</div>
+
+<div id="panel-data" class="panel" role="tabpanel" aria-labelledby="tab-data" hidden>
+<section class="card" data-section>
+  <h2 data-i18n="opt.data"></h2>
+  <div class="item"><button id="export" class="btn" type="button" data-i18n="opt.export"></button></div>
+  <div class="item"><label for="import" data-i18n="opt.import"></label>
+    <span class="pair file-pick"><input id="import" class="file-input" type="file" accept="application/json,.json"><label class="btn" for="import" data-i18n="opt.importChoose"></label><span id="import-name" class="hint" data-i18n="opt.importNone"></span></span></div>
+  <div id="import-box" class="box" hidden>
+    <p id="import-summary"></p>
+    <button id="import-apply" class="btn btn-primary" type="button" data-i18n="opt.importApply"></button>
+  </div>
+</section>
+<section class="card" data-section>
+  <h2 data-i18n="opt.syncTitle"></h2>
+  <div class="item"><label class="check"><span data-i18n="opt.sync"></span><input class="toggle" role="switch" type="checkbox" data-setting="syncEnabled"></label></div>
+  <div class="item"><label class="check"><span data-i18n="opt.syncSites"></span><input class="toggle" role="switch" type="checkbox" data-setting="syncIncludeSites"></label></div>
+</section>
+<section class="card" data-section>
+  <h2 data-i18n="opt.resetTitle"></h2>
+  <div class="item"><button id="reset" class="btn btn-danger" type="button" data-i18n="opt.reset"></button></div>
+</section>
+</div>
+
+<div id="panel-about" class="panel" role="tabpanel" aria-labelledby="tab-about" hidden>
+<section class="card" data-section>
+  <h2 data-i18n="opt.about"></h2>
+  <div id="about-mount"></div>
+</section>
+</div>
+
+<div id="footerMount" class="footer-mount"></div>
+</main>
+</div>
+<script type="module" src="options.js"></script>
+</body>
+</html>

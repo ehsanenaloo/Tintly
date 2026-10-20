@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Bulk inserts</title>
+<style>body{background:#fff;color:#111;margin:0;font:12px system-ui}.row{padding:1px}</style></head>
+<body>
+<div id="list"></div>
+<script>
+// Four inserts of 25 000 elements each, as a single-page app does when it renders a big table. Each element has a style attribute.
+function markup(n) {
+  let html = '';
+  for (let r = 0; r < n / 25; r++) {
+    html += '<div class="row" style="color:#334455">';
+    for (let i = 0; i < 24; i++) html += `<span style="background:#eef${i % 10}ff;color:#223344">${i}</span>`;
+    html += '</div>';
+  }
+  return html;
+}
+window.run = async () => {
+  const list = document.getElementById('list');
+  let worst = 0;
+  let last = performance.now();
+  let stop = false;
+  const channel = new MessageChannel();
+  channel.port1.onmessage = () => {
+    const now = performance.now();
+    worst = Math.max(worst, now - last);
+    last = now;
+    if (!stop) channel.port2.postMessage(0);
+  };
+  channel.port2.postMessage(0);
+  for (let i = 0; i < 4; i++) {
+    await new Promise((r) => setTimeout(r, 120));
+    list.innerHTML = markup(25000);
+  }
+  await new Promise((r) => setTimeout(r, 600));
+  stop = true;
+  return worst;
+};
+window.__done = true;
+</script>
+</body></html>

@@ -1,0 +1,883 @@
+/* Settings page and fix editor. Shared tokens and components are in shared/ui.css. */
+
+.topbar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr minmax(180px, 360px) 1fr;
+  align-items: center;
+  gap: var(--s-4);
+  block-size: 64px;
+  padding-inline: var(--s-6);
+  border-block-end: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px) saturate(1.2);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-inline-size: 0;
+}
+
+.mark {
+  flex: none;
+  border-radius: var(--r-ctl);
+  box-shadow: 0 0 0 1px var(--line), var(--shadow-1);
+}
+
+.brand h1 {
+  font-size: var(--fs-lg);
+  overflow-wrap: anywhere;
+}
+
+.search-box {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 13px;
+  display: grid;
+  color: var(--ink-3);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+[dir="rtl"] .search-icon {
+  transform: translateY(-50%) scaleX(-1);
+}
+
+.search-box input {
+  inline-size: 100%;
+  border-radius: var(--r-pill);
+  padding-inline: 38px var(--s-4);
+  background-color: var(--surface);
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
+
+/* The status message floats over the page, so it never changes the size of the top bar. */
+#message {
+  position: fixed;
+  inset-block-end: var(--s-6);
+  inset-inline-end: var(--s-6);
+  z-index: 40;
+  max-inline-size: min(420px, calc(100% - var(--s-6) * 2));
+  padding-block: var(--s-2);
+  padding-inline: var(--s-4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-ctl);
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+  color: var(--ink);
+  font-size: var(--fs-sm);
+}
+
+#message[data-action] {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+#message[data-action] .say-action {
+  flex: none;
+}
+
+#message[data-kind="error"] {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+#message:empty {
+  display: none;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 216px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s-8);
+  max-inline-size: 1040px;
+  margin-inline: auto;
+  padding: var(--s-6);
+}
+
+.side {
+  position: sticky;
+  inset-block-start: 88px;
+}
+
+.tabs {
+  display: grid;
+  gap: 2px;
+}
+
+.tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-block-size: 40px;
+  padding-inline: var(--s-3);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-weight: 550;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.tab .icon {
+  color: var(--ink-3);
+}
+
+.tab:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.tab[aria-selected="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.tab[aria-selected="true"]::before {
+  content: "";
+  position: absolute;
+  inset-block: 9px;
+  inset-inline-start: 0;
+  inline-size: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent);
+}
+
+[dir="rtl"] .tab[aria-selected="true"]::before {
+  border-radius: 3px 0 0 3px;
+}
+
+.tab:active {
+  transform: scale(0.98);
+}
+
+.tab[aria-selected="true"] .icon {
+  color: var(--accent-strong);
+}
+
+.content {
+  display: grid;
+  gap: var(--s-4);
+  min-inline-size: 0;
+}
+
+.panel {
+  display: grid;
+  gap: var(--s-4);
+  outline: none;
+}
+
+.card h2 {
+  margin-block-end: var(--s-1);
+  font-size: var(--fs-md);
+  letter-spacing: 0.005em;
+}
+
+.panel > .card {
+  padding: var(--s-4) var(--s-5);
+}
+
+.card > .hint {
+  margin-block-end: var(--s-2);
+}
+
+.empty {
+  text-align: center;
+  color: var(--ink-3);
+}
+
+/* settings rows */
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-4);
+  min-block-size: 52px;
+  padding-block: 10px;
+  border-block-start: 1px solid var(--line);
+}
+
+.card > h2 + .item,
+.card > h2 + .hint + .item {
+  border-block-start: 0;
+}
+
+.item > label:first-child:not(.check) {
+  flex: 1 1 220px;
+  color: var(--ink);
+}
+
+.item input[type="text"],
+.item input[type="number"],
+.item input[type="time"] {
+  flex: 0 1 280px;
+  inline-size: 280px;
+  max-inline-size: 100%;
+}
+
+/* A select is as wide as its longest option, so a chosen value is never cut. */
+.item select {
+  flex: 0 1 auto;
+  inline-size: auto;
+  min-inline-size: min(280px, 100%);
+  max-inline-size: 100%;
+}
+
+.item.range {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--s-1) var(--s-4);
+}
+
+.item.range input {
+  grid-column: 1 / -1;
+}
+
+.item.block {
+  display: block;
+}
+
+.item.block textarea {
+  display: block;
+  inline-size: 100%;
+  margin-block-start: var(--s-2);
+}
+
+.check {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  cursor: pointer;
+}
+
+.check.check-inline {
+  flex: none;
+  justify-content: flex-start;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+}
+
+.check .toggle {
+  order: 2;
+}
+
+.pair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.pair input[type="text"] {
+  flex: 1 1 180px;
+}
+
+.plain li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-1) var(--s-2);
+}
+
+.plain {
+  display: grid;
+  gap: var(--s-2);
+  margin-block-end: var(--s-2);
+  padding: 0;
+  list-style: none;
+  color: var(--ink-2);
+}
+
+.cards {
+  display: grid;
+  gap: var(--s-3);
+  padding: 0;
+  list-style: none;
+}
+
+.cards:not(:empty) {
+  margin-block-start: var(--s-2);
+}
+
+.cards li {
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.cards .head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  margin-block-end: var(--s-3);
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+/* A site row is closed by default: the name and one line of what the rule sets. */
+.cards .site-row .head {
+  flex-wrap: nowrap;
+  margin-block-end: 0;
+}
+
+.cards .site-row[data-open] .head {
+  margin-block-end: var(--s-3);
+}
+
+.site-toggle {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-inline-size: 0;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.site-toggle::before {
+  content: none;
+}
+
+.site-name {
+  font-weight: 650;
+}
+
+.site-name::after {
+  content: "";
+  display: inline-block;
+  inline-size: 10px;
+  block-size: 10px;
+  margin-inline-start: 8px;
+  background: var(--chev) center / 10px 10px no-repeat;
+  vertical-align: middle;
+  transition: rotate var(--dur-fast) var(--ease);
+}
+
+.site-row[data-open] .site-name::after {
+  rotate: 180deg;
+}
+
+.site-summary {
+  max-inline-size: 100%;
+  overflow: hidden;
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+.site-more {
+  margin-block-start: var(--s-3);
+}
+
+.cards .fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s-3);
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+
+.cards .fields-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  align-items: end;
+}
+
+.cards .field select,
+.cards .field input[type="number"] {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.cards .fields input[type="text"] {
+  inline-size: 220px;
+  max-inline-size: 100%;
+}
+
+.cards textarea {
+  display: block;
+  inline-size: 100%;
+  margin-block-start: var(--s-3);
+}
+
+.hold {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.hold .hint {
+  color: var(--ink-2);
+}
+
+.hold .head {
+  margin-block-end: 0;
+}
+
+.hold .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.hold pre {
+  margin-block: var(--s-3) 0;
+  padding: var(--s-3);
+  max-block-size: 240px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: 12px/1.5 ui-monospace, Consolas, monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-align: start;
+}
+
+.hold .hint + .hint {
+  margin-block-start: var(--s-2);
+}
+
+#alarm-box .hint + .hint {
+  margin-block-start: var(--s-2);
+}
+
+.box {
+  display: grid;
+  gap: var(--s-3);
+  justify-items: start;
+  margin-block: var(--s-2);
+  padding: var(--s-4);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+}
+
+.box p {
+  color: var(--ink);
+}
+
+/* Same edges as the content cards. The About tab shows the same links itself. */
+.footer-mount {
+  inline-size: 100%;
+  margin-block: var(--s-2) var(--s-6);
+}
+
+body[data-tab="about"]:not([data-searching]) .footer-mount {
+  display: none;
+}
+
+/* fix editor */
+.page {
+  max-inline-size: 860px;
+  margin-inline: auto;
+  padding: var(--s-6);
+}
+
+.page .panel {
+  margin-block-end: var(--s-4);
+}
+
+.page .card h3 {
+  margin-block: var(--s-4) var(--s-1);
+  font-size: var(--fs-base);
+  color: var(--ink-2);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--s-3) var(--s-6);
+}
+
+.grid2 .item {
+  align-content: start;
+  border-block-start: 0;
+  min-block-size: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  padding-block-start: var(--s-3);
+}
+
+.head-link {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 32px;
+  font-weight: 550;
+  text-decoration: none;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    position: static;
+    grid-template-columns: 1fr auto;
+    block-size: auto;
+    padding-block: var(--s-3);
+    padding-inline: var(--s-4);
+  }
+
+  .brand h1 {
+    font-size: var(--fs-md);
+    line-height: 1.2;
+  }
+
+  .top-actions {
+    gap: var(--s-1);
+  }
+
+  #message {
+    inset-block-end: var(--s-4);
+    inset-inline-end: var(--s-4);
+    max-inline-size: calc(100% - var(--s-4) * 2);
+  }
+
+  .search-box {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-4);
+    padding: var(--s-4);
+  }
+
+  .side {
+    inset-block-start: 0;
+    z-index: 10;
+    margin-inline: calc(var(--s-4) * -1);
+    padding-inline: var(--s-4);
+    padding-block: var(--s-2);
+    background: var(--bg);
+    border-block-end: 1px solid var(--line);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabs {
+    display: flex;
+    gap: var(--s-1);
+    inline-size: max-content;
+  }
+
+  .tab {
+    min-block-size: 36px;
+    padding-inline: var(--s-3);
+    border-radius: var(--r-pill);
+    white-space: nowrap;
+  }
+
+  .tab[aria-selected="true"]::before {
+    display: none;
+  }
+
+  .item select,
+  .item input[type="text"],
+  .item input[type="number"],
+  .item input[type="time"] {
+    flex: 1 1 100%;
+    inline-size: 100%;
+  }
+
+  .page {
+    padding: var(--s-4);
+  }
+}
+
+.topbar-simple {
+  grid-template-columns: 1fr auto;
+}
+
+/* E-ink and Paper: the controls of the other modes are hidden while it is chosen, and the other way round. */
+body[data-theme-mode="eink"] .not-eink,
+body[data-theme-mode="original"] .not-eink,
+body:not([data-theme-mode="eink"]) .only-eink {
+  display: none;
+}
+
+.cvd-preview {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.cvd-preview[hidden],
+.cvd-row[hidden] {
+  display: none;
+}
+
+.cvd-row {
+  display: grid;
+  grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-1) var(--s-4);
+}
+
+.cvd-name {
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+}
+
+.cvd-band {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  block-size: 28px;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+}
+
+@media (max-width: 560px) {
+  .cvd-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.swatches {
+  display: inline-flex;
+  gap: var(--s-2);
+}
+
+.swatch {
+  inline-size: 28px;
+  block-size: 28px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--swatch, transparent);
+  cursor: pointer;
+}
+
+.swatch:hover {
+  border-color: var(--accent);
+}
+
+.swatch[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+details.more {
+  display: grid;
+  border-block-start: 1px solid var(--line);
+}
+
+details.more > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-block-size: 44px;
+  padding-block: 10px;
+  color: var(--ink);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+details.more > summary::before {
+  content: "";
+  flex: none;
+  inline-size: 8px;
+  block-size: 8px;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: rotate(-45deg);
+}
+
+[dir="rtl"] details.more > summary::before {
+  transform: rotate(135deg);
+}
+
+details.more[open] > summary::before {
+  transform: translateY(-2px) rotate(45deg);
+}
+
+details.more[open] > summary {
+  color: var(--accent-strong);
+}
+
+/* Palette pickers */
+.palette-label {
+  display: block;
+  margin-block-end: var(--s-2);
+  font-weight: 600;
+}
+
+.palettes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.palette {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-block-size: 44px;
+  padding-block: 4px;
+  padding-inline: 6px var(--s-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.palette:hover {
+  border-color: var(--accent);
+}
+
+.palette[aria-checked="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+  font-weight: 600;
+}
+
+.palette:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.palette-swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 36px;
+  block-size: 32px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--pal-bg, transparent);
+  color: var(--pal-fg, inherit);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (forced-colors: active) {
+  .tab[aria-selected="true"] {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .tab[aria-selected="true"] .icon {
+    color: HighlightText;
+  }
+
+  .tab[aria-selected="true"]::before {
+    display: none;
+  }
+
+  .palette[aria-checked="true"] {
+    outline: 3px solid Highlight;
+    outline-offset: 1px;
+  }
+
+  .palette-swatch,
+  .swatch {
+    forced-color-adjust: none;
+    border-color: ButtonText;
+  }
+
+  .swatch[aria-pressed="true"] {
+    outline: 3px solid Highlight;
+    outline-offset: 1px;
+  }
+
+  #message {
+    border-color: CanvasText;
+  }
+
+  details.more > summary::before {
+    color: ButtonText;
+  }
+}
+
+/* The browser draws the text of a file field in its own language, so the field is hidden and a button of ours opens it. */
+.file-pick {
+  position: relative;
+}
+
+.file-input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.file-input:focus-visible + .btn {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#import-name {
+  overflow-wrap: anywhere;
+}
+
+.cards .site-css-label {
+  display: block;
+  margin-block-start: var(--s-3);
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+
+.cards .site-css-label + textarea {
+  margin-block-start: var(--s-1);
+}
+
+.shortcut-none {
+  color: var(--ink-3);
+  font-size: var(--fs-xs);
+}
+
+.cards .fields input[type="text"] {
+  text-overflow: ellipsis;
+}

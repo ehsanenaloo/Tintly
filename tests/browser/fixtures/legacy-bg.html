@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Legacy background attribute</title>
+<style>td{padding:12px;font:16px system-ui}</style></head>
+<body bgcolor="#ffffff" text="#111111" background="/gen/img/legacy-light.png" style="margin:0;min-height:600px">
+<p id="intro">Page on a light tile</p>
+<table id="t-light" width="300" bgcolor="#ffffff" background="/gen/img/legacy-light.png"><tr><td>Cell on a light tile</td></tr></table>
+<table id="t-dark" width="300" bgcolor="#202830" background="/gen/img/legacy-dark.png"><tr><td id="c-dark" style="color:#eeeeee">Cell on a dark tile</td></tr></table>
+<table id="t-photo" width="300" background="/gen/img/legacy-photo.png"><tr><td id="c-photo">Cell on a photo</td></tr></table>
+<div id="host"></div>
+<div id="later"></div>
+<script>
+  const root = document.getElementById('host').attachShadow({ mode: 'closed' });
+  root.innerHTML = '<table id="t-shadow" width="300" bgcolor="#ffffff" background="/gen/img/legacy-light.png"><tr><td>Cell in a shadow root</td></tr></table>';
+  window.__root = root;
+  window.addLater = () => {
+    document.getElementById('later').innerHTML = '<table id="t-late" width="300" bgcolor="#ffffff" background="/gen/img/legacy-light.png"><tr><td>Added later</td></tr></table>';
+  };
+</script></body></html>

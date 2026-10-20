@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orders</title>
+<style>
+body { margin: 0; background: #f3f4f6; color: #111827; font: 15px/1.5 system-ui, sans-serif; }
+.top { background: #111827; color: #f9fafb; display: flex; align-items: center; gap: 24px; padding: 14px 24px; }
+.top b { font-size: 18px; color: #fff; }
+.top a { color: #d1d5db; text-decoration: none; }
+.top a.on { color: #fff; border-bottom: 2px solid #60a5fa; }
+main { max-width: 980px; margin: 24px auto; padding: 0 24px; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px; box-shadow: 0 4px 14px rgba(0,0,0,.12); }
+.card h2 { font-size: 14px; margin: 0 0 8px; color: #6b7280; font-weight: 600; }
+.big { font-size: 28px; font-weight: 700; }
+.up { color: #15803d; }
+.down { color: #b91c1c; }
+.row { display: flex; gap: 12px; margin: 20px 0; flex-wrap: wrap; }
+.btn { border: 0; border-radius: 8px; padding: 10px 16px; font: 600 15px system-ui; color: #fff; }
+.blue { background: #2563eb; }
+.red { background: #dc2626; }
+.green { background: #16a34a; }
+.ghost { background: #fff; color: #1f2937; border: 1px solid #9ca3af; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+.b1 { background: #dbeafe; color: #1e40af; }
+.b2 { background: #fee2e2; color: #991b1b; }
+.b3 { background: #dcfce7; color: #166534; }
+table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; }
+th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid #e5e7eb; }
+th { background: #f9fafb; color: #4b5563; font-size: 13px; }
+tr:nth-child(even) td { background: #fafafa; }
+input, select { border: 1px solid #9ca3af; border-radius: 8px; padding: 9px 12px; font: 15px system-ui; background: #fff; color: #111827; }
+a { color: #1d4ed8; }
+.hero { margin: 24px 0; border-radius: 12px; padding: 36px; color: #fff; background: linear-gradient(135deg, #1e3a8a, #7c3aed); }
+.hero h1 { margin: 0 0 6px; font-size: 28px; }
+svg.icon { width: 20px; height: 20px; vertical-align: middle; fill: #2563eb; }
+</style>
+</head>
+<body>
+<div class="top"><b>Shopkeep</b><a class="on" href="#">Orders</a><a href="#">Products</a><a href="#">Customers</a></div>
+<main>
+  <div class="hero"><h1>Welcome back, Sam</h1><div>You have 4 orders to ship today.</div></div>
+  <div class="grid">
+    <div class="card"><h2>Revenue</h2><div class="big">$12,480</div><div class="up">+8.2% this week</div></div>
+    <div class="card"><h2>Refunds</h2><div class="big">$320</div><div class="down">+2.1% this week</div></div>
+    <div class="card"><h2>Visitors <svg class="icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"/></svg></h2><div class="big">3,904</div><div>Stable</div></div>
+  </div>
+  <div class="row"><button class="btn blue">Ship orders</button><button class="btn red">Cancel</button><button class="btn green">Approve</button><button class="btn ghost">Export</button><input type="text" placeholder="Search orders"><select><option>All</option><option>Open</option></select></div>
+  <table>
+    <tr><th>Order</th><th>Customer</th><th>Status</th><th>Total</th></tr>
+    <tr><td><a href="#">#1042</a></td><td>Lena Park</td><td><span class="badge b3">Paid</span></td><td>$84.00</td></tr>
+    <tr><td><a href="#">#1043</a></td><td>Omar Haddad</td><td><span class="badge b1">Packed</span></td><td>$129.50</td></tr>
+    <tr><td><a href="#">#1044</a></td><td>Jo Iverson</td><td><span class="badge b2">Late</span></td><td>$42.25</td></tr>
+  </table>
+</main>
+</body>
+</html>

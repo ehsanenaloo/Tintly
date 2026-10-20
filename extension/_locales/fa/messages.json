@@ -1,0 +1,20 @@
+{
+  "extName": {
+    "message": "Tintly - تاریک، روشن، کاغذ، E-ink و دید رنگ"
+  },
+  "extDescription": {
+    "message": "حالت‌های تاریک، روشن، کاغذ و E-ink و فیلترهای دید رنگ برای همه سایت‌ها. سریع و خصوصی، بدون جمع‌آوری اطلاعات."
+  },
+  "cmdToggleExtension": {
+    "message": "روشن یا خاموش کردن Tintly"
+  },
+  "cmdToggleSite": {
+    "message": "روشن یا خاموش کردن Tintly برای این سایت"
+  },
+  "cmdSwitchEngine": {
+    "message": "تغییر موتور تم"
+  },
+  "menuToggleSite": {
+    "message": "روشن یا خاموش کردن Tintly برای این سایت"
+  }
+}

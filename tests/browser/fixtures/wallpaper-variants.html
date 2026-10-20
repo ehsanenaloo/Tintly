@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Dark wallpapers, other ways to paint them</title>
+<style>
+body { margin: 0; background: #fff; color: #1a1a1a; font: 16px system-ui; }
+.wall { position: relative; height: 90px; padding: 8px; overflow: hidden; }
+.bubble { position: relative; display: inline-block; padding: 6px 10px; background: #d9fdd3; color: #111; border-radius: 8px; }
+#v-size { background: #0b141a url(/gen/img/wall-dark.png) 0 0 / 128px auto repeat; }
+#v-cover { background: #0b141a url(/gen/img/wall-big.png) center / cover no-repeat; }
+#v-contain { background: #0b141a url(/gen/img/wall-big.png) center / contain no-repeat; }
+#v-full { background: url(/gen/img/wall-big.png) 0 0 / 100% 100%; }
+#v-repeatx { background: #0b141a url(/gen/img/wall-dark.png) repeat-x; }
+#v-round { background: #0b141a url(/gen/img/wall-dark.png) round; }
+#v-fixed { background: #0b141a url(/gen/img/wall-dark.png) fixed; }
+#v-fade { background: linear-gradient(rgba(11, 20, 26, 0), rgba(11, 20, 26, 0)), url(/gen/img/wall-dark.png) #0b141a; }
+#v-before::before { content: ""; position: absolute; inset: 0; background: url(/gen/img/wall-dark.png); }
+#v-before { background: #0b141a; }
+#v-lines { background: #0b141a; }
+#v-lines::after { content: ""; position: absolute; inset: 0; background: url(/gen/img/wall-lines.png); opacity: .5; }
+#v-svgsize { background: #0b141a url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 64 64'><rect width='64' height='64' fill='%230b141a'/><circle cx='20' cy='20' r='9' fill='none' stroke='%23e9edef' stroke-width='1.5'/><path d='M46 38v18M37 47h18' stroke='%23e9edef' stroke-width='1.5'/></svg>") 0 0 / 50% auto; }
+#v-svgfree { background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><defs><pattern id='p' width='64' height='64' patternUnits='userSpaceOnUse'><rect width='64' height='64' fill='%230b141a'/><circle cx='20' cy='20' r='9' fill='none' stroke='%23e9edef' stroke-width='1.5'/><path d='M46 38v18M37 47h18' stroke='%23e9edef' stroke-width='1.5'/></pattern></defs><rect width='800%' height='800%' fill='url(%23p)'/></svg>") 0 0 / 100%; }
+#v-canvas-wrap { position: relative; height: 90px; }
+#v-canvas, #v-late { position: absolute; inset: 0; width: 100%; height: 100%; }
+#v-late-wrap { position: relative; height: 90px; }
+#v-patt { display: block; width: 100%; height: 90px; }
+#v-opacity { background: #0b141a; }
+#v-opacity > i { position: absolute; inset: 0; background: url(/gen/img/wall-lines.png); opacity: .25; }
+</style></head>
+<body>
+<div class="wall" id="v-size"><span class="bubble">Sized tile</span></div>
+<div class="wall" id="v-cover"><span class="bubble">Cover</span></div>
+<div class="wall" id="v-contain"><span class="bubble">Contain</span></div>
+<div class="wall" id="v-full"><span class="bubble">Full size</span></div>
+<div class="wall" id="v-repeatx"><span class="bubble">Repeat x</span></div>
+<div class="wall" id="v-round"><span class="bubble">Round</span></div>
+<div class="wall" id="v-fixed"><span class="bubble">Fixed</span></div>
+<div class="wall" id="v-fade"><span class="bubble">Clear fade layer</span></div>
+<div class="wall" id="v-before"><span class="bubble">Pseudo tile</span></div>
+<div class="wall" id="v-lines"><span class="bubble">Pseudo lines</span></div>
+<div class="wall" id="v-svgsize"><span class="bubble">Vector with a size</span></div>
+<div class="wall" id="v-svgfree"><span class="bubble">Vector without a size</span></div>
+<div class="wall" id="v-opacity"><i></i><span class="bubble">Faint lines on a color</span></div>
+<div id="v-canvas-wrap"><canvas id="v-canvas" width="400" height="90"></canvas><span class="bubble">Canvas</span></div>
+<div id="v-late-wrap"><canvas id="v-late" width="400" height="90"></canvas><span class="bubble">Canvas drawn late</span></div>
+<svg id="v-patt" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="p" width="64" height="64" patternUnits="userSpaceOnUse"><rect width="64" height="64" fill="#0b141a"/><circle cx="20" cy="20" r="9" fill="none" stroke="#e9edef" stroke-width="1.5"/><path d="M46 38v18M37 47h18" stroke="#e9edef" stroke-width="1.5"/></pattern></defs><rect width="100%" height="100%" fill="url(#p)"/></svg>
+<script>
+function art(id) {
+  const c = document.getElementById(id).getContext('2d');
+  c.fillStyle = '#0b141a'; c.fillRect(0, 0, 400, 90);
+  c.strokeStyle = '#e9edef'; c.lineWidth = 1.5;
+  for (let x = 0; x < 400; x += 64) for (let y = 0; y < 90; y += 64) { c.beginPath(); c.arc(x + 20, y + 20, 9, 0, 7); c.moveTo(x + 46, y + 38); c.lineTo(x + 46, y + 56); c.moveTo(x + 37, y + 47); c.lineTo(x + 55, y + 47); c.stroke(); }
+}
+art('v-canvas');
+setTimeout(() => art('v-late'), 2500);
+</script>
+</body></html>

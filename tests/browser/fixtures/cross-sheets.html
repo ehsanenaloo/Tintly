@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sheets from another origin</title>
+<style>body{margin:8px;background:#fff;color:#222}</style>
+<script>
+  // The two sheets come from the other test server, named in the address after the hash.
+  var base = location.hash.slice(1);
+  ['/css/linked.css', '/css/imported.css'].forEach(function (path) {
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = base + path;
+    document.head.appendChild(link);
+  });
+</script>
+</head>
+<body><p class="linked-note">Linked</p><p class="imported-note">Imported</p></body>
+</html>

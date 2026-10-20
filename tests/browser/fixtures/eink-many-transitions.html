@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Many transitions</title>
+<style>
+  body { font: 14px sans-serif; background: #fff; color: #222; }
+  .t { transition: all .4s; }
+  .card { display: inline-block; margin: 2px; padding: 4px; background: #f4f6fb; color: #123; border: 1px solid #dde; }
+  body.late .card { background: #e8f0ff; color: #234; border-color: #ccd; padding: 5px; }
+  body.late .card a { color: #036; letter-spacing: .2px; }
+  body.late .card span { margin-left: 2px; }
+</style>
+</head>
+<body>
+<main id="list"></main>
+<script>
+  // Every element has `transition: all`, the way a utility class sheet often gives it. A late change of colors (a class on
+  // the body) starts thousands of transitions at once.
+  const list = document.getElementById('list');
+  const html = [];
+  for (let i = 0; i < 1500; i++) html.push(`<div class="card t"><a class="t" href="#">Item ${i}</a> <span class="t">tag</span></div>`);
+  list.innerHTML = html.join('');
+  window.flip = () => document.body.classList.toggle('late');
+</script>
+</body>
+</html>

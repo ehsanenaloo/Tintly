@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shorthands with var()</title>
+<style>
+:root { --c: #cc2222; --w: 4px; --b: 3px dotted #888; --kind: solid red; --bg: #eeeeee; --pic: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='2' height='2' fill='%23336699'/%3E%3C/svg%3E") 0 0 / 8px 8px; }
+body { margin: 8px; background: #fff; color: #222; font: 14px sans-serif; }
+.box { height: 30px; margin: 6px 0; box-sizing: content-box; }
+.c1 { border: 1px solid var(--c); border-top: 0; }
+.c2 { border: 1px solid var(--c); border-width: 5px; }
+.c3 { height: 40px; background: var(--c) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='2' height='2' fill='%23336699'/%3E%3C/svg%3E") no-repeat; background-size: 20px 20px; }
+.c4 { border: 1px solid var(--c); }
+.c4 { border-width: 0; }
+.c5 { border: var(--b); border-width: 6px; }
+.c6 { border: 1px var(--kind); border-top: 0; }
+.c7 { background: var(--bg); background-size: 11px 13px; background-repeat: no-repeat; }
+.c8 { background: var(--pic); background-size: 12px 14px; }
+.c9 { outline: 2px solid var(--c); outline-offset: 3px; margin-left: 12px; }
+.c10 { text-decoration: underline wavy var(--c); text-decoration-thickness: 4px; }
+.c11 { border-bottom: 3px double var(--c); border-bottom-width: 7px; }
+.c12 { border: var(--w) solid var(--c); border-left-width: 1px; }
+.c13 { background: linear-gradient(var(--c), var(--bg)) no-repeat; background-size: 30px 30px; }
+.c14 { border: 2px solid var(--c); }
+.c14b { border-top-width: 9px; }
+.c15 { -webkit-text-stroke: 1px var(--c); -webkit-text-stroke-width: 2px; }
+.c16 { text-emphasis: filled var(--c); text-emphasis-position: under right; }
+.c17 { column-rule: 3px solid var(--c); column-rule-width: 1px; columns: 2; }
+.c18 { border-inline: 2px solid var(--c); border-inline-width: 5px; }
+</style>
+</head>
+<body>
+<div id="c1" class="box c1">c1</div>
+<div id="c2" class="box c2">c2</div>
+<div id="c3" class="box c3">c3</div>
+<div id="c4" class="box c4">c4</div>
+<div id="c5" class="box c5">c5</div>
+<div id="c6" class="box c6">c6</div>
+<div id="c7" class="box c7">c7</div>
+<div id="c8" class="box c8">c8</div>
+<div id="c9" class="box c9">c9</div>
+<div id="c10" class="box c10">c10</div>
+<div id="c11" class="box c11">c11</div>
+<div id="c12" class="box c12">c12</div>
+<div id="c13" class="box c13">c13</div>
+<div id="c14" class="box c14 c14b">c14</div>
+<div id="c15" class="box c15">c15</div>
+<div id="c16" class="box c16">c16</div>
+<div id="c17" class="box c17">c17 c17 c17 c17 c17</div>
+<div id="c18" class="box c18">c18</div>
+</body>
+</html>

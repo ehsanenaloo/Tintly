@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shadow roots made after parsing</title>
+<style>body { background: #fff; color: #222; font: 16px system-ui; }</style>
+</head>
+<body>
+<p class="plain">Plain</p>
+<late-card id="a"></late-card>
+<late-card id="b"></late-card>
+<script>
+  // Markup with custom elements whose definitions arrive later (a deferred bundle): the roots are made well after parsing ends.
+  window.defineCards = () => {
+    customElements.define('late-card', class extends HTMLElement {
+      constructor() {
+        super();
+        const r = this.attachShadow({ mode: 'open' });
+        r.innerHTML = '<style>.t { color: #222; background: #f5f5f5; }</style><p class="t">Late</p>';
+      }
+    });
+  };
+  if (!location.search.includes('manual')) setTimeout(window.defineCards, 300);
+</script>
+</body>
+</html>

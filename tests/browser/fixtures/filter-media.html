@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Filter fixture</title>
+<style>
+  html, body { margin: 0; }
+  body { background: #ffffff; color: #111111; font: 16px system-ui; height: 3000px; position: relative; }
+  .box { position: absolute; width: 60px; height: 40px; }
+  #fixed { position: fixed; top: 0; left: 0; right: 0; height: 40px; background: #f0f0f0; color: #111; padding: 8px; box-sizing: border-box; }
+  #sticky-wrap { position: absolute; top: 60px; left: 0; width: 120px; height: 1500px; }
+  #sticky { position: sticky; top: 60px; height: 30px; background: #e8e8ff; }
+  #ui-gray { left: 200px; top: 120px; background: #cccccc; }
+  #ui-blue { left: 280px; top: 120px; background: #3366cc; }
+  #ui-red { left: 360px; top: 120px; background: #cc3333; }
+  #ui-green { left: 440px; top: 120px; background: #33aa55; }
+  #img-a { left: 200px; top: 200px; }
+  #img-b { left: 280px; top: 200px; }
+  #cv { left: 360px; top: 200px; }
+  #bg-wrap { left: 440px; top: 200px; width: 100px; height: 60px; background-size: cover; }
+  #bg-wrap img { position: absolute; left: 50px; top: 10px; width: 30px; height: 30px; }
+  #frame { position: absolute; left: 200px; top: 300px; width: 300px; height: 100px; border: 0; }
+  #blend { left: 200px; top: 440px; background: #ff8080; mix-blend-mode: multiply; }
+  #under-blend { left: 200px; top: 440px; background: #8080ff; }
+  #backdrop { left: 300px; top: 440px; width: 80px; height: 40px; backdrop-filter: blur(2px); background: rgba(255, 255, 255, 0.4); }
+  #under-backdrop { left: 300px; top: 440px; width: 80px; height: 40px; background: #20a040; }
+  #overlay { position: fixed; left: 600px; top: 100px; width: 200px; height: 120px; background: rgba(255, 255, 255, 0.95); border: 1px solid #999; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
+  #text { position: absolute; left: 600px; top: 300px; font-size: 40px; }
+</style>
+</head>
+<body>
+<div id="fixed">Fixed header</div>
+<div id="sticky-wrap"><div id="sticky">Sticky bar</div></div>
+<div class="box" id="ui-gray"></div>
+<div class="box" id="ui-blue"></div>
+<div class="box" id="ui-red"></div>
+<div class="box" id="ui-green"></div>
+<img class="box" id="img-a" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='40'%3E%3Crect width='60' height='40' fill='%23d04030'/%3E%3C/svg%3E">
+<img class="box" id="img-b" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='40'%3E%3Crect width='60' height='40' fill='%232060c0'/%3E%3C/svg%3E">
+<canvas class="box" id="cv" width="60" height="40"></canvas>
+<div class="box" id="bg-wrap" style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='60'%3E%3Crect width='100' height='60' fill='%23e0b020'/%3E%3C/svg%3E&quot;)"><img alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Crect width='30' height='30' fill='%236a1b9a'/%3E%3C/svg%3E"></div>
+<iframe id="frame" src="/iframe-inner.html"></iframe>
+<div class="box" id="under-blend"></div><div class="box" id="blend"></div>
+<div class="box" id="under-backdrop"></div><div class="box" id="backdrop"></div>
+<div id="overlay"></div>
+<div id="text">Heading text</div>
+<script>
+  const ctx = document.getElementById('cv').getContext('2d');
+  ctx.fillStyle = '#30a050';
+  ctx.fillRect(0, 0, 60, 40);
+</script>
+</body>
+</html>

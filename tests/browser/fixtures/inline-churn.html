@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Inline style churn</title>
+<style>
+  body { margin: 0; background: #fff; }
+  #grid { display: flex; flex-wrap: wrap; width: 1200px; }
+  .box { box-sizing: border-box; width: 100px; height: 40px; margin: 2px; background: #eef; border: 1px solid #99c; }
+</style>
+</head>
+<body>
+<div id="grid"></div>
+<script>
+  // What a player bar, a progress ring or a canvas overlay does: boxes without text get a new inline color on every frame, one of a
+  // few values. No box holds text. 20 boxes change in each frame.
+  const grid = document.getElementById('grid');
+  const boxes = [];
+  for (let i = 0; i < 300; i++) {
+    const d = document.createElement('div');
+    d.className = 'box';
+    grid.append(d);
+    boxes.push(d);
+  }
+  let n = 0;
+  let stopped = false;
+  window.stopChurn = () => { stopped = true; };
+  window.frames = () => n;
+  (function tick() {
+    if (stopped) return;
+    n++;
+    for (let i = 0; i < 20; i++) boxes[i * 7].style.backgroundColor = ['#eef', '#efe', '#fee'][(n + i) % 3];
+    requestAnimationFrame(tick);
+  })();
+</script>
+</body>
+</html>

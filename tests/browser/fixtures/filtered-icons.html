@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Filtered icons</title>
+<style>
+body { margin: 12px; background: #fff; color: #222; font: 16px system-ui; }
+.cell { display: inline-block; vertical-align: top; width: 64px; height: 64px; margin: 6px; position: relative; }
+.cell > img { position: absolute; left: 8px; top: 8px; width: 48px; height: 48px; }
+.panel { background: #202020; }
+#invert { filter: invert(1); }
+#bright { filter: brightness(0); }
+#half { filter: invert(.5); }
+#on-dark { filter: invert(1); }
+#shadow { filter: drop-shadow(0 0 1px #888); }
+</style></head>
+<body>
+<span class="cell"><img id="invert" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='%23fff'/%3E%3C/svg%3E"></span>
+<span class="cell"><img id="bright" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='%23fff'/%3E%3C/svg%3E"></span>
+<span class="cell panel"><img id="on-dark" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='%23000'/%3E%3C/svg%3E"></span>
+<span class="cell"><img id="shadow" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='%23000'/%3E%3C/svg%3E"></span>
+</body></html>

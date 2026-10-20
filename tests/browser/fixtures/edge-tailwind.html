@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opacity utilities</title>
+<style>
+body { margin: 8px; background: #fff; color: #222; }
+.mark { color: #0b57d0; padding: 8px; }
+/* The fallback is the plain current color; a nested block makes it a half-transparent mix where the browser can. */
+.bg-half {
+  background-color: currentcolor;
+  @supports (color: color-mix(in lab, red, red)) {
+    background-color: color-mix(in oklab, currentcolor 50%, transparent);
+  }
+}
+.border-half {
+  border: 4px solid currentcolor;
+  @supports (color: color-mix(in lab, red, red)) {
+    border-color: color-mix(in oklab, currentcolor 50%, transparent);
+  }
+}
+</style>
+</head>
+<body>
+<p id="half" class="mark bg-half">half transparent</p>
+<p id="edge" class="mark border-half">half transparent border</p>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Cascade order of the copies</title>
+<style>
+  body { margin: 20px; font: 16px sans-serif; background: #fff; color: #222; }
+  .a { color: #1a73e8; }
+  .a .ico { fill: currentColor; }
+  .hot:hover .ico { fill: #d00; }
+  @layer comp { .b .ico { fill: currentColor; } }
+  .b { color: #198754; }
+  .plain { color: #222; }
+  /* A text color and a background in one rule. */
+  .warn { color: #212529; background: #ffc107; padding: 4px; }
+</style>
+<style>
+  /* An anonymous layer, then a named one: the named one wins. */
+  @layer { .x { color: #c00; background: #fff; } }
+  @layer named { .x { color: #00c; background: #eee; } .ref { color: #00c; background: #eee; } }
+  /* The same named layer again in a later sheet (below): that sheet wins. */
+  @layer named { .v { background: #fff; } }
+</style>
+<style>
+  @import url("css/anon-layer.css") layer;
+  @layer later { .z { color: #00c; background: #eee; } }
+</style>
+<style>
+  @layer named { .v { background: #eee; } }
+  :root { --c: #ffffff; }
+  .r { background: var(--c); }
+  .k { background: #f00; animation: pulse 100s linear infinite paused; }
+</style>
+<style id="built"></style>
+</head>
+<body>
+<p class="a hot" id="hot"><svg width="24" height="24"><path id="p1" class="ico" fill="#333333" d="M0 0h24v24H0z"/></svg> inline icon</p>
+<p class="b"><svg width="24" height="24"><path id="p2" class="ico" fill="#333333" d="M0 0h24v24H0z"/></svg> layered icon</p>
+<p class="plain"><svg width="24" height="24"><path id="p3" fill="#333333" d="M0 0h24v24H0z"/></svg> plain icon</p>
+<div class="x" id="x">anonymous then named</div>
+<div class="ref" id="ref">named only</div>
+<div class="z" id="z">anonymous import then named</div>
+<div class="v" id="v">same layer, two sheets</div>
+<div class="q" id="q">built by script</div>
+<div class="k" id="k">keyframes with a variable</div>
+<div class="r" id="r">variable</div>
+<div class="warn" id="warn">warning</div>
+<script>
+  // Rules added by script go through the CSSOM path of the engine.
+  const sheet = document.getElementById('built').sheet;
+  sheet.insertRule('@layer named2 { .q { color: #00c; background: #eee; } }', 0);
+  sheet.insertRule('@layer { .q { color: #c00; background: #fff; } }', 0);
+  sheet.insertRule('@keyframes pulse { from { background: var(--c); } to { background: var(--c); } }', 0);
+</script>
+</body></html>

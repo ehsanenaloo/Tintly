@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Faint text</title>
+<style>
+body{margin:0;background:#fff;color:#222;font:18px system-ui}
+.row{margin:8px;padding:8px;background:#ffffff}
+#faintOp{color:#000;opacity:.12}
+#faintAlpha{color:rgba(0,0,0,.1)}
+#faintBoth{color:rgba(0,0,0,.5);opacity:.2}
+#parent{opacity:.15}
+#child{color:#000}
+#fine{color:#222;opacity:.95}
+#anim{color:#000;animation:fade 4s linear infinite alternate}
+@keyframes fade{from{opacity:.1}to{opacity:.2}}
+#hidden{color:#000;opacity:.1}
+</style></head>
+<body>
+<p>Page text</p>
+<div class="row" id="faintOp">Faint through opacity</div>
+<div class="row" id="faintAlpha">Faint through a color with alpha</div>
+<div class="row" id="faintBoth">Faint through both</div>
+<div id="parent"><div class="row"><span id="child">Faint through the opacity of a parent</span></div></div>
+<div class="row" id="fine">Fine text</div>
+<div class="row" id="anim">A fading animation</div>
+<div class="row" id="hidden" aria-hidden="true">Hidden from assistive tools</div>
+</body></html>
