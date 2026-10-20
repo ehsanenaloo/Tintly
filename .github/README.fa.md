@@ -244,7 +244,7 @@ npm run test:perf      # بودجهٔ سرعت و اندازه
 
 ## مجوز
 
-[MIT](../LICENSE). Copyright (c) 2026 Ehsan Enaloo.
+Copyright (c) 2026 Ehsan Enaloo. Released under the [MIT License](../LICENSE).
 
 ## دربارهٔ پروژه
 
