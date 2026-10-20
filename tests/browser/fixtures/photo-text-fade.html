@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Text on a light photo, colors fade</title>
+<style>
+body { margin: 0; background: #fff; color: #111; font: 20px system-ui; }
+.box { position: relative; width: 400px; height: 160px; margin: 8px; overflow: hidden; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='160'><rect width='400' height='160' fill='%23f6e9d3'/><circle cx='300' cy='80' r='60' fill='%23b9d4e8'/></svg>") center/cover; }
+.box h2 { position: absolute; left: 12px; bottom: 12px; margin: 0; color: #111; font-size: 28px; transition: color 3s; }
+.box h2.alt { color: #aa0000; }
+</style></head>
+<body>
+<div class="box" id="b"><h2 id="t">Over a CSS photo</h2></div>
+<button id="go" type="button" onclick="document.getElementById('t').classList.add('alt')">go</button>
+</body></html>

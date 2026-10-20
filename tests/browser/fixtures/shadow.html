@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shadow fixture</title>
+<style>body { background: #fff; color: #222; font: 16px system-ui; }</style>
+</head>
+<body>
+<p class="plain">Plain</p>
+<open-card id="open"></open-card>
+<closed-card id="closed"></closed-card>
+<adopted-card id="adopted"></adopted-card>
+<outer-card id="outer"></outer-card>
+<div id="decl"><template shadowrootmode="open"><style>.d { color: #102a43; background: #f0f4f8; }</style><p class="d">Declarative</p></template></div>
+<p class="docad">Document adopted</p>
+<style id="cij">.cij-base { color: #111; background: #eee; }</style>
+<p class="cij">CSS in JS</p>
+<p class="media-rule">Grouping rule</p>
+<div id="late-host"></div>
+<script>
+class OpenCard extends HTMLElement {
+  constructor() {
+    super();
+    const r = this.attachShadow({ mode: 'open' });
+    r.innerHTML = '<style>.t { color: #222; background: #f5f5f5; }</style><p class="t">Open</p>';
+  }
+}
+class ClosedCard extends HTMLElement {
+  constructor() {
+    super();
+    const r = this.attachShadow({ mode: 'closed' });
+    window.__closed = r;
+    r.innerHTML = '<style>.t { color: #0b3d0b; background: #e8f5e9; }</style><p class="t">Closed</p>';
+  }
+}
+class AdoptedCard extends HTMLElement {
+  constructor() {
+    super();
+    const r = this.attachShadow({ mode: 'open' });
+    const s = new CSSStyleSheet();
+    s.replaceSync('.t { color: #4a148c; background: #f3e5f5; }');
+    r.adoptedStyleSheets = [s];
+    r.innerHTML = '<p class="t">Adopted</p>';
+    window.__adoptedSheet = s;
+  }
+}
+class InnerCard extends HTMLElement {
+  constructor() {
+    super();
+    const r = this.attachShadow({ mode: 'open' });
+    r.innerHTML = '<style>.t { color: #7f0000; background: #fff0f0; }</style><p class="t">Inner</p>';
+  }
+}
+class OuterCard extends HTMLElement {
+  constructor() {
+    super();
+    const r = this.attachShadow({ mode: 'closed' });
+    window.__outer = r;
+    r.innerHTML = '<style>.o { color: #263238; background: #eceff1; }</style><p class="o">Outer</p><inner-card></inner-card>';
+  }
+}
+class LateCard extends HTMLElement {
+  constructor() {
+    super();
+    const r = this.attachShadow({ mode: 'closed' });
+    window.__late = r;
+    r.innerHTML = '<style>.t { color: #3e2723; background: #efebe9; }</style><p class="t">Late</p>';
+  }
+}
+customElements.define('open-card', OpenCard);
+customElements.define('closed-card', ClosedCard);
+customElements.define('adopted-card', AdoptedCard);
+customElements.define('inner-card', InnerCard);
+customElements.define('outer-card', OuterCard);
+customElements.define('late-card', LateCard);
+
+const docSheet = new CSSStyleSheet();
+docSheet.replaceSync('.docad { color: #bf360c; background: #fbe9e7; }');
+document.adoptedStyleSheets = [docSheet];
+
+setTimeout(() => {
+  const sheet = document.getElementById('cij').sheet;
+  sheet.insertRule('.cij { color: #b00020; background: #fdecea; }', sheet.cssRules.length);
+  sheet.insertRule('@media screen { .media-rule { color: #1b5e20; background: #e8f5e9; } }', sheet.cssRules.length);
+  window.__cijSheet = sheet;
+}, 80);
+
+window.replaceAdopted = () => window.__adoptedSheet.replaceSync('.t { color: #004d40; background: #e0f2f1; }');
+window.replaceDocAsync = () => docSheet.replace('.docad { color: #33691e; background: #f1f8e9; }');
+window.dropAdopted = () => { document.getElementById('adopted').shadowRoot.adoptedStyleSheets = []; };
+window.readoptAdopted = () => { document.getElementById('adopted').shadowRoot.adoptedStyleSheets = [window.__adoptedSheet]; };
+window.insertInMedia = () => { const s = window.__cijSheet; s.cssRules[s.cssRules.length - 1].insertRule('.media-rule { border-top-color: #e0e0e0; border-top-style: solid; }', 1); };
+window.addLate = () => document.getElementById('late-host').append(document.createElement('late-card'));
+</script>
+</body>
+</html>

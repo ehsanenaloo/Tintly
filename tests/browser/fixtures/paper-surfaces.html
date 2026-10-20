@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Light surfaces and faint tiles</title>
+<style>
+:root { --band: #e3e6f6; }
+body { margin: 0; background: #fff; color: #1a1a1a; font: 16px system-ui; }
+section { padding: 24px; min-height: 80px; }
+.hex-short { background: #fff url(/gen/img/hex-white.png); }
+.hex-long { background-color: #ffffff; background-image: url(/gen/img/hex-white.png); background-repeat: repeat; }
+.hex-bare { background-image: url(/gen/img/hex-white.png); }
+.hex-clear { background-color: #fff; background-image: url(/gen/img/hex-clear.png); }
+.hex-svg { background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><rect width='60' height='60' fill='%23ffffff'/><path d='M30 6 52 18 52 42 30 54 8 42 8 18Z' fill='none' stroke='%23ececf2' stroke-width='1.5'/></svg>"); }
+.hex-big { background: #fff url(/gen/img/hex-white.png) repeat; }
+.band { background: #e3e6f6; }
+.band-var { background: var(--band); }
+.band-long { background-color: rgb(227, 230, 246); }
+.footer { background: #f0dde6; }
+.footer-grad { background: #f0dde6; }
+.pic-lav { background: url(/gen/img/flat-lav.png) center / cover no-repeat; }
+.pic-mauve { background: #fff url(/gen/img/flat-mauve.png) repeat; }
+.btn { display: inline-block; padding: 8px 16px; background: #1a73e8; color: #fff; border-radius: 4px; }
+</style></head>
+<body>
+<section class="hex-short" id="hex-short"><h2>Short form</h2><a class="btn" href="#x">Start</a></section>
+<section class="hex-long" id="hex-long"><h2>Long form</h2></section>
+<section class="hex-bare" id="hex-bare"><h2>Picture only</h2></section>
+<section class="hex-clear" id="hex-clear"><h2>Clear tile</h2></section>
+<section class="hex-svg" id="hex-svg"><h2>Vector tile</h2></section>
+<section class="band" id="band"><h2>Band</h2></section>
+<section class="band-var" id="band-var"><h2>Band by variable</h2></section>
+<section class="band-long" id="band-long"><h2>Band by color</h2></section>
+<section class="pic-lav" id="pic-lav"><h2>Lavender picture</h2></section>
+<section class="pic-mauve" id="pic-mauve"><h2>Mauve picture</h2></section>
+<footer class="footer" id="footer"><p>Footer</p></footer>
+</body></html>

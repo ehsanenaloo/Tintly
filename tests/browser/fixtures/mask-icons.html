@@ -1,0 +1,14 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Black icons</title><style>
+body{margin:12px;background:#fff;color:#222}
+.icon{display:inline-block;width:24px;height:24px;background-color:#000;-webkit-mask:url(img/black-icon.svg) center/contain no-repeat;mask:url(img/black-icon.svg) center/contain no-repeat}
+.plain{display:inline-block;width:24px;height:24px;background-color:#000}
+</style></head><body>
+<span id="mask" class="icon"></span>
+<span id="mask-inline" style="display:inline-block;width:24px;height:24px;background:#000;-webkit-mask-image:url(img/black-icon.svg);mask-image:url(img/black-icon.svg)"></span>
+<span id="plain" class="plain"></span>
+<img id="far" width="24" height="24" alt="">
+<img id="near" width="24" height="24" src="img/black-icon.svg" alt="">
+<script>
+var base = location.hash.slice(1);
+document.getElementById('far').src = base + '/img/black-icon.svg';
+</script></body></html>

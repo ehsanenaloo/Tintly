@@ -1,0 +1,14 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Gradients</title>
+<style>
+:root { --bgc: #fff; --bgc-fixed: #ffffff; }
+body { background: #fff; color: #222; margin: 0; }
+.a, .b, .c, .d, .e, .f { position: relative; height: 60px; margin: 10px; background: #eee; }
+.a::after { content: ''; position: absolute; inset: 30px 0 0; background-image: linear-gradient(rgba(255,255,255,0), #fff); }
+.b::after { content: ''; position: absolute; inset: 30px 0 0; background-image: linear-gradient(rgba(255,255,255,0), var(--bgc)); }
+.c::after { content: ''; position: absolute; inset: 30px 0 0; background-image: linear-gradient(rgba(255,255,255,0), var(--bgc-fixed, #fff)); }
+.e::after { content: ''; position: absolute; inset: 30px 0 0; background: linear-gradient(rgba(255,255,255,0), var(--bgc)); background-repeat: no-repeat; }
+.f::after { content: ''; position: absolute; inset: 30px 0 0; background: linear-gradient(rgba(255,255,255,0), var(--bgc)) !important; }
+.d::after { content: ''; position: absolute; inset: 30px 0 0; background: linear-gradient(to bottom, transparent, white); }
+</style></head>
+<body><div class="a">a</div><div class="b">b</div><div class="c">c</div><div class="d">d</div><div class="e">e</div><div class="f">f</div></body></html>

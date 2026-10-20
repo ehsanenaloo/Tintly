@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Color vision: a page that reads the scheme once</title>
+<style>
+body { margin: 0; background: #ffffff; color: #20242a; font: 16px/1.5 system-ui, sans-serif; }
+body.js-dark { background: #12161b; color: #e8eaed; }
+#red { color: #c62828; }
+</style>
+<script>
+  // The page turns dark the first time the scheme is dark and does not follow later changes, as many sites do.
+  const query = matchMedia('(prefers-color-scheme: dark)');
+  const once = () => {
+    if (!query.matches || !document.body) return;
+    document.body.classList.add('js-dark');
+    query.removeEventListener('change', once);
+  };
+  query.addEventListener('change', once);
+  document.addEventListener('DOMContentLoaded', once);
+</script></head>
+<body><h1>A page that follows the scheme</h1><p id="red">Red text.</p><p>Gray text on the page.</p></body></html>

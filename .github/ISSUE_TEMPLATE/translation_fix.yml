@@ -1,0 +1,53 @@
+name: Translation fix
+description: Fix a wrong text in Persian, English, Arabic or Hebrew, or offer a new language.
+title: "[Translation]: "
+labels: ["translation", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping people read Tintly in their own language. You can also send a pull request. [TRANSLATING.md](https://github.com/ehsanenaloo/Tintly/blob/main/docs/TRANSLATING.md) explains how.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What do you want to do?
+      options:
+        - Fix a wrong or unnatural text
+        - Offer a new language
+    validations:
+      required: true
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      placeholder: "Persian"
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where does the text appear?
+      description: The window or tab, and the label near it.
+      placeholder: "Settings, Schedule, the note under the choices"
+  - type: textarea
+    id: current
+    attributes:
+      label: Current text
+      description: Paste the text as it is now. Leave empty for a new language.
+  - type: textarea
+    id: suggested
+    attributes:
+      label: Suggested text
+      description: Paste your text. Keep any {placeholder} as it is.
+    validations:
+      required: true
+  - type: dropdown
+    id: skill
+    attributes:
+      label: Your level in this language
+      options:
+        - Native speaker
+        - Fluent
+        - I used a tool and checked the result myself
+    validations:
+      required: true

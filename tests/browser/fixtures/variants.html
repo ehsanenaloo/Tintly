@@ -1,0 +1,34 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Color variables</title>
+<style id="tokens">
+:root { --page: #ffffff; --ink: #222222; --line: #cccccc; --glow: rgba(0, 0, 0, 0.3); --alias: var(--page); --rgb: 250 250 250; --unused: #ff00ff; --unused-too: #00ff00; --size: 12px; }
+:root[data-flip] { --page: #eeeeee; }
+</style>
+<style id="uses">
+body { margin: 0; font: 14px system-ui; background: var(--page); color: var(--ink); }
+.box { height: 24px; margin: 4px; padding: 2px; }
+.bg { background: var(--page); }
+.chain { background: var(--alias); }
+.chan { background: rgb(var(--rgb)); }
+.bd { border: 3px solid var(--line); }
+.sh { box-shadow: 0 0 6px var(--glow); }
+.lit { background: #ffffff; }
+</style>
+</head>
+<body>
+<div class="box bg" id="bg">bg</div>
+<div class="box chain" id="chain">chain</div>
+<div class="box chan" id="chan">chan</div>
+<div class="box bd" id="bd">bd</div>
+<div class="box sh" id="sh">sh</div>
+<div class="box lit" id="lit">lit</div>
+<div class="box" id="late">late</div>
+<script>
+  window.addLateSheet = () => {
+    const s = document.createElement('style');
+    s.id = 'late-sheet';
+    s.textContent = '#late { color: var(--page); background: var(--ink); border: 2px solid var(--unused); }';
+    document.head.append(s);
+  };
+</script>
+</body></html>

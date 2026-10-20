@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Opt out later</title>
+<style>body{margin:8px;background:#fff;color:#222}</style>
+</head>
+<body><p>This page asks for no theme after it has loaded.</p>
+<script>
+  window.optOut = () => document.documentElement.setAttribute('data-tintly', 'off');
+  window.optIn = () => document.documentElement.removeAttribute('data-tintly');
+</script>
+</body>
+</html>

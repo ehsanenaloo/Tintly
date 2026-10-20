@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>E-ink: what the palette cannot reach</title>
+<style>
+html,body{margin:0;background:#fff;color:#222;font:16px system-ui}
+#bar{position:fixed;top:0;left:0;right:0;height:40px;background:#fff;border-bottom:1px solid #ccc;z-index:5}
+#sticky{position:sticky;top:40px;height:30px;background:#fff;z-index:4}
+.box{position:absolute;width:120px;height:90px;overflow:hidden}
+#emoji{left:20px;top:100px;font-size:64px;line-height:90px;white-space:nowrap}
+#svgimg{left:160px;top:100px}
+#cv{left:300px;top:100px}
+#tint{left:440px;top:100px;background:#ff0000;color:#fff;font:700 18px system-ui;padding:6px}
+#svginline{left:580px;top:100px}
+#filler{height:2400px}
+</style></head>
+<body>
+<div id="bar">Fixed header</div>
+<div id="sticky">Sticky bar</div>
+<div class="box" id="emoji">😀❤️🇨🇦</div>
+<img class="box" id="svgimg" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='90'%3E%3Crect width='120' height='90' fill='%23e02020'/%3E%3Ccircle cx='60' cy='45' r='30' fill='%232060e0'/%3E%3C/svg%3E">
+<canvas class="box" id="cv" width="120" height="90"></canvas>
+<div class="box" id="tint">Red box</div>
+<svg class="box" id="svginline" width="120" height="90"><rect width="120" height="90" fill="#20a040"/></svg>
+<div id="filler"></div>
+<script>
+  const c = document.getElementById('cv').getContext('2d');
+  c.fillStyle = '#ff0000';
+  c.fillRect(0, 0, 120, 90);
+  c.fillStyle = '#00cc00';
+  c.fillRect(30, 20, 60, 50);
+</script>
+</body></html>

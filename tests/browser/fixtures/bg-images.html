@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Background pictures</title>
+<style>
+body { margin: 0; background: #fff; color: #111; font: 16px system-ui; }
+.i { display: inline-block; width: 32px; height: 32px; margin: 8px; background-repeat: no-repeat; background-size: contain; vertical-align: top; }
+#logo { background-image: url(/gen/img/dark-logo-0.png); }
+#navy { background-image: url(/gen/img/navy-logo-1.png); }
+#chart { background-image: url(/gen/img/chart-2.png); }
+#photo { background-image: url(/gen/img/photo-0.png); }
+#color { background-image: url(/gen/img/color-logo-2.png); }
+#svg { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><circle cx='16' cy='16' r='10' fill='%23111'/></svg>"); }
+#labeled { width: auto; padding-left: 40px; background-image: url(/gen/img/dark-logo-2.png); background-position: 4px 50%; }
+#plated { background-color: #fff; background-image: url(/gen/img/dark-logo-4.png); }
+#layered { background-image: linear-gradient(rgba(255, 255, 255, .5), rgba(255, 255, 255, .5)), url(/gen/img/dark-logo-5.png); }
+#late { background-image: none; }
+.hero { width: 600px; height: 200px; margin: 8px; background: url(/gen/img/photo-1.png) center/cover; }
+.hero h2 { margin: 0; padding: 40px; color: #111111; }
+.hero .card { display: inline-block; margin-left: 40px; padding: 8px; background: #fff; }
+.hero .card p { margin: 0; color: #222222; }
+</style></head>
+<body>
+<div id="row">
+<span class="i" id="logo"></span><span class="i" id="navy"></span><span class="i" id="chart"></span><span class="i" id="photo"></span><span class="i" id="color"></span><span class="i" id="svg"></span><span class="i" id="inline" style="background-image:url(/gen/img/dark-logo-3.png)"></span><span class="i" id="cross"></span><span class="i" id="plated"></span><span class="i" id="layered"></span><span class="i" id="late"></span><a class="i" id="labeled" href="#x">Go</a>
+</div>
+<div class="hero" id="hero"><h2 id="over-photo">Text on a picture</h2><div class="card"><p id="on-card">Text on a card</p></div></div>
+<script>
+const other = location.hash.slice(1);
+if (other) document.getElementById('cross').style.backgroundImage = 'url(' + other + '/gen/img/dark-logo-6.png)';
+</script>
+</body></html>

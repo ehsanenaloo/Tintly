@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Light line art on a transparent picture</title>
+<style>
+body { margin: 0; background: #fff; color: #1a1a1a; font: 16px system-ui; }
+.wall { position: relative; height: 90px; padding: 8px; overflow: hidden; background: #0b141a; }
+.bubble { position: relative; display: inline-block; padding: 6px 10px; background: #d9fdd3; color: #111; border-radius: 8px; }
+#l-after::after { content: ""; position: absolute; inset: 0; background: url(/gen/img/wall-lines.png); }
+#l-child > i { position: absolute; inset: 0; background: url(/gen/img/wall-lines.png); opacity: .5; }
+#l-own { background: #0b141a url(/gen/img/wall-lines.png); }
+#l-set::after { content: ""; position: absolute; inset: 0; background-image: image-set(url(/gen/img/wall-lines.png) 1x, url(/gen/img/wall-lines.png) 2x); }
+#l-photo { background: #35506b url(/gen/img/wall-photo.png); }
+#l-photo > i { position: absolute; inset: 0; background: url(/gen/img/wall-lines.png); }
+</style></head>
+<body>
+<div class="wall" id="l-after"><span class="bubble">Pseudo-element lines</span></div>
+<div class="wall" id="l-child"><i></i><span class="bubble">Child with faint lines</span></div>
+<div class="wall" id="l-own"><span class="bubble">Lines on its own color</span></div>
+<div class="wall" id="l-set"><span class="bubble">Lines through image-set</span></div>
+<div class="wall" id="l-photo"><i></i><span class="bubble">Lines over a photo</span></div>
+</body></html>

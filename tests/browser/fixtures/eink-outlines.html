@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Faint borders</title>
+<style>
+:root{--clear:#0000;--clear2:rgba(0,0,0,0);--rel:rgb(from #000 r g b / .05);--hslparts:0 0% 90%;--hslparts-wrap:hsl(var(--hslparts) / .4);--bt:color-mix(in oklab,transparent,transparent);--line:rgba(0,0,0,.05);--line8:#0000000d;--ring:rgb(0 0 0 / 6%);--tone:#e5e5e5}
+body{margin:16px;background:#fff;color:#0d0d0d;font:15px system-ui}
+*,::before,::after{box-sizing:border-box;border:0 solid var(--tone)}
+ul{list-style:none;margin:0;padding:0;width:260px}
+li,button,.card,.row,.chip{display:block;margin:6px 0;padding:8px 12px;background:#fff;color:#0d0d0d;font:inherit;text-align:start}
+#alpha{border:1px solid rgba(0,0,0,.05)}
+#alpha8{border:1px solid var(--line8)}
+#slash{border:1px solid var(--ring)}
+#var{border-width:1px;border-color:var(--line)}
+#opaque{border:1px solid #ededed}
+#clear{border:1px solid transparent}
+#ring{box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+#ring2{box-shadow:0 0 0 1px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.05)}
+#none{}
+#outline{outline:1px solid transparent;outline-offset:2px}
+#btn{border:1px solid rgba(0,0,0,.08);background:transparent}
+#mix{border:1px solid color-mix(in srgb,currentColor 10%,transparent)}
+#hsl{border:1px solid hsl(0 0% 0% / .06)}
+#t1{border:1px solid #0000}
+#t2{border:1px solid #00000000}
+#t3{border:1px solid rgb(0 0 0 / 0)}
+#t4{border:1px solid hsl(0 0% 0% / 0%)}
+#t5{border:1px solid var(--clear)}
+#t6{border:1px solid var(--clear2, transparent)}
+#t7{border:1px solid var(--rel)}
+#t8{border:1px solid light-dark(#0000000d, #ffffff1a)}
+#t9{border-width:1px;border-color:var(--hslparts-wrap)}
+#t10{border:1px solid oklch(0 0 0 / .05)}
+#t11{border:1px solid color(srgb 0 0 0 / .05)}
+#t12{border:1px solid lab(0 0 0 / .05)}
+#t13{border:1px solid rgb(from var(--tone) r g b / .1)}
+#t14{outline:1px solid #0000001a}
+#t15{outline:2px solid transparent;outline-offset:2px}
+#t16{border:1px solid var(--bt)}
+#real{border:1px solid #d0d0d0}
+#strong{border:1px solid #333}
+button.e1{border:1px solid rgba(0,0,0,.08)}
+.btn.e2{border:1px solid #ececec}
+[role=button].e3{border:1px solid rgba(0,0,0,.1)}
+input.e4{border:1px solid rgba(0,0,0,.1)}
+button.e5{border:0 solid;background:transparent}
+button.e6{border-width:1px;border-color:transparent}
+button.e7{border:1px solid;border-color:var(--clear)}
+.nocolor{border-width:0;border-style:solid}
+</style></head>
+<body>
+<ul>
+<li id="alpha">alpha</li><li id="alpha8">alpha8</li><li id="slash">slash</li><li id="var">var</li><li id="opaque">opaque</li><li id="clear">clear</li>
+<li id="ring">ring</li><li id="ring2">ring2</li><li id="none">none</li><li id="outline">outline</li><li id="mix">mix</li><li id="hsl">hsl</li>
+<li id="t1">t1</li><li id="t2">t2</li><li id="t3">t3</li><li id="t4">t4</li><li id="t5">t5</li><li id="t6">t6</li><li id="t7">t7</li><li id="t8">t8</li><li id="t9">t9</li><li id="t10">t10</li><li id="t11">t11</li><li id="t12">t12</li><li id="t13">t13</li><li id="t14">t14</li><li id="t15">t15</li><li id="t16">t16</li>
+<li id="real">real</li><li id="strong">strong</li>
+</ul>
+<button id="btn">button</button>
+<button id="btnplain">plain button</button>
+<button class="e1" id="e1">e1</button><button class="btn e2" id="e2">e2</button><div role="button" class="e3" id="e3">e3</div><input class="e4" id="e4"><button class="e5" id="e5">e5</button><button class="e6" id="e6">e6</button><button class="e7" id="e7">e7</button><button class="nocolor" id="e8">e8</button>
+<input id="field" placeholder="Search">
+</body></html>

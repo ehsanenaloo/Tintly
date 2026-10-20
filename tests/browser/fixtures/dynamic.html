@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dynamic fixture</title>
+<style>body { background: #fff; color: #222; font: 16px system-ui; }</style>
+</head>
+<body>
+<p class="late-style">Late style</p>
+<p class="late-link">Late link</p>
+<p class="edited">Edited style</p>
+<p class="inline-late">Inline later</p>
+<div id="body-style-host"><p class="body-style">Style in body</p></div>
+<script>
+const s = document.createElement('style');
+s.textContent = '.late-style { color: #b71c1c; background: #ffebee; }';
+setTimeout(() => document.head.append(s), 60);
+const l = document.createElement('link');
+l.rel = 'stylesheet'; l.href = '/late.css';
+setTimeout(() => document.head.append(l), 120);
+const e = document.createElement('style');
+e.id = 'edited';
+e.textContent = '.edited { color: #111; background: #eee; }';
+document.head.append(e);
+window.editStyle = () => { e.textContent = '.edited { color: #004d40; background: #e0f2f1; }'; };
+window.removeLate = () => s.remove();
+window.setInline = () => { const p = document.querySelector('.inline-late'); p.style.color = '#880e4f'; p.style.backgroundColor = '#fce4ec'; };
+window.addBodyStyle = () => { const b = document.createElement('style'); b.textContent = '.body-style { color: #1a237e; background: #e8eaf6; }'; document.body.append(b); };
+</script>
+</body>
+</html>

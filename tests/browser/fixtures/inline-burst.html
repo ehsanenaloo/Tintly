@@ -1,0 +1,24 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Inline burst</title><style>body{margin:8px;background:#fff;color:#222;font:14px system-ui}.cell{display:inline-block;width:20px;height:12px}</style></head><body>
+<p id="late-target">late target</p>
+<p id="late-add">late add</p>
+<div id="cells"></div>
+<script>
+var cells = [];
+for (var i = 0; i < 400; i++) {
+  var d = document.createElement('div');
+  d.className = 'cell';
+  document.getElementById('cells').appendChild(d);
+  cells.push(d);
+}
+var start = performance.now();
+function tick() {
+  var t = performance.now() - start;
+  if (t < 2200) {
+    for (var i = 0; i < cells.length; i++) cells[i].style.backgroundColor = 'rgb(' + ((i * 7 + t) % 255 | 0) + ',10,10)';
+    requestAnimationFrame(tick);
+  }
+}
+requestAnimationFrame(tick);
+setTimeout(function () { document.getElementById('late-target').style.cssText = 'background:#fff;color:#000'; }, 3200);
+setTimeout(function () { var p = document.getElementById('late-add'); p.setAttribute('style', 'background:#ffffff;color:#111111'); }, 5200);
+</script></body></html>

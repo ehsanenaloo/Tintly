@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Thirty small frames</title>
+<style>body{background:#fff;color:#111;margin:8px;font:14px system-ui}iframe{width:120px;height:60px;border:1px solid #ccc;margin:2px}</style></head>
+<body>
+<p>Embedded widgets: small frames with a line of text each.</p>
+<div id="frames"></div>
+<script>
+const holder = document.getElementById('frames');
+for (let i = 0; i < 30; i++) {
+  const f = document.createElement('iframe');
+  f.src = '/frame-small-inner.html?n=' + i;
+  holder.append(f);
+}
+window.__done = true;
+</script>
+</body></html>

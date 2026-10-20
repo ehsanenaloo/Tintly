@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>E-ink borders that change</title>
+<style>
+body{margin:20px;font:16px sans-serif}
+input{border:0;background:transparent;outline:0;padding:4px}
+input.lined{border:1px solid #333}
+.framed input{border:1px solid #333}
+</style></head>
+<body>
+<p><input id="self" placeholder="Own class"></p>
+<div id="wrap"><input id="child" placeholder="Parent class"></div>
+<p><input id="fixed" class="lined" placeholder="Always lined"></p>
+<div id="burst"></div>
+</body></html>

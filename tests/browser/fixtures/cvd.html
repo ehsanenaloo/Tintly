@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Color vision fixture</title>
+<style>
+:root { --red: 204 51 51; --green: #6b8e23; }
+body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: #ffffff; color: #222222; }
+.bar { position: fixed; inset: 0 0 auto 0; height: 40px; background: #d32f2f; color: #ffffff; }
+main { padding: 60px 16px 16px; }
+.red { color: #cc3333; }
+.green { color: var(--green); }
+.chan { color: rgb(var(--red)); }
+.gray { color: #808080; background: #f0f0f0; border: 2px solid #999999; }
+.swatch { display: inline-block; width: 60px; height: 40px; }
+.s-red { background: #c62828; }
+.s-green { background: #558b2f; }
+.s-blue { background: #1e88e5; }
+a { color: #0b57d0; text-decoration: none; }
+img { display: block; width: 40px; height: 40px; }
+</style>
+</head>
+<body>
+<div class="bar">Fixed bar</div>
+<main>
+  <p class="red" id="red">Red text that a deficiency confuses with green.</p>
+  <p class="green" id="green">Olive green text.</p>
+  <p class="chan" id="chan">A red built from channels.</p>
+  <p class="gray" id="gray">Gray text on a light gray box.</p>
+  <p><a href="#here" id="link">A link told apart by color only</a></p>
+  <span class="swatch s-red" id="s-red"></span><span class="swatch s-green" id="s-green"></span><span class="swatch s-blue" id="s-blue"></span>
+  <img id="pic" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23cc3333'/%3E%3C/svg%3E">
+  <iframe id="frame" title="frame" width="60" height="30" srcdoc="&lt;p&gt;frame&lt;/p&gt;"></iframe>
+</main>
+</body>
+</html>

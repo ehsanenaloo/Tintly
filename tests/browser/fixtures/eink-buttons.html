@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Labels on colored boxes</title>
+<style>
+body{margin:0;background:#fff;color:#202124;font:16px system-ui}
+.row{display:flex;gap:12px;padding:12px;flex-wrap:wrap}
+.btn{display:inline-block;padding:10px 18px;border-radius:6px;text-decoration:none}
+#one{background:#1a73e8;color:#ffffff}
+#two{background:#1a73e8}
+#two .label{color:#ffffff}
+#three{background:#1a73e8}
+a.cta{color:#fff}
+#green{background:#188038;color:#ffffff;padding:4px 10px;border-radius:12px;display:inline-block}
+#banner{background:#202124;color:#ffffff;padding:18px}
+#red{background:#d93025;color:#fff}
+#yellow{background:#fbbc04;color:#202124}
+#mid{background:#5f6368;color:#fff}
+#gradbtn{background:linear-gradient(90deg,#1a73e8,#8e24aa);color:#fff}
+#var{background:var(--brand);color:var(--on-brand);--brand:#0b57d0;--on-brand:#ffffff}
+</style></head>
+<body>
+<div class="row">
+  <a class="btn" id="one" href="#a">Learn more</a>
+  <a class="btn" id="two" href="#b"><span class="label">Add to cart</span></a>
+  <a class="btn cta" id="three" href="#c">Buy now</a>
+  <span id="green">In stock</span>
+  <a class="btn" id="red" href="#d" style="color:#fff">Delete</a>
+  <a class="btn" id="yellow" href="#e">Warning</a>
+  <a class="btn" id="mid" href="#f">Settings</a>
+  <a class="btn" id="gradbtn" href="#g">Upgrade</a>
+  <a class="btn" id="var" href="#h">Sign in</a>
+</div>
+<div id="banner">A dark banner with white text</div>
+</body></html>

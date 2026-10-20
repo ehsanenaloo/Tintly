@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Gradients</title>
+<style>
+html,body{margin:0}
+body{background:radial-gradient(circle at 50% 0%, rgba(0,200,120,.55), rgba(255,255,255,0) 60%), #ffffff;color:#222;font:16px system-ui}
+.box{margin:10px;padding:14px}
+#banner{background:linear-gradient(90deg,#1a74e8,#8e24aa);color:#fff}
+#fade{background:linear-gradient(to right,rgba(255,255,255,0),#ffffff)}
+#bar{background:linear-gradient(90deg,#00aa00 60%,#cccccc 60%);height:14px}
+#hero{background:linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.6)),url(/img/scene.svg) center/cover;color:#fff;min-height:80px}
+#title{font:700 36px system-ui;background:linear-gradient(90deg,#4285f4,#a142f4);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;display:inline-block}
+#pale{font:700 36px system-ui;background:linear-gradient(90deg,#ffffff,#d8d8d8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;display:inline-block}
+</style></head>
+<body>
+<div class="box" id="banner">Opaque blue to purple banner</div>
+<div class="box" id="fade">Fade to white</div>
+<div class="box" id="bar"></div>
+<div class="box" id="hero">Text on a hero picture with a dark veil</div>
+<div class="box"><span id="title">Gradient title</span></div>
+<div class="box" style="background:#444"><span id="pale">Pale gradient title</span></div>
+<div class="box" id="inline" style="background-image:radial-gradient(circle,rgba(255,0,0,.4),rgba(255,255,255,0))">Inline glow</div>
+<div id="host"></div>
+<script>
+  const root = document.getElementById('host').attachShadow({ mode: 'open' });
+  root.innerHTML = '<style>.g{display:block;padding:14px;background:radial-gradient(circle,rgba(0,0,255,.4),rgba(255,255,255,0))}.s{display:block;padding:14px;background:linear-gradient(90deg,#d73a49,#6f42c1);color:#fff}</style><div class="g" id="sglow">Shadow glow</div><div class="s" id="ssolid">Shadow solid</div>';
+  window.__root = root;
+</script>
+</body></html>

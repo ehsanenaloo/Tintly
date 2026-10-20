@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>E-ink borders that keep their style</title>
+<style>
+body{margin:20px;font:16px sans-serif}
+input{border:0 solid #333;background:transparent;outline:0;padding:4px}
+input.lined{border-width:1px}
+.framed input{border-width:1px}
+#slow{transition:border-width .4s linear}
+</style></head>
+<body>
+<p><input id="self" placeholder="Own class"></p>
+<div id="wrap"><input id="child" placeholder="Parent class"></div>
+<p><input id="inline" placeholder="Inline width"></p>
+<p><input id="fixed" class="lined" placeholder="Always lined"></p>
+<p><input id="slow" class="lined" placeholder="Width with a transition"></p>
+<div id="form"></div>
+</body></html>

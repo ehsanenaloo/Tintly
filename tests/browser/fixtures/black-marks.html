@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Black marks on a light page</title>
+<style>
+body { margin: 12px; background: #fff; color: #222; font: 16px system-ui; }
+.cell { display: inline-block; vertical-align: top; width: 64px; height: 64px; margin: 6px; position: relative; }
+.cell > * { position: absolute; left: 8px; top: 8px; }
+/* The mask lives in one rule, the black fill in another. */
+.shape { width: 48px; height: 48px; -webkit-mask: url(img/black-icon.svg) center/contain no-repeat; mask: url(img/black-icon.svg) center/contain no-repeat; }
+.fill-black { background-color: #000; }
+.bg-svg { width: 48px; height: 48px; background: url(img/black-icon.svg) center/contain no-repeat; }
+.pseudo::before { content: ""; display: block; width: 48px; height: 48px; background: url(img/black-icon.svg) center/contain no-repeat; }
+.list { list-style: none; margin: 0; padding: 0; }
+.list li { width: 48px; height: 48px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='7' fill='%23000'/%3E%3C/svg%3E") center/contain no-repeat; }
+.cur { color: #000; }
+</style></head>
+<body>
+<span class="cell"><svg id="inline" width="48" height="48" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="#000"/></svg></span>
+<span class="cell cur"><svg id="current" width="48" height="48" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="currentColor"/></svg></span>
+<span class="cell"><svg id="sprite" width="48" height="48" viewBox="0 0 24 24"><use href="#sym"/></svg></span>
+<svg width="0" height="0" style="position:absolute"><symbol id="sym" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="#000"/></symbol></svg>
+<span class="cell"><img id="same" width="48" height="48" src="img/black-icon.svg" alt=""></span>
+<span class="cell"><img id="data" width="48" height="48" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='7' fill='%23000'/%3E%3C/svg%3E"></span>
+<span class="cell"><picture><source srcset="img/black-icon.svg" type="image/svg+xml"><img id="picture" width="48" height="48" alt="" src="img/black-icon.svg"></picture></span>
+<span class="cell"><span id="mask-split" class="shape fill-black"></span></span>
+<span class="cell"><span id="bg-svg" class="bg-svg"></span></span>
+<span class="cell"><span id="pseudo" class="pseudo"></span></span>
+<span class="cell"><ul class="list"><li id="list"></li></ul></span>
+<span class="cell"><canvas id="canvas" width="48" height="48"></canvas></span>
+<span class="cell"><canvas id="canvas-color" width="48" height="48"></canvas></span>
+<script>
+{
+  const c = document.getElementById('canvas-color').getContext('2d');
+  c.fillStyle = '#d33'; c.fillRect(2, 10, 12, 36);
+  c.fillStyle = '#3a3'; c.fillRect(18, 20, 12, 26);
+  c.fillStyle = '#36d'; c.fillRect(34, 4, 12, 42);
+}
+const ctx = document.getElementById('canvas').getContext('2d');
+ctx.fillStyle = '#000';
+ctx.beginPath(); ctx.arc(24, 24, 16, 0, 7); ctx.fill();
+</script>
+</body></html>

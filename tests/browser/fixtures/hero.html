@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Hero</title>
+<style>
+body { margin: 0; background: #fff; color: #111; font: 18px system-ui; }
+.hero { position: relative; width: 800px; height: 260px; }
+.hero img { width: 800px; height: 260px; display: block; pointer-events: none; }
+.hero h1 { position: absolute; left: 40px; top: 60px; margin: 0; color: #111111; font-size: 48px; }
+.bgi { width: 800px; height: 160px; margin-top: 20px; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='160'><rect width='800' height='160' fill='%23f6f6f8'/><circle cx='560' cy='80' r='70' fill='%23b9bfd2'/><rect width='300' height='160' fill='%23dde0ea'/></svg>") center / cover no-repeat; }
+.bgi h2 { margin: 0; padding: 50px 40px; color: #222222; }
+.cv { position: relative; width: 800px; height: 100px; margin-top: 20px; }
+.cv canvas { position: absolute; inset: 0; width: 800px; height: 100px; pointer-events: none; }
+.cv h3 { position: relative; margin: 0; padding: 30px 40px; color: #0e1216; }
+.card { width: 800px; margin-top: 20px; background: #eef; padding: 20px; }
+.card p { margin: 0; color: #333333; }
+</style></head>
+<body>
+<div class="hero"><img alt="" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='260'><rect width='800' height='260' fill='%23f5f5f7'/><circle cx='620' cy='130' r='90' fill='%23d9dbe0'/></svg>"><h1 id="over-img">Light hero</h1></div>
+<div class="bgi"><h2 id="over-bg">On a background picture</h2></div>
+<div class="cv"><canvas id="cv" width="800" height="100"></canvas><h3 id="over-canvas">Over a canvas</h3></div>
+<div class="card"><p id="on-box">On a colored box</p></div>
+<p id="plain" style="margin:20px 0 0 40px">Plain text on the page</p>
+</body></html>

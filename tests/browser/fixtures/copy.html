@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Copy</title>
+<style>body{margin:8px;background:#fff;color:#222}#para{background:#fff;color:#111;padding:8px}#styled{background:#f4f4f4;color:#222}</style>
+</head>
+<body>
+<p id="para">Selected text</p>
+<p id="inl" style="background:#fff;color:#111">Inline styled text</p>
+<script>
+  window.copied = [];
+  document.addEventListener('copy', () => {
+    const colors = (id) => { const s = getComputedStyle(document.getElementById(id)); return [s.backgroundColor, s.color]; };
+    window.copied.push({ para: colors('para'), inl: colors('inl') });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Light page, colors fade, motion under way</title><style>
+body{background:#fff;color:#111;margin:0;min-height:100vh;transition:background-color 3s,color 3s}
+@keyframes appear{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+#intro{animation:appear 200ms forwards;padding:8px}
+#spin{width:20px;height:20px;background:#999;animation:spin 2s linear infinite}
+#slide{width:100px;height:20px;background:#ddd;transition:width 6s linear}
+#slide.wide{width:300px}
+</style></head><body><p>White</p><div id="intro">Intro</div><div id="spin"></div><div id="slide"></div></body></html>

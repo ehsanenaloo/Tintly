@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pictures</title>
+<style>
+body { margin: 0; background: #fff; color: #222; font: 16px/1.5 system-ui, sans-serif; padding: 24px; }
+img { width: 320px; height: 180px; display: block; margin-bottom: 12px; }
+.bg { width: 320px; height: 180px; background-image: url(img/scene.svg); background-size: cover; margin-bottom: 12px; }
+.bgtext { width: 320px; height: 180px; background-image: url(img/scene.svg); background-size: cover; color: #fff; padding: 12px; box-sizing: border-box; }
+canvas { width: 160px; height: 90px; display: block; background: linear-gradient(#f00, #00f); }
+</style>
+</head>
+<body>
+<img id="photo" src="img/scene.svg" alt="">
+<div id="bg" class="bg"></div>
+<div id="bgtext" class="bgtext">Title over a photo</div>
+<div id="bgfilter" class="bg" style="filter: brightness(1)"></div>
+<canvas id="cv" width="160" height="90"></canvas>
+</body>
+</html>

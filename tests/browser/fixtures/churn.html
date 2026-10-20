@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Style element rewritten again and again</title>
+<style>body{margin:0;background:#fff;color:#222}</style>
+<style id="s">#box{background:#fefefe;color:#111;padding:8px}</style>
+<script>
+  window.rewrite = (i, last) => {
+    const shade = last ? 'ffffff' : (240 + (i % 15)).toString(16).repeat(3);
+    let css = '#box{background:#' + shade + ';color:#111;padding:8px}';
+    for (let k = 0; k < 150; k++) css += '.r' + k + '{color:#' + ((k * 2654435) & 0xffffff).toString(16).padStart(6, '0') + ';background:#fafafa}';
+    document.getElementById('s').textContent = css;
+  };
+</script></head>
+<body><div id="box">churn</div></body></html>

@@ -1,0 +1,16 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>var() forms</title>
+<style>
+:root { --p: #fff; --rgb: 255 255 255; --rgbc: 255, 255, 255; --surface: 0 0% 100%; }
+body { background: #fff; color: #222; margin: 0; }
+.t { height: 24px; margin: 4px; border: 1px solid #ccc; }
+.t1 { background: var(--nope, #ffffff); }
+.t2 { background: var(--n1, var(--n2, rgb(250,250,252))); }
+.t3 { background: var(--n1, var(--p)); }
+.t4 { background: linear-gradient(var(--nope, #fff), var(--nope2, #eee)); }
+.t5 { background: rgb(var(--rgb)); }
+.t6 { background: rgba(var(--rgbc), 0.9); }
+.t7 { background: hsl(var(--surface)); }
+.t8 { background: var(--nope, white); }
+</style></head>
+<body><div class="t t1">1</div><div class="t t2">2</div><div class="t t3">3</div><div class="t t4">4</div><div class="t t5">5</div><div class="t t6">6</div><div class="t t7">7</div><div class="t t8">8</div></body></html>

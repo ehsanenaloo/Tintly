@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Colors built from channels</title>
+<style>
+:root { --h: 215; --s: 90%; --r: 230; --g: 242; --b: 255; --l: 0.96; --ch: 0.03; --hh: 250; }
+body { margin: 8px; background: #fff; color: #222; font: 14px sans-serif; }
+.box { height: 24px; margin: 4px 0; border: 3px solid transparent; }
+.p1 { background: hsl(215 100% 95%); } .v1 { background: hsl(var(--h) 100% 95%); }
+.p2 { background: rgb(230, 242, 255); } .v2 { background: rgb(var(--r), var(--g), var(--b)); }
+.p3 { background: oklch(0.96 0.03 250); } .v3 { background: oklch(var(--l) var(--ch) var(--hh)); }
+.p4 { background: rgb(230 242 255 / .9); } .v4 { background: rgb(var(--r) var(--g) var(--b)/.9); }
+.p5 { background: hsl(215 90% 50%); } .v5 { background: hsl(var(--h) var(--s) 50%); }
+.p6 { color: hsl(215 90% 30%); } .v6 { color: hsl(var(--h) var(--s) 30%); }
+.p7 { color: hsl(215 90% 85%); } .v7 { color: hsl(var(--h) var(--s) 85%); }
+.p8 { border-color: hsl(215 30% 80%); } .v8 { border-color: hsl(var(--h) 30% 80%); }
+.p9 { background: hsl(0 0% 96%); } .v9 { background: hsl(var(--zero, 0) 0% 96%); }
+</style>
+</head>
+<body>
+<div class="box p1" id="p1">p1</div><div class="box v1" id="v1">v1</div>
+<div class="box p2" id="p2">p2</div><div class="box v2" id="v2">v2</div>
+<div class="box p3" id="p3">p3</div><div class="box v3" id="v3">v3</div>
+<div class="box p4" id="p4">p4</div><div class="box v4" id="v4">v4</div>
+<div class="box p5" id="p5">p5</div><div class="box v5" id="v5">v5</div>
+<div class="box p6" id="p6">p6</div><div class="box v6" id="v6">v6</div>
+<div class="box p7" id="p7">p7</div><div class="box v7" id="v7">v7</div>
+<div class="box p8" id="p8">p8</div><div class="box v8" id="v8">v8</div>
+<div class="box p9" id="p9">p9</div><div class="box v9" id="v9">v9</div>
+</body>
+</html>

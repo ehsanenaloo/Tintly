@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Variables overridden with no color</title>
+<style>
+body { margin: 8px; background: #fff; color: #222; font: 14px sans-serif; }
+.sh { --s: 0 0 8px rgba(0, 0, 0, 0.3); --c: #cc2222; --k: #cc2222; --ch: 204 34 34; padding: 6px; }
+.sh .in { --s: none; }
+.t { box-shadow: var(--s); height: 20px; margin: 4px; }
+.cc { --c: currentColor; color: #223355; }
+.ini { --c: initial; color: #335522; }
+.uns { --c: unset; }
+.sys { --c: CanvasText; }
+.t2 { color: var(--c); }
+.pic { --k: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='2' height='2' fill='%23336699'/%3E%3C/svg%3E"); }
+.t3 { background-image: var(--k); height: 20px; }
+.nch { --ch: 12px 4px 2px; }
+.t4 { background-color: rgb(var(--ch)); height: 20px; }
+.out { --c: #cc2222; }
+.sysctl .t2 { --c: CanvasText; }
+</style>
+</head>
+<body>
+<div class="sh">
+  <div class="t" id="s-out">shadow</div>
+  <div class="in"><div class="t" id="s-in">no shadow</div></div>
+  <div class="cc" id="cc"><span class="t2" id="c-cur">current</span></div>
+  <div class="ini" id="ini"><span class="t2" id="c-ini">initial</span></div>
+  <div class="uns"><span class="t2" id="c-uns">unset</span></div>
+  <div class="sys"><span class="t2" id="c-sys">system</span></div>
+  <div class="pic"><div class="t3" id="p-in">picture</div></div>
+  <div class="nch"><div class="t4" id="n-in">not channels</div></div>
+</div>
+<div class="out"><span class="t2" id="c-out">outside</span></div>
+<div class="sysctl"><span class="t2" id="c-sys-ctl">control</span></div>
+</body>
+</html>

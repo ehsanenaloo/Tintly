@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Reduced motion rules</title>
+<style>
+  @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  body{margin:0;background:#fff;color:#222;font:16px system-ui}
+  .spin{animation:spin 2s linear infinite;width:40px;height:40px;background:#fff;border:1px solid #888}
+  .chip{background:#ffffff;color:#111111;padding:6px;transition:color .3s;scroll-behavior:smooth}
+  .both{animation:spin 2s linear infinite;width:40px;height:40px}
+  @media (prefers-reduced-motion: reduce){
+    .spin{animation:none}
+    .chip{transition:none;background:#ffffff}
+  }
+  @media (prefers-reduced-motion: reduce) and (min-width: 400px){
+    .both{animation:none}
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .calm{animation:spin 1s infinite}
+  }
+  .calm{width:10px;height:10px}
+</style></head>
+<body>
+<div id="spin" class="spin"></div>
+<div id="chip" class="chip">Chip text</div>
+<div id="both" class="both"></div>
+<div id="calm" class="calm"></div>
+</body></html>

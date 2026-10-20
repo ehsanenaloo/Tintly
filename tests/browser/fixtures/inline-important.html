@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Important rules and inline values</title>
+<style>
+body{background:#fff;color:#111;margin:0;font:20px system-ui}
+.imp{color:#f00!important}
+.imp2{color:#f00!important}
+p{margin:6px}
+</style></head>
+<body>
+<p id="page-wins" class="imp" style="color:#000">The page rule is important, the inline value is not: red.</p>
+<p id="inline-wins" class="imp2" style="color:#000!important">Both are important: the inline value wins.</p>
+<p id="plain" style="color:#000">Only inline: themed to light.</p>
+</body></html>

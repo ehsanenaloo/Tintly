@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A style added before the body exists</title>
+<script>
+  // Runs while the head is still being parsed: there is no body yet.
+  var early = document.createElement('style');
+  early.textContent = 'body { background: #ffffff; color: #111111; } .early-box { background: #f0f0f0; padding: 8px; }';
+  document.head.appendChild(early);
+  var onRoot = document.createElement('style');
+  onRoot.textContent = '.root-box { background: #e8f0fe; padding: 8px; }';
+  document.documentElement.appendChild(onRoot);
+</script>
+</head>
+<body>
+<p id="box" class="early-box">in a box</p>
+<p id="rootbox" class="root-box">in another box</p>
+</body>
+</html>

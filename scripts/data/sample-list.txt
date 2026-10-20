@@ -1,0 +1,10 @@
+# Local test pages, for a trial run: node scripts/data/crawl.mjs scripts/data/sample-list.txt --local
+/basic.html
+/dynamic.html
+/shadow.html
+/detect/dark-css.html
+/detect/dark-meta.html
+/detect/light-white.html
+/detect/light-header.html
+/detect/light-sepia.html
+/gen/large.html?rules=3000

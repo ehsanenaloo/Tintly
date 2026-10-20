@@ -1,0 +1,57 @@
+# Labels used by this project. Colors are hex values without the leading #.
+# Create them in the repository settings, or with the GitHub CLI: gh label create <name> --color <color> --description "<text>"
+
+- name: bug
+  color: d73a4a
+  description: Something does not work as expected
+- name: site-breakage
+  color: f9a03f
+  description: A page looks wrong with Tintly on
+- name: enhancement
+  color: a2eeef
+  description: New feature or improvement
+- name: documentation
+  color: 0075ca
+  description: Improvements to docs or guides
+- name: translation
+  color: 0e8a16
+  description: Translation fix or new language
+- name: accessibility
+  color: 1d76db
+  description: Keyboard, screen reader, contrast, forced colors, reduced motion or right to left
+- name: performance
+  color: fbca04
+  description: Speed or memory use
+- name: privacy
+  color: 5319e7
+  description: Data, permissions or network use
+- name: security
+  color: b60205
+  description: Security related. Use private reporting for vulnerabilities
+- name: good first issue
+  color: 7057ff
+  description: Small and well described, good for a first contribution
+- name: help wanted
+  color: 008672
+  description: The maintainer would welcome help with this
+- name: question
+  color: d876e3
+  description: A usage question, not a bug
+- name: needs triage
+  color: ededed
+  description: Not reviewed by the maintainer yet
+- name: blocked
+  color: 6f42c1
+  description: Waiting on something else before work can continue
+- name: duplicate
+  color: cfd3d7
+  description: This already exists in another issue or pull request
+- name: invalid
+  color: e4e669
+  description: This is not a valid report or does not apply
+- name: wontfix
+  color: ffffff
+  description: This will not be worked on
+- name: dependencies
+  color: 0366d6
+  description: Updates to GitHub Actions and dev tools

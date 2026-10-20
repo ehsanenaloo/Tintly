@@ -1,0 +1,84 @@
+name: Page looks wrong
+description: A page has wrong colors, unreadable text, a white box, a broken picture or a slow load with Tintly on.
+title: "[Page]: "
+labels: ["site-breakage", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping. Tintly fixes the pattern behind a problem, so the more exactly you describe the page, the better.
+        Please use a public page. Do not post pages that need a sign-in or show private data.
+  - type: input
+    id: url
+    attributes:
+      label: Page address
+      description: The full address of a public page that shows the problem.
+      placeholder: "https://example.com/article"
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      options:
+        - Dark
+        - Light
+        - Paper
+        - E-ink
+    validations:
+      required: true
+  - type: dropdown
+    id: engine
+    attributes:
+      label: Engine
+      description: Shown in the toolbar window. Please say if another engine looks better.
+      options:
+        - Automatic
+        - Dynamic
+        - Filter
+        - Filter+
+        - Static
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Tintly version
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: browser-version
+    attributes:
+      label: Browser, version and operating system
+      placeholder: "Firefox 150 on Linux"
+    validations:
+      required: true
+  - type: textarea
+    id: wrong
+    attributes:
+      label: What looks wrong?
+      description: For example "the menu text is dark on dark" or "a white box stays in the middle". Add a screenshot by dragging it into this box.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should it look like?
+      description: Describe it, or add a screenshot with Tintly off.
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Settings that apply to this page
+      description: A site rule, a fix, a schedule, a preset, the palette, the sliders, "Use the site's own dark theme". Other extensions that change page colors can conflict, so name them.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and did not find this page.
+          required: true
+        - label: The page is public and my screenshots show no private data.
+          required: true

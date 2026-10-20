@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>SVG veil</title>
+<style>
+  body { margin: 20px; background: #fff; color: #111; font: 14px sans-serif; }
+  .legend .entry .veil { fill: rgba(0, 0, 0, 0); }
+  .legend .entry .veil.faded { fill: rgba(255, 255, 255, 0.8); }
+  .icon-white { fill: #ffffff; }
+  .plate { fill: #ffffff; }
+</style></head>
+<body>
+<svg width="300" height="80" class="legend">
+  <rect x="0" y="0" width="300" height="80" fill="#cccccc"></rect>
+  <g class="entry"><text x="10" y="20" fill="#111111">Series</text><rect id="veil" class="veil faded" x="0" y="0" width="120" height="30"></rect></g>
+  <path id="icon" class="icon-white" d="M10 50 L30 50 L20 70 Z"></path>
+  <rect id="plate" class="plate" x="150" y="40" width="100" height="30"></rect>
+</svg>
+</body></html>

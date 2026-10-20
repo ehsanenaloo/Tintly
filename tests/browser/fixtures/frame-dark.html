@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A frame that is dark</title>
+<style>body{margin:8px;background:#fff;color:#222}iframe{width:400px;height:200px;border:1px solid #888}</style>
+</head>
+<body>
+<p>Light page with a dark frame</p>
+<iframe id="inner"></iframe>
+<script>document.getElementById('inner').src = location.hash.slice(1) + '/detect/dark-css.html';</script>
+</body>
+</html>

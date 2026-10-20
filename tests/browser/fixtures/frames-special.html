@@ -1,0 +1,9 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Frames without an address</title><style>body{background:#fff;color:#222;font:16px system-ui}iframe{width:300px;height:120px;border:1px solid #888}</style></head><body>
+<p>Outer page</p>
+<iframe id="srcdoc" srcdoc="<!doctype html><body style='background:#fff;color:#111'><p>srcdoc frame</p>"></iframe>
+<iframe id="sandboxed" sandbox="allow-scripts" srcdoc="<!doctype html><body style='background:#fff;color:#111'><p>sandboxed frame</p>"></iframe>
+<iframe id="blob"></iframe>
+<script>
+var html = "<!doctype html><body style='background:#fff;color:#111'><p>blob frame</p>";
+document.getElementById('blob').src = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+</script></body></html>

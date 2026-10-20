@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Site dark: variables the dark theme leaves light</title>
+<style>
+:root { --card: #ffffff; --ink: #222222; --panel: #f4f4f4; --tint: #e8f0fe; --pic: linear-gradient(#fff, #eee); }
+body { margin: 0; background: #ffffff; color: #1d2127; font: 16px/1.5 system-ui, sans-serif; }
+section { box-sizing: border-box; padding: 24px; height: 160px; }
+/* The dark theme below sets the page colors and --panel, not --card, --ink, --tint. */
+#a { background: var(--card); color: var(--ink); }
+#b { background-color: var(--card); color: var(--ink); }
+#c { background: var(--panel); color: var(--ink); }
+#d { background: var(--tint); color: var(--ink); }
+#e { background: var(--pic); color: var(--ink); }
+#f { background: var(--missing, #fff); color: #222; }
+/* Dark in any case: keeps the light sections under the limit of the gate. */
+.fill { height: 1800px; background: #1b2128; color: #e8eaed; }
+#g { --card: #202428; background: var(--card); color: #e8eaed; }
+@media (prefers-color-scheme: dark) {
+  :root { --panel: #23282e; }
+  body { background: #101418; color: #e8eaed; }
+}
+</style></head>
+<body>
+<section id="a">A: background shorthand from a variable.</section>
+<section id="b">B: background-color from a variable.</section>
+<section id="c">C: the dark theme sets this variable.</section>
+<section id="d">D: a light blue tint.</section>
+<section id="e">E: a gradient in a variable.</section>
+<section id="f">F: a fallback color.</section>
+<section id="g">G: a deeper scope gives its own dark value.</section>
+<div class="fill"></div>
+</body></html>

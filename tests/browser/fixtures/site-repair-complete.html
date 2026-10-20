@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Site dark: a complete dark theme</title>
+<style>
+body { margin: 0; background: #ffffff; color: #1d2127; font: 16px/1.5 system-ui, sans-serif; }
+section { box-sizing: border-box; padding: 24px; height: 450px; }
+#one { background: #f4f6fb; }
+#two { background: linear-gradient(180deg, #ffffff, #f1f3f5); border-top: 1px solid #ddd; }
+.card { background: #f1f3f5; color: #1d2127; padding: 12px; border: 1px solid #c9ced4; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+a { color: #0b57d0; }
+@media (prefers-color-scheme: dark) {
+  body { background: #101418; color: #e8eaed; }
+  #one { background: #161b22; }
+  #two { background: linear-gradient(180deg, #11161c, #0e1217); border-top: 1px solid #2a323c; }
+  .card { background: #1b2128; color: #e8eaed; border-color: #3b4450; box-shadow: 0 1px 3px rgba(0,0,0,.5); }
+  a { color: #8ab4f8; }
+}
+</style></head>
+<body>
+<section id="one"><div class="card" id="card"><p>Complete.</p><a id="link" href="#x">link</a></div></section>
+<section id="two"><p id="two-text">Covered section.</p></section>
+</body></html>

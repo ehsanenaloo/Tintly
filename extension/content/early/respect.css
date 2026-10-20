@@ -1,0 +1,5 @@
+@media screen {
+  html:not([data-dk-go]) {
+    --dk-respect: 1;
+  }
+}
