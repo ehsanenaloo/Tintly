@@ -1,6 +1,6 @@
 <div align="center">
 
-**English** | [فارسی](.github/README.fa.md)
+**English** | [فارسی](.github/README.fa.md) | [العربية](.github/README.ar.md) | [עברית](.github/README.he.md)
 
 <a href="https://enaloo.com/apps/tintly/"><img src=".github/assets/logo.svg" width="112" height="112" alt="Tintly logo"></a>
 
