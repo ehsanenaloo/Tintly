@@ -258,7 +258,7 @@ Thanks to everyone who has helped. Your name appears here after your first merge
 
 ## License
 
-[MIT](LICENSE). Copyright (c) 2026 Ehsan Enaloo.
+Copyright (c) 2026 Ehsan Enaloo. Released under the [MIT License](LICENSE).
 
 ## About
 
