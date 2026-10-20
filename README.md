@@ -252,7 +252,7 @@ Security problems go through [SECURITY.md](.github/SECURITY.md), not public issu
 
 Thanks to everyone who has helped. Your name appears here after your first merged contribution.
 
-<a href="https://github.com/ehsanenaloo/Tintly/graphs/contributors"><img src="https://contrib.rocks/image?repo=ehsanenaloo/Tintly" alt="Contributors"></a>
+<a href="https://github.com/ehsanenaloo/Tintly/graphs/contributors"><img src="https://contrib.rocks/image?repo=ehsanenaloo/Tintly&max=100" alt="Contributors"></a>
 
 ---
 

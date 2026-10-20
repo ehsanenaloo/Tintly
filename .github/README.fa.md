@@ -238,7 +238,7 @@ npm run test:perf      # بودجهٔ سرعت و اندازه
 
 از همهٔ کسانی که کمک کرده‌اند سپاسگزاریم. نام شما بعد از اولین مشارکت ادغام‌شده اینجا می‌آید.
 
-<a href="https://github.com/ehsanenaloo/Tintly/graphs/contributors"><img src="https://contrib.rocks/image?repo=ehsanenaloo/Tintly" alt="مشارکت‌کنندگان"></a>
+<a href="https://github.com/ehsanenaloo/Tintly/graphs/contributors"><img src="https://contrib.rocks/image?repo=ehsanenaloo/Tintly&max=100" alt="مشارکت‌کنندگان"></a>
 
 ---
 
