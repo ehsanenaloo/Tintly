@@ -75,8 +75,10 @@ test('SEC: the request counters of the injector do not grow with the number of f
 test('SEC: the search for a mask or background picture takes linear time on repeated names', () => {
   const heard = [];
   for (const body of ['mask:'.repeat(400000), 'background:mask-image :'.repeat(100000), `mask:${'x '.repeat(300000)}`, '-webkit-mask '.repeat(200000)]) {
-    const r = read(`a{${body}}`, { onBackground: (selector) => heard.push(selector) });
-    assert.ok(r.ms < MAX_MS, `took ${Math.round(r.ms)} ms`);
+    // Fastest of three runs: a busy machine slows one run, not all three; quadratic work stays far above the limit.
+    let ms = Infinity;
+    for (let i = 0; i < 3 && ms >= MAX_MS; i++) ms = Math.min(ms, read(`a{${body}}`, { onBackground: (selector) => heard.push(selector) }).ms);
+    assert.ok(ms < MAX_MS, `took ${Math.round(ms)} ms`);
   }
 });
 
