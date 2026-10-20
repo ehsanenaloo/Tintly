@@ -163,6 +163,8 @@ Store listings are on the way. Watch the repository to hear when they are live.
 
 The interface is in English, Persian, Arabic and Hebrew. Persian, Arabic and Hebrew are right to left, and the whole window mirrors. To fix a text or add a language, read [TRANSLATING.md](docs/TRANSLATING.md) or use the [translation fix form](https://github.com/ehsanenaloo/Tintly/issues/new?template=translation_fix.yml).
 
+The translations are machine-made. If you offer a fluent, native translation for any language, we will publish it under your name.
+
 ---
 
 ## Notes for site authors
