@@ -20,8 +20,48 @@
   const BG_MAX_ELEMENTS = 40000;
   const BG_REQUERY_MS = 4000;
   const BG_MAX_SIDE = 640;
+  const STAR_MAX_HEIGHT = 64;
+  const STAR_MAX_WIDTH = 320;
   const BG_PHOTO_MIN = [160, 80];
   const BG_TEXT_MAX = 40;
+
+  /**
+   * The part of a picture that a small box shows, when the picture is a sprite sheet (the box shows less than a quarter of it).
+   * Only sizes in pixels or `auto` and positions in pixels or percent are followed. Width and height scale on their own.
+   * @param {{ w: number, h: number, size: string, pos: string }} spec @param {number} nw @param {number} nh
+   * @returns {{ sx: number, sy: number, sw: number, sh: number } | null}
+   */
+  function cropOf(spec, nw, nh) {
+    if (!(nw > 0 && nh > 0)) return null;
+    const size = spec.size.trim().split(/\s+/);
+    if (size.length > 2) return null;
+    /** @param {string} v @returns {number | null} null for `auto`, NaN for what is not followed */
+    const length = (v) => (v === 'auto' ? null : /^[\d.]+px$/.test(v) ? parseFloat(v) : NaN);
+    let rw = length(size[0]);
+    let rh = length(size[1] ?? 'auto');
+    if (Number.isNaN(rw) || Number.isNaN(rh)) return null;
+    // One `auto` keeps the picture's aspect ratio; two keep its own size.
+    if (rw === null && rh === null) [rw, rh] = [nw, nh];
+    else if (rw === null) rw = ((/** @type {number} */ (rh)) * nw) / nh;
+    else if (rh === null) rh = (rw * nh) / nw;
+    const kx = rw / nw;
+    const ky = /** @type {number} */ (rh) / nh;
+    if (!(kx > 0 && ky > 0)) return null;
+    const place = (/** @type {string} */ v, /** @type {number} */ box, /** @type {number} */ drawn) => {
+      const m = /^(-?[\d.]+)(px|%)$/.exec(v);
+      return m ? (m[2] === '%' ? ((box - drawn) * Number(m[1])) / 100 : Number(m[1])) : NaN;
+    };
+    const pos = spec.pos.trim().split(/\s+/);
+    const ox = place(pos[0] ?? '', spec.w, rw);
+    const oy = place(pos[1] ?? '', spec.h, /** @type {number} */ (rh));
+    if (Number.isNaN(ox) || Number.isNaN(oy)) return null;
+    const sx = Math.max(0, -ox / kx);
+    const sy = Math.max(0, -oy / ky);
+    const sw = Math.min(nw - sx, spec.w / kx);
+    const sh = Math.min(nh - sy, spec.h / ky);
+    if (!(sw >= 1 && sh >= 1) || sw * sh > 0.25 * nw * nh) return null;
+    return { sx, sy, sw, sh };
+  }
 
   /** @type {Set<Element>} */
   const legacyQueue = new Set();
@@ -260,12 +300,39 @@
       rootStyles.set(rn, st);
     }
 
+    /**
+     * A masked box with a light neutral color and a colored box inside it, cut to a part of its width, is the empty layer of a rating
+     * (the mask is the star shape). It takes a muted tone.
+     * @param {Element} el @param {any} parsed the color of the box @param {DOMRect} rect
+     */
+    function emptyLayer(el, parsed, rect) {
+      const color = /** @type {any} */ (dk).color;
+      if (parsed.a < 0.5 || el.childElementCount < 1 || el.childElementCount > 2 || rect.height > STAR_MAX_HEIGHT || rect.width > STAR_MAX_WIDTH) return false;
+      const [l, chroma] = color.toOklch(parsed);
+      if (l < 0.6 || chroma > 0.03) return false;
+      for (const child of el.children) {
+        const p = color.parseColor(getComputedStyle(child).backgroundColor);
+        if (!p || p.a < 0.5 || color.toOklch(p)[1] <= 0.06) continue;
+        const r = child.getBoundingClientRect();
+        if (r.width > 0 && r.left >= rect.left - 1 && r.right <= rect.right + 1 && r.top >= rect.top - 1 && r.bottom <= rect.bottom + 1) return true;
+      }
+      return false;
+    }
+
     /** @param {Element} el @param {CSSStyleDeclaration} cs @param {DOMRect} rect @returns {boolean} true when marked */
     function maskedMark(el, cs, rect) {
       const mask = cs.maskImage || cs.webkitMaskImage;
       if (!mask || mask === 'none' || !mask.includes('url(')) return false;
       const color = /** @type {any} */ (dk).color;
       const parsed = color?.parseColor(cs.backgroundColor);
+      if (parsed && emptyLayer(el, parsed, rect)) {
+        session.emptyTone?.();
+        if (el.getAttribute(BG_ATTR) !== 'empty') {
+          el.setAttribute(BG_ATTR, 'empty');
+          bgMarked.add(el);
+        }
+        return true;
+      }
       const alone = el.childElementCount === 0 && !hasText(el) && (cs.filter === 'none' || el.hasAttribute(BG_ATTR)) && Math.max(rect.width, rect.height) <= BG_MAX_SIDE;
       if (!alone || !parsed || parsed.a < 0.5 || color.toOklch(parsed)[0] >= 0.4 || color.toOklch(parsed)[1] > 0.06) return false;
       if (el.getAttribute(BG_ATTR) !== 'invert') {
@@ -402,10 +469,14 @@
       }
     }
 
-    /** @param {string} url @returns {Promise<'keep' | 'dim' | 'invert' | 'plate' | 'flip' | null>} */
-    async function actionFor(url) {
-      let action = cache.get(url);
-      if (action !== undefined && surfaces.has(url)) return action;
+    /** The cache key of a picture as a box shows it. @param {string} url @param {{ w: number, h: number, size: string, pos: string } | null} spec */
+    const idOf = (url, spec) => (spec ? `${url}#${spec.size}|${spec.pos}|${spec.w}x${spec.h}` : url);
+
+    /** @param {string} url @param {{ w: number, h: number, size: string, pos: string } | null} [spec] a small box: the part it shows is sorted, not the whole file @returns {Promise<'keep' | 'dim' | 'invert' | 'plate' | 'flip' | null>} */
+    async function actionFor(url, spec = null) {
+      const id = idOf(url, spec);
+      let action = cache.get(id);
+      if (action !== undefined && surfaces.has(id)) return action;
       if (bgState.urls >= BG_MAX_URLS) {
         stats.bgCapped += 1;
         return null;
@@ -418,14 +489,15 @@
         probe.src = url;
         await probe.decode().catch(() => {});
         if (dead) return null;
-        const pixels = await read(probe, url);
+        const crop = spec ? cropOf(spec, probe.naturalWidth, probe.naturalHeight) : null;
+        const pixels = await read(probe, url, crop);
         if (dead) return null;
         if (!pixels) {
           stats.failed += 1;
           return null;
         }
         action = classify(pixels);
-        surfaces.set(url, toneOf(pixels));
+        surfaces.set(id, toneOf(pixels));
       } catch {
         stats.failed += 1;
         return null;
@@ -435,7 +507,7 @@
         cache.delete(/** @type {string} */ (cache.keys().next().value));
         surfaces.clear();
       }
-      cache.set(url, action);
+      cache.set(id, action);
       return action;
     }
 
@@ -616,14 +688,17 @@
     /** @param {{ el: Element, url: string, key: string, legacy?: boolean }} job */
     async function analyzeBackground({ el, url, key, legacy }) {
       if (dead || !el.isConnected) return;
-      const action = await actionFor(url);
+      const before = getComputedStyle(el);
+      const box = el.getBoundingClientRect();
+      const spec = Math.max(box.width, box.height) <= BG_MAX_SIDE && box.width >= 1 && box.height >= 1 ? { w: Math.round(box.width), h: Math.round(box.height), size: before.backgroundSize, pos: before.backgroundPosition } : null;
+      const action = await actionFor(url, spec);
       if (dead || !action || !el.isConnected) return;
       const cs = getComputedStyle(el);
       if (`${cs.backgroundImage}|${cs.backgroundColor}` !== key) {
         bgHandled.delete(el);
         return;
       }
-      const tone = surfaces.get(url);
+      const tone = surfaces.get(idOf(url, spec));
       const how = legacy ? 2 : /^(?!no-repeat( no-repeat)?$)/.test(cs.backgroundRepeat) && !/cover|contain|100%/.test(cs.backgroundSize) ? 1 : 0;
       if (tone && surfaceMark(el, kindOf(tone, how), how > 0 || tone.sd < 0.02)) return;
       if (options.light || cs.backgroundImage.includes('gradient(')) {
@@ -744,6 +819,7 @@
   dk.imagebg = Object.freeze({
     noteBackground,
     noteLegacy,
+    cropOf,
     /** @param {any} session */
     attach(session) {
       if (session.bg) return;

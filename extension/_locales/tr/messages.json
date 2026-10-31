@@ -1,0 +1,35 @@
+{
+  "extName": {
+    "message": "Tintly - Koyu, Açık, Kâğıt, E-ink ve Renk Görme"
+  },
+  "extDescription": {
+    "message": "Her web sitesi için koyu, açık, Kâğıt ve E-ink modları ile renk görme filtreleri. Hızlı ve gizli. Hiçbir veri toplanmaz."
+  },
+  "cmdToggleExtension": {
+    "message": "Tintly’yi aç veya kapat"
+  },
+  "cmdToggleSite": {
+    "message": "Bu sitede Tintly’yi aç veya kapat"
+  },
+  "cmdSwitchEngine": {
+    "message": "Tema motorunu değiştir"
+  },
+  "cmdModeDark": {
+    "message": "Koyu moda geç"
+  },
+  "cmdModeLight": {
+    "message": "Açık moda geç"
+  },
+  "cmdModePaper": {
+    "message": "Kâğıt moduna geç"
+  },
+  "cmdModeEink": {
+    "message": "E-ink moduna geç"
+  },
+  "cmdModeOriginal": {
+    "message": "Özgün renklere geç"
+  },
+  "menuToggleSite": {
+    "message": "Bu sitede Tintly’yi aç veya kapat"
+  }
+}

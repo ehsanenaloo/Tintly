@@ -85,10 +85,11 @@
 
   /**
    * Start or stop for the decision of the gate. The Filter engines invert the page, so the colors are left out under them.
-   * @param {boolean} on @param {Record<string, any>} themeSettings @param {string} kind
+   * The page's own colors (`original`) keep the page's own scrollbar and selection too.
+   * @param {boolean} on @param {Record<string, any>} themeSettings @param {string} kind @param {boolean} [original]
    */
-  function sync(on, themeSettings, kind) {
-    if (on) start(themeSettings, { colors: kind !== 'filter' && kind !== 'filterPlus' });
+  function sync(on, themeSettings, kind, original = false) {
+    if (on) start(themeSettings, { colors: kind !== 'filter' && kind !== 'filterPlus' && !original });
     else stop();
   }
 

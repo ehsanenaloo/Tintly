@@ -1,5 +1,5 @@
 name: Translation fix
-description: Fix a wrong text in Persian, English, Arabic or Hebrew, or offer a new language.
+description: Fix a wrong text in any interface language, or offer a new language.
 title: "[Translation]: "
 labels: ["translation", "needs triage"]
 body:

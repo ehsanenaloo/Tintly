@@ -1,10 +1,10 @@
 # Translating Tintly
 
-Tintly shows its windows in Persian (`fa`), English (`en`), Arabic (`ar`) and Hebrew (`he`). Persian, Arabic and Hebrew are written right to left, and the whole window mirrors.
+Tintly shows its windows in Persian (`fa`), English (`en`), Arabic (`ar`), Hebrew (`he`), Spanish (`es`), Brazilian Portuguese (`pt`), Russian (`ru`), German (`de`), French (`fr`), Simplified Chinese (`zh`), Traditional Chinese (`zh-TW`), Korean (`ko`), Japanese (`ja`), Hindi (`hi`), Indonesian (`id`), Italian (`it`) and Turkish (`tr`). Persian, Arabic and Hebrew are written right to left, and the whole window mirrors.
 
 ## Status of the translations
 
-English is the source. Tests check that the translation files are complete and consistent. They cannot judge wording, tone or fit, so a native reader is the best judge. Reports of wrong or awkward text are welcome.
+English is the source. Every other language is machine-made and has not been read by a native speaker. If you are a native speaker and you improve the texts of your language, we publish your work under your name. The maintainer's checks make sure that the translation files are complete and consistent. They cannot judge wording, tone or fit, so a native reader is the best judge. Reports of wrong or awkward text are welcome.
 
 ## Two kinds of text
 
@@ -19,7 +19,7 @@ An interface string is a message with `{placeholder}` markers, or a set of plura
 
 1. Find the text in `extension/shared/locales/en.js` to get its key, then find the same key in your language file.
 2. Change the value only. Keep the key, every `{placeholder}` and the plural structure.
-3. Run `npm run check`. It fails if a file is incomplete or a placeholder changed.
+3. Load `extension/` in Chrome or Edge as an unpacked extension, choose your language in the settings, and look at the text in the window where it shows. The maintainer's checks catch a missing key or a changed placeholder.
 4. Open a pull request. Name the screen where you saw the text, and say whether you are a native speaker, fluent, or used a tool and checked the result yourself.
 
 If you do not want to edit files, open a [translation fix issue](https://github.com/ehsanenaloo/Tintly/issues/new?template=translation_fix.yml) with the current text and your suggestion.
@@ -28,12 +28,11 @@ If you do not want to edit files, open a [translation fix issue](https://github.
 
 Open an issue first, so we can agree on the language code. Then:
 
-1. Add `extension/shared/locales/<code>.js` with every key of `en.js`. Give each plural entry the forms your language needs. `node -e "console.log(new Intl.PluralRules('<code>').resolvedOptions().pluralCategories)"` lists them.
+1. Add `extension/shared/locales/<code>.js` with every key of `en.js`. Give each plural entry the forms your language needs. The [CLDR plural rules](https://www.unicode.org/cldr/charts/latest/supplemental/language_plural_rules.html) list them for each language.
 2. Add one line to `LOADERS` in `extension/shared/i18n.js`. For a right-to-left language, add the code to `RTL_LOCALES` in the same file.
 3. Add `extension/_locales/<code>/messages.json` with the same keys as English. Use the browser's folder names (`pt_BR`, not `pt-BR`).
-4. Run `npm run check`.
-5. Load the extension, choose the language in the settings, and look at the toolbar window, every settings tab and the fix editor. Look for cut-off text, overlaps and icons that point the wrong way.
-6. Say in the pull request whether you are a native speaker, fluent, or used a tool and checked the result.
+4. Load the extension, choose the language in the settings, and look at the toolbar window, every settings tab and the fix editor. Look for cut-off text, overlaps and icons that point the wrong way. The maintainer's checks catch missing keys and changed placeholders.
+5. Say in the pull request whether you are a native speaker, fluent, or used a tool and checked the result.
 
 ## Writing rules
 
@@ -44,6 +43,6 @@ Open an issue first, so we can agree on the language code. Then:
 - Write each sentence as one message. Do not join translated pieces.
 - Persian: simple modern Persian, correct half-space, Persian punctuation.
 
-## What the tests cannot judge
+## What the checks cannot judge
 
 Quality, tone, terms, and fit in a narrow window. Look at the real windows in your language, in the light and the dark look, and at a narrow width. For a right-to-left language, check that the layout mirrors.

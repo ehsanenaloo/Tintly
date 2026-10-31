@@ -1,5 +1,6 @@
 // @ts-check
 import { SYNC } from './limits.js';
+import { STATE_KEYS } from './sections.js';
 import { SCHEMA_VERSION, SECTIONS, holdIncoming, migrate, sanitizeSection, sanitizeState, withoutHold } from './settings.js';
 
 /**
@@ -12,7 +13,7 @@ import { SCHEMA_VERSION, SECTIONS, holdIncoming, migrate, sanitizeSection, sanit
  * }} Area
  */
 
-export const STATE_KEYS = Object.freeze(['schemaVersion', 'updatedAt', ...SECTIONS]);
+export { STATE_KEYS };
 
 /** How far ahead of this device's clock a revision may be and still count as a real one (clocks differ by hours, not by days). */
 export const REVISION_SKEW_MS = 24 * 60 * 60 * 1000;
@@ -174,46 +175,83 @@ export function syncPayload(state) {
   return withoutHold(payload);
 }
 
+/** Format 2 names every snapshot's chunks after the snapshot: `dk.sync.<id>.<index>`. Format 1 used `dk.sync.<index>`. */
+const SNAPSHOT_ID = /^[0-9a-z]{1,13}-[0-9a-f]{4}$/;
+const ORPHAN_AGE_MS = 60 * 60 * 1000;
+
+/** The id carries the time it was made, so a clean-up can tell how long ago a snapshot was written. @param {number} time */
+function newSnapshotId(time) {
+  const salt = crypto.getRandomValues(new Uint16Array(1))[0].toString(16).padStart(4, '0');
+  return `${Math.max(0, Math.floor(time) || 0).toString(36)}-${salt}`;
+}
+
+/** The meta of one snapshot, next to its chunks. The shared `dk.sync.meta` points at the last one written, for readers of older versions. */
+/** @param {string} id */
+const snapshotMetaKey = (id) => `${SYNC.PREFIX}${id}.meta`;
+
+/** What one snapshot may take: two must fit at once, because the one being replaced stays until the new one is committed. */
+const SNAPSHOT_BYTES = Math.floor(SYNC.TOTAL_BYTES / 2);
+const SNAPSHOT_ITEMS = Math.floor(SYNC.MAX_ITEMS / 2);
+
+/** @param {string} id @param {number} index */
+const chunkKey = (id, index) => `${SYNC.PREFIX}${id}.${index}`;
+
+/**
+ * Which snapshot a `dk.sync.` key belongs to: its id, `''` for a format 1 chunk, null for the meta and anything else.
+ * @param {string} key
+ * @returns {string | null}
+ */
+function snapshotOfKey(key) {
+  if (!key.startsWith(SYNC.PREFIX) || key === META_KEY) return null;
+  const rest = key.slice(SYNC.PREFIX.length);
+  if (/^\d+$/.test(rest)) return '';
+  if (rest.endsWith('.meta')) return SNAPSHOT_ID.test(rest.slice(0, -5)) ? rest.slice(0, -5) : null;
+  const dot = rest.lastIndexOf('.');
+  if (dot < 1 || !/^\d+$/.test(rest.slice(dot + 1))) return null;
+  const id = rest.slice(0, dot);
+  return SNAPSHOT_ID.test(id) ? id : null;
+}
+
 /**
  * Turn the state into `storage.sync` items. Refuses when the data does not fit the limits.
+ * `id` names the snapshot; by default a new one.
  * @param {any} state
- * @returns {Promise<{ ok: true, items: Record<string, any>, bytes: number } | { ok: false, code: 'too-large', bytes: number }>}
+ * @param {{ id?: string }} [options]
+ * @returns {Promise<{ ok: true, items: Record<string, any>, bytes: number, id: string } | { ok: false, code: 'too-large', bytes: number }>}
  */
-export async function buildSyncItems(state) {
+export async function buildSyncItems(state, { id = newSnapshotId(Date.now()) } = {}) {
   const text = JSON.stringify(syncPayload(state));
   const chunks = splitIntoChunks(text, SYNC.ITEM_BYTES - SYNC.KEY_RESERVE - 2);
   /** @type {Record<string, any>} */
   const items = {};
   chunks.forEach((chunk, i) => {
-    items[`${SYNC.PREFIX}${i}`] = chunk;
+    items[chunkKey(id, i)] = chunk;
   });
-  items[META_KEY] = { v: 1, n: chunks.length, hash: await sha256(text), updatedAt: state.updatedAt };
+  const meta = { v: 2, id, n: chunks.length, hash: await sha256(text), updatedAt: state.updatedAt };
+  items[META_KEY] = meta;
+  items[snapshotMetaKey(id)] = meta;
   let bytes = 0;
   for (const [key, value] of Object.entries(items)) bytes += itemBytes(key, value);
-  if (bytes > SYNC.TOTAL_BYTES || chunks.length + 1 > SYNC.MAX_ITEMS) return { ok: false, code: 'too-large', bytes };
-  return { ok: true, items, bytes };
+  if (bytes > SNAPSHOT_BYTES || Object.keys(items).length > SNAPSHOT_ITEMS) return { ok: false, code: 'too-large', bytes };
+  return { ok: true, items, bytes, id };
 }
 
 /**
- * Read items back into a checked payload.
- * A snapshot whose revision is more than a day ahead of `now` is `broken`: it is never applied, and the next push replaces it. A
- * missing, negative or non-numeric revision is read as 0.
- * @param {Record<string, any>} items
- * @param {number} [now]
- * @returns {Promise<{ ok: true, payload: Record<string, any>, updatedAt: number } | { ok: false, code: 'none' | 'broken' | 'newer' }>}
+ * Read one snapshot, the one a meta describes, into a checked payload.
+ * @param {Record<string, any>} items @param {any} meta @param {number} now
+ * @returns {Promise<{ ok: true, payload: Record<string, any>, updatedAt: number } | { ok: false, code: 'broken' }>}
  */
-export async function parseSyncItems(items, now = Date.now()) {
-  const meta = items[META_KEY];
-  if (!meta) return { ok: false, code: 'none' };
-  // A snapshot of a newer format is not read and must not be replaced.
-  if (Number.isInteger(meta.v) && meta.v > 1) return { ok: false, code: 'newer' };
-  if (meta.v !== 1 || !Number.isInteger(meta.n) || meta.n < 0 || meta.n >= SYNC.MAX_ITEMS) {
+async function readSnapshot(items, meta, now) {
+  if (meta === null || typeof meta !== 'object') return { ok: false, code: 'broken' };
+  const named = meta.v === 2;
+  if ((meta.v !== 1 && !named) || (named && !(typeof meta.id === 'string' && SNAPSHOT_ID.test(meta.id)))) {
     return { ok: false, code: 'broken' };
   }
+  if (!Number.isInteger(meta.n) || meta.n < 0 || meta.n >= SYNC.MAX_ITEMS) return { ok: false, code: 'broken' };
   if (typeof meta.updatedAt === 'number' && meta.updatedAt > now + REVISION_SKEW_MS) return { ok: false, code: 'broken' };
   let text = '';
   for (let i = 0; i < meta.n; i++) {
-    const part = items[`${SYNC.PREFIX}${i}`];
+    const part = items[named ? chunkKey(meta.id, i) : `${SYNC.PREFIX}${i}`];
     if (typeof part !== 'string') return { ok: false, code: 'broken' };
     text += part;
   }
@@ -230,23 +268,124 @@ export async function parseSyncItems(items, now = Date.now()) {
 }
 
 /**
- * Write the state to `storage.sync`, then remove the chunks that the snapshot now in the area does not use. The
- * snapshot is read again after the write, so the chunks of a snapshot that another device wrote meanwhile stay.
+ * Read items back into a checked payload.
+ * The newest readable snapshot wins: the shared meta and the meta of every snapshot are read, so a snapshot that was written
+ * while another device published the shared meta is not lost when the shared meta goes back to an older one. A shared meta
+ * that names a newer revision than any readable snapshot makes the account `broken`.
+ * A snapshot whose revision is more than a day ahead of `now` is `broken`: it is never applied, and the next push replaces it. A
+ * missing, negative or non-numeric revision is read as 0.
+ * @param {Record<string, any>} items
+ * @param {number} [now]
+ * @returns {Promise<{ ok: true, payload: Record<string, any>, updatedAt: number, id: string } | { ok: false, code: 'none' | 'broken' | 'newer' }>}
+ */
+export async function parseSyncItems(items, now = Date.now()) {
+  const pointer = items[META_KEY];
+  // A snapshot of a newer format is not read and must not be replaced.
+  if (pointer && Number.isInteger(pointer.v) && pointer.v > 2) return { ok: false, code: 'newer' };
+  /** @type {{ meta: any, id: string }[]} */
+  const candidates = [];
+  const pointerId = pointer && pointer.v === 2 && typeof pointer.id === 'string' ? pointer.id : '';
+  if (pointer) candidates.push({ meta: pointer, id: pointerId });
+  for (const key of Object.keys(items)) {
+    const owner = snapshotOfKey(key);
+    if (!owner || key !== snapshotMetaKey(owner) || owner === pointerId) continue;
+    const meta = items[key];
+    if (meta?.v === 2 && meta.id === owner) candidates.push({ meta, id: owner });
+  }
+  if (candidates.length === 0) return { ok: false, code: 'none' };
+  /** @type {{ ok: true, payload: Record<string, any>, updatedAt: number, id: string } | null} */
+  let best = null;
+  /** @type {any} */
+  let first = null;
+  for (const [index, { meta, id }] of candidates.entries()) {
+    const r = await readSnapshot(items, meta, now);
+    if (index === 0 && pointer) first = r;
+    if (r.ok && (!best || r.updatedAt > best.updatedAt)) best = { ...r, id };
+  }
+  if (best && !(first && !first.ok && typeof pointer.updatedAt === 'number' && pointer.updatedAt > best.updatedAt)) return best;
+  return first ?? { ok: false, code: 'broken' };
+}
+
+/**
+ * Write the state to `storage.sync`. A readable snapshot in the area that is newer than the state is left alone, and so
+ * is a snapshot of a newer format.
+ * The chunks and the metas go out in one write, under keys named after the new snapshot, so they never collide with the
+ * chunks of the snapshot they replace or of one that another device writes at the same time. If that write fails (write
+ * rate, quota) or the push is cancelled first, the old snapshot is still whole. After the write only the keys of the
+ * snapshots that were replaced are removed (and format 1 chunks, and orphans of a lost race that were written over an hour ago): a clean-up never touches the chunks of a head it did not read. Readers go by the metas and ignore
+ * other keys, so a failed or skipped clean-up is harmless.
+ * Capacity: two snapshots must fit at once, so one snapshot may take half of the area (`too-large` above that). The old
+ * snapshot is never removed to make room. An old format 1 snapshot that leaves no room for the new one answers
+ * `too-large` and stays readable. Chunks of old lost races that block the write are removed first; recent ones answer
+ * `quota` (a later push finds them old enough).
+ * `storage.sync` has no compare-and-set: the head is read right before the write, and a newer snapshot that lands in the
+ * gap between that read and the write is overwritten in the shared meta only; its own meta and chunks stay and readers
+ * take the newest readable snapshot, so nothing is lost. A head that cannot be read is never written over, unless the
+ * caller says so (`allowBroken`: the person confirmed it, or the caller found the head's revision to be its own and is
+ * repairing it, sync.js).
  * @param {Area} syncArea
  * @param {any} state
+ * @param {{ live?: () => boolean, allowBroken?: boolean, now?: number }} [options]  `live` is asked after the account was read and right before the write; false ends the push
  */
-export async function syncPush(syncArea, state) {
+export async function syncPush(syncArea, state, { live = () => true, allowBroken = false, now = Date.now() } = {}) {
   if (!state.settings.syncEnabled) return { ok: false, code: 'disabled' };
-  const built = await buildSyncItems(state);
+  const built = await buildSyncItems(state, { id: newSnapshotId(now) });
   if (!built.ok) return built;
-  await syncArea.set(built.items);
+  if (!live()) return { ok: false, code: 'disabled' };
   const all = (await syncArea.get(null)) ?? {};
-  const meta = all[META_KEY];
-  if (meta && Number.isInteger(meta.n) && meta.n >= 0 && meta.n < SYNC.MAX_ITEMS) {
-    const keep = new Set([META_KEY]);
-    for (let i = 0; i < meta.n; i++) keep.add(`${SYNC.PREFIX}${i}`);
-    const stale = Object.keys(all).filter((k) => k.startsWith(SYNC.PREFIX) && !keep.has(k));
-    if (stale.length) await syncArea.remove(stale);
+  // Snapshots this push replaces: format 1 chunks (''), the one the shared meta names and the newest readable one.
+  /** @type {Set<string>} */
+  const replaced = new Set(['']);
+  if (all[META_KEY]) {
+    const head = await parseSyncItems(all, now);
+    if (head.ok && head.updatedAt > state.updatedAt) return { ok: true, skipped: true };
+    if (!head.ok && head.code === 'newer') return { ok: false, code: 'newer' };
+    if (!head.ok && head.code === 'broken' && !allowBroken) return { ok: false, code: 'broken' };
+    if (head.ok) replaced.add(head.id);
+    if (all[META_KEY].v === 2 && typeof all[META_KEY].id === 'string') replaced.add(all[META_KEY].id);
+  }
+  const horizon = now - ORPHAN_AGE_MS;
+  const owned = (/** @type {string} */ key) => {
+    const owner = snapshotOfKey(key);
+    return owner !== null && owner !== built.id && replaced.has(owner);
+  };
+  const old = (/** @type {string} */ key) => {
+    const owner = snapshotOfKey(key);
+    return owner !== null && owner !== built.id && !replaced.has(owner) && parseInt(owner.slice(0, owner.indexOf('-')), 36) < horizon;
+  };
+  let free = SYNC.TOTAL_BYTES - built.bytes;
+  let slots = SYNC.MAX_ITEMS - Object.keys(built.items).length;
+  let heldReplaced = 0;
+  /** @type {string[]} */
+  const sweep = [];
+  for (const [key, value] of Object.entries(all)) {
+    if (!key.startsWith(SYNC.PREFIX) || Object.hasOwn(built.items, key)) continue;
+    const size = itemBytes(key, value);
+    free -= size;
+    slots -= 1;
+    if (owned(key)) heldReplaced += size;
+    else if (old(key)) sweep.push(key);
+  }
+  if (free < 0 || slots < 0) {
+    // The replaced snapshot has to stay until the new one is committed; old lost races can go now.
+    const swept = sweep.reduce((n, key) => n + itemBytes(key, all[key]), 0);
+    if (free + swept < 0 || slots + sweep.length < 0) {
+      // Only the replaced snapshot is in the way: that cannot change. Anything else is recent and will have aged.
+      const permanent = heldReplaced + built.bytes > SYNC.TOTAL_BYTES;
+      return permanent ? { ok: false, code: 'too-large', bytes: built.bytes } : { ok: false, code: 'quota', retry: true };
+    }
+    if (!live()) return { ok: false, code: 'disabled' };
+    await syncArea.remove(sweep);
+  }
+  if (!live()) return { ok: false, code: 'disabled' };
+  await syncArea.set(built.items);
+  const stale = Object.keys(all).filter((key) => !Object.hasOwn(built.items, key) && (owned(key) || old(key)));
+  if (stale.length && live()) {
+    try {
+      await syncArea.remove(stale);
+    } catch {
+      // The new snapshot is already committed; the surplus keys are ignored by readers.
+    }
   }
   return { ok: true, bytes: built.bytes };
 }

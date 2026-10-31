@@ -55,6 +55,21 @@
   }
 
   /**
+   * The luminance of the text color at the middle of the window: the color of the top element there (text inherits it), or null.
+   * Many pages keep the default black text on the body and set their light text on an inner box.
+   * @param {Element} root @param {Element | null} body @param {(el: Element) => CSSStyleDeclaration} [styleOf]
+   */
+  function textAtCenter(root, body, styleOf = getComputedStyle) {
+    const w = innerWidth;
+    const h = innerHeight;
+    if (!(w > 0 && h > 0)) return null;
+    const el = document.elementFromPoint(w / 2, h / 2);
+    if (!el || el === root || el === body) return null;
+    const c = parse(styleOf(el).color);
+    return c && c.a >= 0.5 ? c.y : null;
+  }
+
+  /**
    * Read the signals. Runs with the engines' elements disabled and always puts them back.
    * @returns {{ dark: boolean, signals: { scheme: boolean, background: number | null, text: number | null } }}
    */
@@ -62,7 +77,21 @@
     probes += 1;
     const root = document.documentElement;
     // A frame whose core is older than this module has no `cascade`: the call throws and the page is themed as usual.
-    return /** @type {any} */ (dk).scheme.cascade((/** @type {any} */ r) => {
+    // The first look reads the root and the body only, which is cheap (the page below is held); a page that looks dark gets a second look that also hit tests.
+    return /** @type {any} */ (dk).scheme.cascade(
+      (/** @type {any} */ r) => {
+        const first = look(r, false);
+        if (!first.dark && !first.ask) return first;
+        r?.reveal?.();
+        return look(r, true);
+      },
+      null,
+      '',
+      true,
+    );
+
+    /** @param {any} r @param {boolean} hitTest */
+    function look(r, hitTest) {
       // An older core passes no reader.
       const styleOf = r?.style ?? getComputedStyle;
       const rootStyle = styleOf(root);
@@ -80,9 +109,15 @@
       const text = bodyStyle ? parse(bodyStyle.color) : null;
       const textY = text ? text.y : null;
       let dark = background < DARK_BACKGROUND && (textY === null || textY - background > MIN_TEXT_GAP);
-      if (dark && lightBoxAtCenter(root, body, 0.5, styleOf)) dark = false;
-      return { dark, signals: { scheme: schemeDark, background, text: textY } };
-    });
+      // A dark ground with body text as dark as it: the text that is really drawn at the middle decides, in the look that hit tests.
+      const ask = background < DARK_BACKGROUND && !dark;
+      if (ask && hitTest) {
+        const shown = textAtCenter(root, body, styleOf);
+        dark = shown !== null && shown - background > MIN_TEXT_GAP;
+      }
+      if (dark && hitTest && lightBoxAtCenter(root, body, 0.5, styleOf)) dark = false;
+      return { dark, ask: ask && !hitTest, signals: { scheme: schemeDark, background, text: textY } };
+    }
   }
 
   /**
@@ -180,6 +215,16 @@
       listen(window, 'load', () => run(true));
     }
 
+    /**
+     * Can a change of this attribute of the root or the body change the page's colors? Its class and style do, and so does a name that speaks of a theme.
+     * A light page that marks its own progress there (a loaded flag, a router state) must not cost a second look at load.
+     * @param {string} name
+     */
+    function themeAttribute(name) {
+      if (name.startsWith('data-dk')) return false;
+      return name === 'class' || name === 'style' || /theme|mode|scheme|color|colour|dark|light|night|skin|appearance|contrast|palette/i.test(name);
+    }
+
     /** Watch the root and the body for the attributes a page changes when it switches theme. */
     function watchRoot() {
       if (stopped) return;
@@ -193,8 +238,13 @@
       rootWatcher = new MutationObserver((records) => {
         // The engine's own markers (`data-dk-*`) are not the page's change.
         const ours = (/** @type {Node} */ n) => n instanceof Element && n.hasAttribute('data-dk');
-        const page = (/** @type {MutationRecord} */ r) =>
-          r.type === 'childList' ? [...r.addedNodes, ...r.removedNodes].some((n) => !ours(n)) : !(r.attributeName ?? '').startsWith('data-dk');
+        // A page held as dark can turn light through an attribute of any name; that recheck is rate limited by RECHECK_MS.
+        const held = gate.dark();
+        const page = (/** @type {MutationRecord} */ r) => {
+          if (r.type === 'childList') return [...r.addedNodes, ...r.removedNodes].some((n) => !ours(n));
+          const name = r.attributeName ?? '';
+          return held ? !name.startsWith('data-dk') : themeAttribute(name);
+        };
         if (!records.some(page)) return;
         changedSinceProbe = true;
         recheck();

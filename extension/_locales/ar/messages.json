@@ -14,6 +14,21 @@
   "cmdSwitchEngine": {
     "message": "تبديل محرك السمة"
   },
+  "cmdModeDark": {
+    "message": "التبديل إلى الوضع الداكن"
+  },
+  "cmdModeLight": {
+    "message": "التبديل إلى الوضع الفاتح"
+  },
+  "cmdModePaper": {
+    "message": "التبديل إلى وضع الورق"
+  },
+  "cmdModeEink": {
+    "message": "التبديل إلى وضع E-ink"
+  },
+  "cmdModeOriginal": {
+    "message": "التبديل إلى الألوان الأصلية"
+  },
   "menuToggleSite": {
     "message": "تشغيل Tintly أو إيقافه لهذا الموقع"
   }

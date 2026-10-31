@@ -7,7 +7,7 @@ import { createRouter } from './modules/router.js';
 import { createIcon } from './modules/icon.js';
 import { createData } from './modules/data.js';
 import { createVerifier } from './modules/verify.js';
-import { createCommands, createMenu, MENU_ID } from './modules/commands.js';
+import { bindCommands, createCommands, createMenu, MENU_ID } from './modules/commands.js';
 import { createSync } from './modules/sync.js';
 import { createEarly } from './modules/early.js';
 import { createOnDemand } from './modules/ondemand.js';
@@ -41,7 +41,8 @@ const readRules = async () => {
   return read.ok ? { settings: read.state.settings, siteRules: read.state.siteRules, idle: alarms.idleFor(read.state.settings) } : null;
 };
 const register = createRegister({ scripting: chrome.scripting, tabs: chrome.tabs, warn, read: readRules });
-const router = createRouter({ runtimeId: chrome.runtime.id, extensionOrigin, state, net, icon, data, tabs: chrome.tabs, ondemand, register });
+const sync = createSync({ local: chrome.storage.local, sync: chrome.storage.sync, state, retryAlarm: alarms.retry });
+const router = createRouter({ runtimeId: chrome.runtime.id, extensionOrigin, state, net, icon, data, tabs: chrome.tabs, ondemand, register, sync });
 const loading = createLoading({
   register,
   siteEnabled,
@@ -67,7 +68,6 @@ const sitePages = createSitePages({
   lang: () => chrome.i18n.getUILanguage?.() ?? '',
   warn,
 });
-const sync = createSync({ local: chrome.storage.local, sync: chrome.storage.sync, state, retryAlarm: alarms.retry });
 const activeTab = async () => (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
 const commands = createCommands({ state, activeTab });
 const menu = createMenu({
@@ -130,7 +130,7 @@ chrome.runtime.onStartup.addListener(() => {
   void start().catch(warn);
 });
 
-chrome.commands.onCommand.addListener((command, tab) => {
+bindCommands(chrome.commands, (command, tab) => {
   void commands.handle(command, tab).catch(warn);
 });
 

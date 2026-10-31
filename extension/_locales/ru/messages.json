@@ -1,0 +1,35 @@
+{
+  "extName": {
+    "message": "Tintly - тёмный, светлый, Paper, E-ink и цветовое зрение"
+  },
+  "extDescription": {
+    "message": "Тёмный, светлый, Paper и E-ink режимы и фильтры для людей с нарушением цветового зрения на любом сайте. Быстро и приватно. Данные не собираются."
+  },
+  "cmdToggleExtension": {
+    "message": "Включить или выключить Tintly"
+  },
+  "cmdToggleSite": {
+    "message": "Включить или выключить Tintly на этом сайте"
+  },
+  "cmdSwitchEngine": {
+    "message": "Сменить движок тем"
+  },
+  "cmdModeDark": {
+    "message": "Переключить на тёмный режим"
+  },
+  "cmdModeLight": {
+    "message": "Переключить на светлый режим"
+  },
+  "cmdModePaper": {
+    "message": "Переключить на режим Paper"
+  },
+  "cmdModeEink": {
+    "message": "Переключить на режим E-ink"
+  },
+  "cmdModeOriginal": {
+    "message": "Вернуть исходные цвета"
+  },
+  "menuToggleSite": {
+    "message": "Включить или выключить Tintly на этом сайте"
+  }
+}

@@ -15,7 +15,7 @@
     const held = () => /** @type {any} */ (globalThis).__dkHold;
     const { rate: INLINE_RATE, now: INLINE_NOW, pause: INLINE_PAUSE_MS, pauseMax: INLINE_PAUSE_MAX_MS, add: ADD_BUDGET, settle: SETTLE_MS } = ctx.limits;
 
-    /** @typedef {{ root: ShadowRoot, style: HTMLStyleElement | null, attrs: HTMLStyleElement | null, attrVersion: number, ids: Map<string, string>, added: string[], dirty: boolean, queue: Set<Element>, timer: ReturnType<typeof setTimeout> | null, attrMo: MutationObserver | null, addMo: MutationObserver | null, windowStart: number, count: number, pause: number, addWindow: number, addBudget: number, gone: boolean }} RootInline */
+    /** @typedef {{ root: ShadowRoot, style: HTMLStyleElement | null, attrs: HTMLStyleElement | null, attrVersion: number, ids: Map<string, string>, added: string[], dirty: boolean, queue: Set<Element>, timer: ReturnType<typeof setTimeout> | null, attrMo: MutationObserver | null, addMo: MutationObserver | null, windowStart: number, count: number, pause: number, addWindow: number, addBudget: number, overflow: object, draining: boolean, gone: boolean }} RootInline */
     const WATCHED_ATTRS = ['style', 'background', 'bgcolor', 'text', 'link', 'vlink', 'alink', 'color', 'fill', 'stroke', 'stop-color', 'flood-color', 'contenteditable'];
     const MAX_ROOT_STATES = 64;
 
@@ -29,7 +29,7 @@
       /** @type {RootInline} */
       const rs = {
         root, style: null, attrs: null, attrVersion: -1, ids: new Map(), added: [], dirty: false, queue: new Set(), timer: null,
-        attrMo: null, addMo: null, windowStart: performance.now(), count: 0, pause: INLINE_PAUSE_MS, addWindow: 0, addBudget: ADD_BUDGET, gone: false,
+        attrMo: null, addMo: null, windowStart: performance.now(), count: 0, pause: INLINE_PAUSE_MS, addWindow: 0, addBudget: ADD_BUDGET, overflow: {}, draining: false, gone: false,
       };
       rootInline.set(root, rs);
       void rootPass(rs);
@@ -117,15 +117,36 @@
       rs.attrs.textContent = ctx.attrSheetText();
     }
 
-    /** @param {RootInline} rs */
-    function drainRoot(rs) {
+    /**
+     * Work off the queue of a root in slices. The rules made so far are written at each pause; elements queued meanwhile are
+     * taken by the same loop.
+     * @param {RootInline} rs
+     */
+    async function drainRoot(rs) {
       if (rs.timer !== null) clearTimeout(rs.timer);
       rs.timer = null;
-      if (dead() || inlineOff() || rs.gone) return;
-      for (const el of rs.queue) if (el.isConnected) processInline(el, rs);
-      rs.queue.clear();
-      flushRoot(rs);
-      flushInline();
+      if (rs.draining || dead() || inlineOff() || rs.gone) return;
+      rs.draining = true;
+      sl.reset();
+      try {
+        for (const el of rs.queue) {
+          rs.queue.delete(el);
+          if (el.isConnected) processInline(el, rs);
+          if (rs.queue.size && sl.shouldYield()) {
+            flushRoot(rs);
+            flushInline();
+            await sl.yieldNow();
+            if (dead() || inlineOff() || rs.gone) return;
+          }
+        }
+        flushRoot(rs);
+        flushInline();
+      } catch (error) {
+        fault(error);
+      } finally {
+        sl.finish();
+        rs.draining = false;
+      }
     }
 
     /** @param {RootInline} rs */
@@ -162,8 +183,8 @@
         }
         flushAttrs();
         flushRootAttrs(rs);
-        if (rs.queue.size && rs.queue.size <= INLINE_NOW) drainRoot(rs);
-        else if (rs.queue.size && rs.timer === null) rs.timer = setTimeout(() => drainRoot(rs), 40);
+        if (rs.queue.size && rs.queue.size <= INLINE_NOW) void drainRoot(rs);
+        else if (rs.queue.size && rs.timer === null) rs.timer = setTimeout(() => void drainRoot(rs), 40);
       });
       rs.attrMo.observe(rs.root, { attributes: true, attributeFilter: WATCHED_ATTRS, subtree: true });
     }
@@ -177,14 +198,16 @@
           rs.addWindow = now;
           rs.addBudget = ADD_BUDGET;
         }
+        // Past the budget the elements are not followed one by one: one pass over the root later finds them.
         const take = (/** @type {Element} */ el) => {
           if (rs.addBudget-- > 0) rs.queue.add(el);
+          else later(rs.overflow, () => !rs.gone && void rootPass(rs), INLINE_PAUSE_MS);
         };
         for (const r of records) for (const n of r.addedNodes) if (n instanceof Element) ctx.visitAdded(n, take, false);
         flushAttrs();
         flushRootAttrs(rs);
-        if (rs.queue.size && rs.queue.size <= INLINE_NOW) drainRoot(rs);
-        else if (rs.queue.size && rs.timer === null) rs.timer = setTimeout(() => drainRoot(rs), 40);
+        if (rs.queue.size && rs.queue.size <= INLINE_NOW) void drainRoot(rs);
+        else if (rs.queue.size && rs.timer === null) rs.timer = setTimeout(() => void drainRoot(rs), 40);
       });
       rs.addMo.observe(rs.root, { childList: true, subtree: true });
     }

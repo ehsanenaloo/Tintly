@@ -893,7 +893,8 @@
      * @param {string} fg @param {string} bg @returns {string | null}
      */
     function pairColor(fg, bg) {
-      if (repair || typeof transformer.pair !== 'function') return null;
+      if (repair) return keptPair(fg, bg);
+      if (typeof transformer.pair !== 'function') return null;
       const key = `${fg}\u0001${bg}`;
       let out = pairs.get(key);
       if (out === undefined) {
@@ -904,6 +905,24 @@
         pairs.set(key, out);
       }
       return out === '' ? null : out;
+    }
+
+    /**
+     * Repair mode: a rule keeps its own opaque background (the dark theme uses it too) and its text color moved. When the page's
+     * pair read well and the moved text reads worse on that background, the text keeps the page's color.
+     * @param {string} fg @param {string} bg @returns {string | null}
+     */
+    function keptPair(fg, bg) {
+      if (colorOf(bg, 'background') !== bg) return null;
+      const moved = colorOf(fg, 'foreground');
+      if (moved === null || moved === fg) return null;
+      const color = /** @type {any} */ (dk).color;
+      const f = color.parseColor(fg);
+      const b = color.parseColor(bg);
+      const m = color.parseColor(moved);
+      if (!f || !b || !m || b.a < 1 || f.a < 1) return null;
+      const before = color.contrastRatio(f, b);
+      return before >= 3 && color.contrastRatio(m, b) < before ? fg : null;
     }
 
     return Object.freeze({

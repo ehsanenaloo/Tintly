@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Tintly is in development and has no store release yet. Security fixes are made to the latest code on the `main` branch and, once there are releases, to the latest release. Older versions are not patched. Please update before you report.
+Security fixes are made to the latest release and to the latest code on the `main` branch. Older versions are not patched. Please update before you report.
 
 ## Reporting a vulnerability
 

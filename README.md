@@ -11,18 +11,17 @@
 Turn any page dark, light, paper-like or E-ink gray. Move colors apart when red and green look the same to you. Set it once per site and forget it. Everything stays on your device.
 
 [![User guide](https://img.shields.io/badge/User%20guide-Read%20online-0f766e?logo=readthedocs&logoColor=white&style=for-the-badge)](https://enaloo.com/apps/tintly/)
-[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/enaloo)
+[![Support Tintly](https://img.shields.io/badge/Support%20Tintly-FFDD00?style=for-the-badge&logoColor=black)](https://enaloo.com/support/)
 
-[![CI](https://github.com/ehsanenaloo/Tintly/actions/workflows/ci.yml/badge.svg)](https://github.com/ehsanenaloo/Tintly/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/ehsanenaloo/Tintly?include_prereleases&label=release)](https://github.com/ehsanenaloo/Tintly/releases)
 [![Manifest V3](https://img.shields.io/badge/manifest-V3-blue.svg)](extension/manifest.json)
 [![Browsers](https://img.shields.io/badge/browsers-Chrome%20%7C%20Edge%20%7C%20Firefox-informational.svg)](#install)
-[![Languages](https://img.shields.io/badge/interface-en%20%7C%20fa%20%7C%20ar%20%7C%20he-orange.svg)](#languages)
+[![Languages](https://img.shields.io/badge/interface-en%20%7C%20fa%20%7C%20ar%20%7C%20he%20%7C%20es%20%7C%20pt%20%7C%20ru%20%7C%20de%20%7C%20fr%20%7C%20zh%20%7C%20zh--TW%20%7C%20ko%20%7C%20ja%20%7C%20hi%20%7C%20id%20%7C%20it%20%7C%20tr-orange.svg)](#languages)
 [![Analytics](https://img.shields.io/badge/analytics-none-lightgrey.svg)](#private-by-design)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/ehsanenaloo/Tintly?style=social)](https://github.com/ehsanenaloo/Tintly/stargazers)
 
-<a href="https://enaloo.com/apps/tintly/"><img src=".github/assets/before-after.png" width="860" alt="The same article before Tintly on the left and with the dark theme on the right"></a>
+<a href="https://enaloo.com/apps/tintly/"><img src=".github/assets/banner-five-modes.png" width="860" alt="One article page in five modes side by side: Original, Light, Paper, E-ink and Dark"></a>
 
 </div>
 
@@ -112,18 +111,16 @@ Paper and E-ink turn a busy page into something that feels like a book.
 
 <table>
   <tr>
-    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src=".github/assets/toolbar-window.png" alt="A dark article page with the Tintly toolbar window open"></a></td>
-    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src=".github/assets/paper-and-eink.png" alt="The same article in Paper on the left and in E-ink on the right"></a></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src=".github/assets/banner-dark.png" alt="An article before Tintly and with Dark mode"></a></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src=".github/assets/banner-toolbar.png" alt="The Tintly toolbar window and its main controls"></a></td>
   </tr>
   <tr>
-    <td align="center"><sub>The toolbar window: mode, color vision, sliders and presets</sub></td>
-    <td align="center"><sub>Paper and E-ink for reading</sub></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src=".github/assets/banner-reading.png" alt="An article in Paper and in E-ink"></a></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src=".github/assets/banner-color-vision.png" alt="A status board before color correction and with the correction for green weakness"></a></td>
   </tr>
   <tr>
-    <td colspan="2"><a href="https://enaloo.com/apps/tintly/"><img src=".github/assets/settings.png" alt="The Tintly settings page in the dark look"></a></td>
-  </tr>
-  <tr>
-    <td colspan="2" align="center"><sub>The settings page: sites, schedule, palettes, backup</sub></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src=".github/assets/banner-sites-schedule.png" alt="The settings for sites and for the schedule"></a></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src=".github/assets/banner-private.png" alt="Privacy in Tintly: no tracking, no account, open source"></a></td>
   </tr>
 </table>
 
@@ -152,18 +149,16 @@ Full text: [Privacy policy](docs/PRIVACY.md).
 
 | Browser | Minimum | How |
 |---|---|---|
-| Chrome and Edge | 119 | Clone this repository, run `npm install`, open `chrome://extensions`, turn on Developer mode and choose **Load unpacked**. Pick the `extension/` folder |
-| Firefox | 128 | Run `npm run build:firefox`. In `about:debugging` load the zip from `dist/` as a temporary add-on |
-
-Store listings are on the way. Watch the repository to hear when they are live.
+| Chrome and Edge | 119 | Install from the Chrome Web Store or Edge Add-ons. To run the source, clone this repository, open `chrome://extensions`, turn on Developer mode and choose **Load unpacked**. Pick the `extension/` folder |
+| Firefox | 128 | Install from Firefox Add-ons. Firefox needs its own package, which the maintainer builds from `extension/` |
 
 ---
 
 ## Languages
 
-The interface is in English, Persian, Arabic and Hebrew. Persian, Arabic and Hebrew are right to left, and the whole window mirrors. To fix a text or add a language, read [TRANSLATING.md](docs/TRANSLATING.md) or use the [translation fix form](https://github.com/ehsanenaloo/Tintly/issues/new?template=translation_fix.yml).
+The interface is in English, Persian, Arabic, Hebrew, Spanish, Portuguese (Brazil), Russian, German, French, Chinese (Simplified), Chinese (Traditional), Korean, Japanese, Hindi, Indonesian, Italian and Turkish. Persian, Arabic and Hebrew are right to left, and the whole window mirrors. To fix a text or add a language, read [TRANSLATING.md](docs/TRANSLATING.md) or use the [translation fix form](https://github.com/ehsanenaloo/Tintly/issues/new?template=translation_fix.yml).
 
-The translations are machine-made. If you offer a fluent, native translation for any language, we will publish it under your name.
+Every translation except English is machine-made, and no native speaker has checked it yet. If you are a native speaker and you improve the texts of your language, we will publish your work under your name. Start with [TRANSLATING.md](docs/TRANSLATING.md) or the translation fix form.
 
 ---
 
@@ -189,20 +184,7 @@ The translations are machine-made. If you offer a fluent, native translation for
 
 ## Develop
 
-Node.js 22 or newer.
-
-```bash
-npm install
-npm run check          # static checks, type check and unit tests
-npm run build          # Chrome and Edge package in dist/
-npm run build:firefox  # Firefox package in dist/
-npm run lint:firefox   # builds the Firefox package and runs the add-on linter on it
-npm run test:browser   # real Chromium; run `npx playwright install chromium` once
-npm run test:firefox   # real Firefox; needs Firefox installed
-npm run test:perf      # speed and size budgets
-```
-
-`.npmrc` sets `ignore-scripts=true`, so installing a package never runs its install script. More in [docs/TESTING.md](docs/TESTING.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+There is no build step and nothing to install. Load the `extension/` folder in Chrome or Edge as shown in [Install](#install), make your change, and choose the reload button of the extension. The maintainer runs the checks and the tests and builds the store packages. More in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
 ```text
 extension/            the extension exactly as it ships (no build step)
@@ -210,14 +192,11 @@ extension/            the extension exactly as it ships (no build step)
   content/            gate, engines and the small page-world hook
   pages/              toolbar window, settings page, fix editor
   shared/             settings, storage, languages, limits
-  data/               site data written by npm run data:build
+  data/               site data built from data-src/
   _locales/           browser-level strings
 data-src/             source of the site data (fixes and the dark-site list)
-scripts/              validation, packaging, data tools
-tests/                unit, browser, Firefox and performance tests
-types/                type declarations
-docs/                 privacy policy, architecture, testing and translating notes
-.github/              community files, issue forms, workflows, README images
+docs/                 privacy policy, architecture and translating notes
+.github/              community files, issue forms, README images
 ```
 
 ---
@@ -230,9 +209,8 @@ docs/                 privacy policy, architecture, testing and translating note
 | [Privacy policy](docs/PRIVACY.md) | What is read, kept and sent |
 | [Translating](docs/TRANSLATING.md) | How to fix a text or add a language |
 | [Architecture](docs/ARCHITECTURE.md) | Engines, worlds, worker and data flow |
-| [Testing](docs/TESTING.md) | The test suites and how to run them |
 | [Changelog](CHANGELOG.md) | What changed |
-| [Contributing](.github/CONTRIBUTING.md) | Setup, rules, tests, fixes, translations |
+| [Contributing](.github/CONTRIBUTING.md) | Setup, rules, fixes, translations |
 | [Support](.github/SUPPORT.md) | Where to ask |
 | [Security](.github/SECURITY.md) | How to report a vulnerability |
 
@@ -243,10 +221,10 @@ docs/                 privacy policy, architecture, testing and translating note
 Bug reports, reports of pages that look wrong, translation fixes and small pull requests are welcome. Read [CONTRIBUTING.md](.github/CONTRIBUTING.md) first. By taking part you agree to the [Code of Conduct](.github/CODE_OF_CONDUCT.md).
 
 - **Report a page that looks wrong.** Use the page looks wrong form and give the address, the mode and the engine.
-- **Improve the words.** Fixes for the Persian, Arabic and Hebrew texts are very welcome.
+- **Improve the words.** Fixes for the texts in any language are very welcome.
 - **Star the repository** if it helps you. It helps other people find it.
 
-If Tintly is easier on your eyes, you can [buy me a coffee](https://buymeacoffee.com/enaloo). It is never expected, and it changes nothing about how issues are handled.
+If Tintly is easier on your eyes, you can [support the project](https://enaloo.com/support/). It is never expected, and it changes nothing about how issues are handled.
 
 Security problems go through [SECURITY.md](.github/SECURITY.md), not public issues.
 

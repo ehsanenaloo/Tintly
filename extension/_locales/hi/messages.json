@@ -1,0 +1,35 @@
+{
+  "extName": {
+    "message": "Tintly - डार्क, लाइट, पेपर, E-ink और रंग दृष्टि"
+  },
+  "extDescription": {
+    "message": "हर वेबसाइट के लिए डार्क, लाइट, पेपर और E-ink मोड और रंग दृष्टि फ़िल्टर। तेज़ और निजी। कोई डेटा इकट्ठा नहीं किया जाता।"
+  },
+  "cmdToggleExtension": {
+    "message": "Tintly चालू या बंद करें"
+  },
+  "cmdToggleSite": {
+    "message": "इस साइट पर Tintly चालू या बंद करें"
+  },
+  "cmdSwitchEngine": {
+    "message": "थीम इंजन बदलें"
+  },
+  "cmdModeDark": {
+    "message": "डार्क मोड पर जाएँ"
+  },
+  "cmdModeLight": {
+    "message": "लाइट मोड पर जाएँ"
+  },
+  "cmdModePaper": {
+    "message": "पेपर मोड पर जाएँ"
+  },
+  "cmdModeEink": {
+    "message": "E-ink मोड पर जाएँ"
+  },
+  "cmdModeOriginal": {
+    "message": "मूल रंगों पर जाएँ"
+  },
+  "menuToggleSite": {
+    "message": "इस साइट पर Tintly चालू या बंद करें"
+  }
+}

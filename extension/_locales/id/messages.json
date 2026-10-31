@@ -1,0 +1,35 @@
+{
+  "extName": {
+    "message": "Tintly - Mode Gelap, Terang, Kertas, E-ink, dan Penglihatan Warna"
+  },
+  "extDescription": {
+    "message": "Mode gelap, terang, Kertas, dan E-ink serta filter penglihatan warna untuk setiap situs web. Cepat dan privat. Tidak ada data yang dikumpulkan."
+  },
+  "cmdToggleExtension": {
+    "message": "Aktifkan atau nonaktifkan Tintly"
+  },
+  "cmdToggleSite": {
+    "message": "Aktifkan atau nonaktifkan Tintly di situs ini"
+  },
+  "cmdSwitchEngine": {
+    "message": "Ganti mesin tema"
+  },
+  "cmdModeDark": {
+    "message": "Beralih ke mode gelap"
+  },
+  "cmdModeLight": {
+    "message": "Beralih ke mode terang"
+  },
+  "cmdModePaper": {
+    "message": "Beralih ke mode Kertas"
+  },
+  "cmdModeEink": {
+    "message": "Beralih ke mode E-ink"
+  },
+  "cmdModeOriginal": {
+    "message": "Beralih ke warna asli"
+  },
+  "menuToggleSite": {
+    "message": "Aktifkan atau nonaktifkan Tintly di situs ini"
+  }
+}

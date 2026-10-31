@@ -88,24 +88,25 @@
     return /** @type {any} */ (dk.scheme).cascade(
       (/** @type {any} */ r) => {
         const styleOf = r?.style ?? getComputedStyle;
-        const verdict = look(styleOf);
+        const verdict = look(styleOf, r);
         if (!options.plainWhen?.(verdict)) return verdict;
         // Still on: the ones `keep` named.
         const kept = /** @type {HTMLStyleElement[]} */ ([...document.querySelectorAll('style[data-dk]')].filter((el) => el instanceof HTMLStyleElement && !el.disabled));
         for (const el of kept) el.disabled = true;
         try {
           r?.settle();
-          return { ...verdict, plain: look(styleOf) };
+          return { ...verdict, plain: look(styleOf, r) };
         } finally {
           for (const el of kept) el.disabled = false;
         }
       },
       (/** @type {HTMLStyleElement} */ el) => options.keep(el),
       options.scheme ? '@media screen{html{color-scheme:dark!important}}' : '',
+      true,
     );
 
-    /** @param {any} styleOf @returns {any} */
-    function look(styleOf) {
+    /** The page below the body is held until a look has found the root and the body fit (the sections and the middle of the window need layout). @param {any} styleOf @param {any} [r] @returns {any} */
+    function look(styleOf, r) {
       const rootStyle = styleOf(root);
       const meta = document.querySelector('meta[name="color-scheme" i]');
       const scheme = `${rootStyle.colorScheme} ${meta ? meta.getAttribute('content') ?? '' : ''}`.toLowerCase().split(/[\s,]+/).filter(Boolean);
@@ -122,6 +123,10 @@
       const rootSolid = parse(rootStyle.backgroundColor);
       const canvasFromBody = !!bodySolid && bodySolid.a >= 0.5 && !(rootSolid && rootSolid.a >= 0.5);
       const contrast = (Math.max(background, text.y) + 0.05) / (Math.min(background, text.y) + 0.05);
+      if (!(background < DARK_BACKGROUND && contrast >= options.minContrast)) {
+        return { ok: false, contrast, background, text: text.y, repair: false, canvasFromBody, lightSections: 0, lightShare: 0 };
+      }
+      r?.reveal?.();
       const sections = lightSections(body, kit, styleOf);
       const ok = background < DARK_BACKGROUND && contrast >= options.minContrast && !lightBoxAtCenter(root, body, 0.5, styleOf) && sections.share < LIGHT_SHARE_MAX;
       // A light box low in the window, or a light section anywhere on the page, is for the repair to darken.
@@ -242,7 +247,7 @@
         if (typeof value !== 'string') return whole;
         // A color that the page's own dark theme puts in its palette is the page's decision (its accent, its ink on the accent, its lines).
         const mine = color ? color.parseColor(value) : null;
-        if (mine && current?.(mine, role)) {
+        if (mine && current?.(mine, role, true)) {
           repairCache.set(key, '');
           return whole;
         }
@@ -282,12 +287,22 @@
   const GROUP = /** @type {Record<string, string>} */ ({ background: 'b', foreground: 'c', border: 'd', edge: 'd' });
   const FAMILY_GROUP = /** @type {Record<string, string>} */ ({ b: 'b', c: 'c', f: 'c', d: 'd', o: 'd' });
   const COLOR_TOKEN = /#[0-9a-f]{3,8}\b|(?:rgb|hsl)a?\([^()]*\)/gi;
-  /** The test of the repair that runs now: is a color part of the page's own dark theme? @type {((c: any, role: string) => boolean) | null} */
+  /** The test of the repair that runs now: is a color part of the page's own dark theme? @type {((c: any, role: string, token?: boolean) => boolean) | null} */
   let current = null;
   const MAX_VARS = 600;
   const MAX_PALETTE = 5000;
   /** @param {{ r: number, g: number, b: number, a: number }} c */
   const paletteKey = (c) => `${Math.round(c.r * 255)},${Math.round(c.g * 255)},${Math.round(c.b * 255)},${Math.round(c.a * 100)}`;
+  const BLACK = { r: 0, g: 0, b: 0, a: 1 };
+  /** A color as it shows over black. @param {{ r: number, g: number, b: number, a: number }} c */
+  const overBlack = (c) => ({ r: c.r * c.a, g: c.g * c.a, b: c.b * c.a, a: 1 });
+  /** Does a text color keep a contrast of 3 on black? @param {{ r: number, g: number, b: number, a: number }} c */
+  const readsOnDark = (c) => /** @type {any} */ (dk.color).contrastRatio(overBlack(c), BLACK) >= 3;
+  /** Is a background a light gray or white (no accent)? The same limits as a background that is fine for a dark page. @param {{ r: number, g: number, b: number, a: number }} c */
+  const lightNeutral = (c) => {
+    const [L, C] = /** @type {any} */ (dk.color).toOklch(overBlack(c));
+    return L >= 0.35 && C < 0.08;
+  };
 
   /** @param {Context} ctx */
   function create(ctx) {
@@ -335,10 +350,18 @@
      * Is this color part of the page's own dark theme for this role? Repair mode leaves such a color as it is: the page chose it
      * (its accent, the ink on its accent, its lines), and a color moved by our curves would break the pair.
      * @param {{ r: number, g: number, b: number, a: number }} c @param {string} role
+     * @param {boolean} [token]  the color is the root value of a variable: the page's dark theme sets that variable for this use
      */
-    function ownColor(c, role) {
+    function ownColor(c, role, token = false) {
       const g = GROUP[role];
-      return g !== undefined && palette.has(`${g}|${paletteKey(c)}`);
+      if (g === undefined || !palette.has(`${g}|${paletteKey(c)}`)) return false;
+      if (token) return true;
+      // Black ink and a white or light gray background in the dark rules belong to a light button or chip there. The same colors
+      // in a light rule are the text and the surfaces of the light theme: kept, the text vanishes on the dark page and the
+      // surface stays light. A light rule that keeps its own accent background keeps its ink by the pair rule of the rewriter.
+      if (role === 'foreground') return readsOnDark(c);
+      if (role === 'background') return !lightNeutral(c);
+      return true;
     }
 
     /** @param {CSSRuleList} rules @param {number} depth */

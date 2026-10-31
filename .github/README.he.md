@@ -11,18 +11,17 @@
 בחרו לכל דף מראה כהה, בהיר, דמוי נייר או אפור בסגנון E-ink. אם קשה לכם להבחין בין אדום לירוק, Tintly עוזר להבליט את ההבדל ביניהם. הגדירו כל אתר פעם אחת, וההגדרות יישמרו לביקורים הבאים. הכול נעשה במכשיר שלכם.
 
 [![User guide](https://img.shields.io/badge/User%20guide-Read%20online-0f766e?logo=readthedocs&logoColor=white&style=for-the-badge)](https://enaloo.com/apps/tintly/)
-[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/enaloo)
+[![Support Tintly](https://img.shields.io/badge/Support%20Tintly-FFDD00?style=for-the-badge&logoColor=black)](https://enaloo.com/support/)
 
-[![CI](https://github.com/ehsanenaloo/Tintly/actions/workflows/ci.yml/badge.svg)](https://github.com/ehsanenaloo/Tintly/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/ehsanenaloo/Tintly?include_prereleases&label=release)](https://github.com/ehsanenaloo/Tintly/releases)
 [![Manifest V3](https://img.shields.io/badge/manifest-V3-blue.svg)](../extension/manifest.json)
 [![Browsers](https://img.shields.io/badge/browsers-Chrome%20%7C%20Edge%20%7C%20Firefox-informational.svg)](#התקנה)
-[![Languages](https://img.shields.io/badge/interface-en%20%7C%20fa%20%7C%20ar%20%7C%20he-orange.svg)](#languages)
+[![Languages](https://img.shields.io/badge/interface-en%20%7C%20fa%20%7C%20ar%20%7C%20he%20%7C%20es%20%7C%20pt%20%7C%20ru%20%7C%20de%20%7C%20fr%20%7C%20zh%20%7C%20zh--TW%20%7C%20ko%20%7C%20ja%20%7C%20hi%20%7C%20id%20%7C%20it%20%7C%20tr-orange.svg)](#languages)
 [![Analytics](https://img.shields.io/badge/analytics-none-lightgrey.svg)](#פרטיות-כחלק-מהתכנון)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](../LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/ehsanenaloo/Tintly?style=social)](https://github.com/ehsanenaloo/Tintly/stargazers)
 
-<a href="https://enaloo.com/apps/tintly/"><img src="assets/before-after.png" width="860" alt="מאמר לפני Tintly משמאל ועם ערכת נושא כהה מימין"></a>
+<a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-five-modes.png" width="860" alt="דף מאמר אחד בחמישה מצבים זה לצד זה: מקורי, בהיר, נייר, E-ink וכהה"></a>
 
 </div>
 
@@ -114,18 +113,16 @@ Tintly מתאים את צבעי הדף עצמו, כך שאין צורך באתר
 
 <table>
   <tr>
-    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/toolbar-window.png" alt="דף מאמר כהה עם חלון סרגל הכלים של Tintly"></a></td>
-    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/paper-and-eink.png" alt="אותו מאמר במצב נייר משמאל ובמצב E-ink מימין"></a></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-dark.png" alt="מאמר לפני Tintly ועם מצב כהה"></a></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-toolbar.png" alt="חלון סרגל הכלים של Tintly והפקדים העיקריים שלו"></a></td>
   </tr>
   <tr>
-    <td align="center"><sub>חלון סרגל הכלים: מצב תצוגה, התאמות לעיוורון צבעים, מחוונים והגדרות שמורות</sub></td>
-    <td align="center"><sub>נייר ו-E-ink לקריאה</sub></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-reading.png" alt="מאמר במצב נייר ובמצב E-ink"></a></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-color-vision.png" alt="לוח מצב לפני תיקון הצבעים ועם תיקון לחולשה בראיית ירוק"></a></td>
   </tr>
   <tr>
-    <td colspan="2"><a href="https://enaloo.com/apps/tintly/"><img src="assets/settings.png" alt="דף ההגדרות של Tintly במראה כהה"></a></td>
-  </tr>
-  <tr>
-    <td colspan="2" align="center"><sub>דף ההגדרות: אתרים, לוח זמנים, פלטות, גיבוי</sub></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-sites-schedule.png" alt="ההגדרות של אתרים ושל תזמון"></a></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-private.png" alt="פרטיות ב-Tintly: בלי מעקב, בלי חשבון, קוד פתוח"></a></td>
   </tr>
 </table>
 
@@ -154,10 +151,8 @@ Tintly מתאים את צבעי הדף עצמו, כך שאין צורך באתר
 
 | דפדפן | גרסה מינימלית | איך |
 |---|---|---|
-| Chrome ו-Edge | 119 | שכפלו את המאגר והריצו `npm install`. פתחו את `chrome://extensions`, הפעילו Developer mode ולחצו **Load unpacked**. בחרו את התיקייה `extension/` |
-| Firefox | 128 | הריצו `npm run build:firefox`. ב-`about:debugging` טענו את קובץ ה-zip מהתיקייה `dist/` כתוסף זמני |
-
-התוסף יעלה בקרוב לחנויות הדפדפנים. עקבו אחרי המאגר כדי לקבל עדכון כשהוא יהיה זמין.
+| Chrome ו-Edge | 119 | התקינו מ-Chrome Web Store או מ-Edge Add-ons. כדי להריץ את קוד המקור, שכפלו את המאגר, פתחו את `chrome://extensions`, הפעילו Developer mode ולחצו **Load unpacked**. בחרו את התיקייה `extension/` |
+| Firefox | 128 | התקינו מ-Firefox Add-ons. Firefox צריך חבילה משלו, ומתחזק הפרויקט בונה אותה מהתיקייה `extension/` |
 
 ---
 
@@ -165,9 +160,9 @@ Tintly מתאים את צבעי הדף עצמו, כך שאין צורך באתר
 
 ## שפות
 
-הממשק זמין באנגלית, בפרסית, בערבית ובעברית. בפרסית, בערבית ובעברית, פריסת החלון כולו מותאמת לכיוון הכתיבה מימין לשמאל. כדי לתקן טקסט או להוסיף שפה, קראו את [TRANSLATING.md](../docs/TRANSLATING.md) (באנגלית) או השתמשו ב[טופס תיקון תרגום](https://github.com/ehsanenaloo/Tintly/issues/new?template=translation_fix.yml).
+הממשק זמין באנגלית, בפרסית, בערבית, בעברית, בספרדית, בפורטוגזית (ברזיל), ברוסית, בגרמנית, בצרפתית, בסינית (מפושטת), בסינית (מסורתית), בקוריאנית, ביפנית, בהינדית, באינדונזית, באיטלקית ובטורקית. בפרסית, בערבית ובעברית, פריסת החלון כולו מותאמת לכיוון הכתיבה מימין לשמאל. כדי לתקן טקסט או להוסיף שפה, קראו את [TRANSLATING.md](../docs/TRANSLATING.md) (באנגלית) או השתמשו ב[טופס תיקון תרגום](https://github.com/ehsanenaloo/Tintly/issues/new?template=translation_fix.yml).
 
-תרגומי הממשק הוכנו בעזרת תרגום מכונה. אם תציעו תרגום טבעי ושוטף בשפת האם שלכם, נפרסם אותו בשמכם.
+כל התרגומים חוץ מהאנגלית הם תרגומי מכונה, ועדיין אף דובר שפת אם לא בדק אותם. אם אחת השפות האלה היא שפת האם שלכם ושיפרתם את הטקסטים, נפרסם את העבודה בשמכם. התחילו מ-[TRANSLATING.md](../docs/TRANSLATING.md) (באנגלית) או מטופס תיקון התרגום.
 
 ---
 
@@ -193,20 +188,7 @@ Tintly מתאים את צבעי הדף עצמו, כך שאין צורך באתר
 
 ## פיתוח
 
-נדרש Node.js גרסה 22 ומעלה.
-
-```bash
-npm install
-npm run check          # בדיקות סטטיות, בדיקת טיפוסים ובדיקות יחידה
-npm run build          # חבילת Chrome ו-Edge בתיקייה dist/
-npm run build:firefox  # חבילת Firefox בתיקייה dist/
-npm run lint:firefox   # בונה את חבילת Firefox ומריץ את בודק התוספים
-npm run test:browser   # Chromium אמיתי; הריצו npx playwright install chromium פעם אחת
-npm run test:firefox   # Firefox אמיתי; חייב להיות מותקן
-npm run test:perf      # בדיקת מגבלות הביצועים והגודל
-```
-
-בקובץ `.npmrc` מוגדר `ignore-scripts=true`, ולכן התקנת חבילה לא מריצה לעולם את סקריפט ההתקנה שלה. עוד ב-[docs/TESTING.md](../docs/TESTING.md) וב-[docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) (באנגלית).
+אין שלב בנייה ואין צורך להתקין דבר. טענו את התיקייה `extension/` ב-Chrome או ב-Edge כמו שמוסבר ב[התקנה](#התקנה), בצעו את השינוי ולחצו על כפתור הטעינה מחדש של התוסף. מתחזק הפרויקט מריץ את הבדיקות ובונה את החבילות לחנויות. פרטים נוספים ב-[ARCHITECTURE.md](../docs/ARCHITECTURE.md) וב-[CONTRIBUTING.md](CONTRIBUTING.md) (באנגלית).
 
 ---
 
@@ -218,9 +200,8 @@ npm run test:perf      # בדיקת מגבלות הביצועים והגודל
 | [מדיניות פרטיות](../docs/PRIVACY.md) | מה נקרא, נשמר ונשלח |
 | [תרגום](../docs/TRANSLATING.md) | איך מתקנים טקסט או מוסיפים שפה (באנגלית) |
 | [ארכיטקטורה](../docs/ARCHITECTURE.md) | מנועים, סביבות הרצת קוד, שירות הרקע וזרימת הנתונים |
-| [בדיקות](../docs/TESTING.md) | חבילות הבדיקות ואיך מריצים אותן |
 | [יומן שינויים](../CHANGELOG.md) | מה השתנה |
-| [תרומה](CONTRIBUTING.md) | הכנה, כללים, בדיקות, תיקונים ותרגומים |
+| [תרומה](CONTRIBUTING.md) | הכנה, כללים, תיקונים ותרגומים |
 | [תמיכה](SUPPORT.md) | דרכים לקבלת עזרה |
 | [אבטחה](SECURITY.md) | דיווח על פרצה |
 
@@ -234,7 +215,7 @@ npm run test:perf      # בדיקת מגבלות הביצועים והגודל
 - **עזרו לשפר את הניסוח.** נשמח להצעות לשיפור הטקסטים בפרסית, בערבית ובעברית.
 - **סמנו את המאגר בכוכב אם הוא מועיל לכם.** כך תעזרו לאחרים למצוא אותו.
 
-אם Tintly הופך את הקריאה לנוחה יותר לעיניים שלכם, אפשר לתמוך בפרויקט באמצעות [קניית קפה](https://buymeacoffee.com/enaloo). התמיכה היא לבחירתכם בלבד ואינה משפיעה על הטיפול בדיווחים.
+אם Tintly הופך את הקריאה לנוחה יותר לעיניים שלכם, אפשר [לתמוך בפרויקט](https://enaloo.com/support/). התמיכה היא לבחירתכם בלבד ואינה משפיעה על הטיפול בדיווחים.
 
 על בעיות אבטחה יש לדווח באופן פרטי, לפי ההנחיות ב-[SECURITY.md](SECURITY.md).
 

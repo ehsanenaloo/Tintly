@@ -173,19 +173,26 @@
 
     /**
      * The color for text `fg` on `bg`: the least change that reaches the target, kept on the same side of the background (light
-     * text stays lighter than its box) when some step of the ladder can reach it there, else the best color overall.
+     * text stays lighter than its box) when some step of the ladder can reach it there, else the other side when that reaches 4.5, else the best color overall.
      * @param {Rgba} fg @param {Rgba} bg @returns {Rgba}
      */
     function pick(fg, bg) {
       const lb = color.contrastRatio(bg, { r: 0, g: 0, b: 0, a: 1 });
       const lighter = color.contrastRatio(fg, { r: 0, g: 0, b: 0, a: 1 }) > lb;
-      for (const t of [target, 4.5, 3.2]) {
-        if (t > target) continue;
+      const sameSide = (/** @type {number} */ t) => {
+        if (t > target) return null;
         const w = color.ensureContrast(fg, bg, t);
         const same = color.contrastRatio(w, { r: 0, g: 0, b: 0, a: 1 }) > lb === lighter;
-        if (same && color.contrastRatio(w, bg) >= t) return w;
+        return same && color.contrastRatio(w, bg) >= t ? w : null;
+      };
+      for (const t of [target, 4.5]) {
+        const w = sameSide(t);
+        if (w) return w;
       }
-      return color.ensureContrast(fg, bg, 4.5);
+      // A box of middle lightness: the other side reaches the floor when this side can only just clear the trigger.
+      const best = color.ensureContrast(fg, bg, 4.5);
+      if (color.contrastRatio(best, bg) >= 4.5) return best;
+      return sameSide(3.2) ?? best;
     }
 
     /** The page color behind everything, shown through a fade. @type {Rgba | null} */
@@ -231,11 +238,11 @@
     function examine(el) {
       if (seen.get(el) === pass) return;
       seen.set(el, pass);
-      if (SKIP_TAGS.has(el.tagName.toUpperCase()) || el instanceof SVGElement || el.hasAttribute('data-dk-k') || el.hasAttribute('data-dk')) return;
+      if (SKIP_TAGS.has(el.tagName.toUpperCase()) || el instanceof SVGElement || (!theme.eink && el.hasAttribute('data-dk-k')) || el.hasAttribute('data-dk')) return;
       // Editors: the engine's own list of editable areas (some editors mark them with a class, not the attribute).
       if (/** @type {HTMLElement} */ (el).isContentEditable || el.closest(editable)) return;
-      // Hidden from assistive tools or from view, or a disabled control (which WCAG leaves out of the contrast rules): left alone.
-      if (el.closest('[aria-hidden="true"], [hidden], [aria-disabled="true"], [disabled]')) return;
+      // Hidden from view, or a disabled control (which WCAG leaves out of the contrast rules): left alone. Text that only assistive tools skip (`aria-hidden`) still shows, so it is checked.
+      if (el.closest('[hidden], [aria-disabled="true"], [disabled]')) return;
       const mine = fixed.get(el);
       if (mine && mine.tries >= 2) return;
       const r = el.getBoundingClientRect();

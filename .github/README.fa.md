@@ -11,18 +11,17 @@
 هر صفحه را تاریک، روشن، شبیه کاغذ یا خاکستریِ E-ink ببینید. اگر قرمز و سبز را از هم تشخیص نمی‌دهید، Tintly رنگ‌ها را از هم جدا می‌کند. برای هر سایت یک بار تنظیم کنید و دیگر فکرش را نکنید. همه‌چیز روی خود دستگاه می‌ماند.
 
 [![User guide](https://img.shields.io/badge/User%20guide-Read%20online-0f766e?logo=readthedocs&logoColor=white&style=for-the-badge)](https://enaloo.com/apps/tintly/)
-[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/enaloo)
+[![Support Tintly](https://img.shields.io/badge/Support%20Tintly-FFDD00?style=for-the-badge&logoColor=black)](https://enaloo.com/support/)
 
-[![CI](https://github.com/ehsanenaloo/Tintly/actions/workflows/ci.yml/badge.svg)](https://github.com/ehsanenaloo/Tintly/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/ehsanenaloo/Tintly?include_prereleases&label=release)](https://github.com/ehsanenaloo/Tintly/releases)
 [![Manifest V3](https://img.shields.io/badge/manifest-V3-blue.svg)](../extension/manifest.json)
 [![Browsers](https://img.shields.io/badge/browsers-Chrome%20%7C%20Edge%20%7C%20Firefox-informational.svg)](#نصب)
-[![Languages](https://img.shields.io/badge/interface-en%20%7C%20fa%20%7C%20ar%20%7C%20he-orange.svg)](#زبانها)
+[![Languages](https://img.shields.io/badge/interface-en%20%7C%20fa%20%7C%20ar%20%7C%20he%20%7C%20es%20%7C%20pt%20%7C%20ru%20%7C%20de%20%7C%20fr%20%7C%20zh%20%7C%20zh--TW%20%7C%20ko%20%7C%20ja%20%7C%20hi%20%7C%20id%20%7C%20it%20%7C%20tr-orange.svg)](#زبانها)
 [![Analytics](https://img.shields.io/badge/analytics-none-lightgrey.svg)](#حریم-خصوصی)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](../LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/ehsanenaloo/Tintly?style=social)](https://github.com/ehsanenaloo/Tintly/stargazers)
 
-<a href="https://enaloo.com/apps/tintly/"><img src="assets/before-after.png" width="860" alt="یک مقاله پیش از Tintly در سمت چپ و با تم تاریک در سمت راست"></a>
+<a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-five-modes.png" width="860" alt="یک صفحهٔ مقاله در پنج حالت کنار هم: اصلی، روشن، کاغذ، E-ink و تاریک"></a>
 
 </div>
 
@@ -108,18 +107,16 @@ Tintly چهار موتور دارد. «پویا» شیوه‌نامه‌ها ر�
 
 <table>
   <tr>
-    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/toolbar-window.png" alt="یک صفحهٔ مقالهٔ تاریک با پنجرهٔ نوار ابزار Tintly"></a></td>
-    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/paper-and-eink.png" alt="همان مقاله در حالت کاغذ در سمت چپ و در حالت E-ink در سمت راست"></a></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-dark.png" alt="یک مقاله پیش از Tintly و با حالت تاریک"></a></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-toolbar.png" alt="پنجرهٔ نوار ابزار Tintly و کنترل‌های اصلی آن"></a></td>
   </tr>
   <tr>
-    <td align="center"><sub>پنجرهٔ نوار ابزار: حالت، بینایی رنگ، لغزنده‌ها و الگوها</sub></td>
-    <td align="center"><sub>کاغذ و E-ink برای مطالعه</sub></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-reading.png" alt="یک مقاله در حالت کاغذ و در حالت E-ink"></a></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-color-vision.png" alt="یک صفحهٔ وضعیت پیش از اصلاح رنگ و با اصلاح برای ضعف دیدن رنگ سبز"></a></td>
   </tr>
   <tr>
-    <td colspan="2"><a href="https://enaloo.com/apps/tintly/"><img src="assets/settings.png" alt="صفحهٔ تنظیمات Tintly با ظاهر تاریک"></a></td>
-  </tr>
-  <tr>
-    <td colspan="2" align="center"><sub>صفحهٔ تنظیمات: سایت‌ها، زمان‌بندی، پالت‌ها، پشتیبان</sub></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-sites-schedule.png" alt="تنظیمات سایت‌ها و زمان‌بندی"></a></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-private.png" alt="حریم خصوصی در Tintly: بدون ردیابی، بدون حساب کاربری، متن‌باز"></a></td>
   </tr>
 </table>
 
@@ -149,18 +146,16 @@ Tintly رنگ‌ها و فونت‌ها و نشانهٔ color-scheme را عوض
 
 | مرورگر | حداقل نسخه | روش |
 |---|---|---|
-| Chrome و Edge | ۱۱۹ | مخزن را کلون کنید و `npm install` بزنید. `chrome://extensions` را باز کنید، Developer mode را روشن کنید و **Load unpacked** را بزنید. پوشهٔ `extension/` را انتخاب کنید |
-| Firefox | ۱۲۸ | `npm run build:firefox` را اجرا کنید. در `about:debugging` فایل zip پوشهٔ `dist/` را به‌عنوان افزونهٔ موقت بارگذاری کنید |
-
-صفحه‌های فروشگاه‌ها به‌زودی آماده می‌شوند. مخزن را دنبال کنید تا خبردار شوید.
+| Chrome و Edge | ۱۱۹ | از Chrome Web Store یا Edge Add-ons نصبش کنید. برای اجرای کد منبع، مخزن را کلون کنید، `chrome://extensions` را باز کنید، Developer mode را روشن کنید و **Load unpacked** را بزنید. پوشهٔ `extension/` را انتخاب کنید |
+| Firefox | ۱۲۸ | از Firefox Add-ons نصبش کنید. Firefox بستهٔ جداگانه‌ای لازم دارد که نگه‌دارندهٔ پروژه آن را از `extension/` می‌سازد |
 
 ---
 
 ## زبان‌ها
 
-رابط به انگلیسی، فارسی، عربی و عبری است. فارسی و عربی و عبری راست‌به‌چپ‌اند و کل پنجره آینه می‌شود. برای اصلاح یک متن یا افزودن زبان، [TRANSLATING.md](../docs/TRANSLATING.md) (به انگلیسی) را بخوانید یا از [فرم اصلاح ترجمه](https://github.com/ehsanenaloo/Tintly/issues/new?template=translation_fix.yml) استفاده کنید.
+رابط به انگلیسی، فارسی، عربی، عبری، اسپانیایی، پرتغالی (برزیل)، روسی، آلمانی، فرانسوی، چینی (ساده)، چینی (سنتی)، کره‌ای، ژاپنی، هندی، اندونزیایی، ایتالیایی و ترکی است. فارسی و عربی و عبری راست‌به‌چپ‌اند و کل پنجره آینه می‌شود. برای اصلاح یک متن یا افزودن زبان، [TRANSLATING.md](../docs/TRANSLATING.md) (به انگلیسی) را بخوانید یا از [فرم اصلاح ترجمه](https://github.com/ehsanenaloo/Tintly/issues/new?template=translation_fix.yml) استفاده کنید.
 
-ترجمه‌ها ماشینی‌اند. اگر کسی ترجمهٔ بومی و روانی برای هر زبانی ارائه کند، آن را به نام خودش منتشر می‌کنیم.
+همهٔ ترجمه‌ها به‌جز انگلیسی ماشینی‌اند و هنوز هیچ فارسی‌زبان یا بومی‌زبان دیگری آن‌ها را بازبینی نکرده است. اگر زبان مادری‌تان یکی از این زبان‌هاست و متن‌ها را بهتر و بومی‌تر کنید، کار شما را به نام خودتان منتشر می‌کنیم. از [TRANSLATING.md](../docs/TRANSLATING.md) (به انگلیسی) یا فرم اصلاح ترجمه شروع کنید.
 
 ---
 
@@ -188,20 +183,7 @@ Tintly رنگ‌ها و فونت‌ها و نشانهٔ color-scheme را عوض
 
 ## برای توسعه‌دهندگان
 
-به Node.js نسخهٔ ۲۲ یا بالاتر نیاز دارید.
-
-```bash
-npm install
-npm run check          # بررسی‌های ایستا، بررسی نوع و آزمون‌های واحد
-npm run build          # بستهٔ Chrome و Edge در dist/
-npm run build:firefox  # بستهٔ Firefox در dist/
-npm run lint:firefox   # بستهٔ Firefox را می‌سازد و لینتر افزونه را اجرا می‌کند
-npm run test:browser   # Chromium واقعی؛ یک بار npx playwright install chromium را اجرا کنید
-npm run test:firefox   # Firefox واقعی؛ باید نصب باشد
-npm run test:perf      # بودجهٔ سرعت و اندازه
-```
-
-فایل `.npmrc` مقدار `ignore-scripts=true` دارد، پس نصب یک بسته هیچ‌وقت اسکریپت نصب آن را اجرا نمی‌کند. جزئیات بیشتر در [docs/TESTING.md](../docs/TESTING.md) و [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) (به انگلیسی) است.
+پروژه مرحلهٔ ساخت ندارد و لازم نیست چیزی نصب کنید. پوشهٔ `extension/` را همان‌طور که در بخش [نصب](#نصب) آمده در Chrome یا Edge بارگذاری کنید، تغییرتان را بدهید و دکمهٔ بارگذاری دوبارهٔ افزونه را بزنید. بررسی‌ها و آزمون‌ها را نگه‌دارندهٔ پروژه اجرا می‌کند و بسته‌های فروشگاه را هم خودش می‌سازد. جزئیات در [ARCHITECTURE.md](../docs/ARCHITECTURE.md) و [CONTRIBUTING.md](CONTRIBUTING.md) (به انگلیسی).
 
 ---
 
@@ -213,9 +195,8 @@ npm run test:perf      # بودجهٔ سرعت و اندازه
 | [سیاست حریم خصوصی](../docs/PRIVACY.md) | چه چیزی خوانده، نگه داشته و فرستاده می‌شود |
 | [ترجمه](../docs/TRANSLATING.md) | چطور متنی را اصلاح کنیم یا زبانی اضافه کنیم (به انگلیسی) |
 | [معماری](../docs/ARCHITECTURE.md) | موتورها، دنیاها، سرویس‌ورکر و جریان داده |
-| [آزمون](../docs/TESTING.md) | مجموعه‌های آزمون و روش اجرایشان |
 | [تغییرها](../CHANGELOG.md) | چه چیزی عوض شده است |
-| [مشارکت](CONTRIBUTING.md) | راه‌اندازی، قاعده‌ها، آزمون‌ها، اصلاح‌ها و ترجمه‌ها |
+| [مشارکت](CONTRIBUTING.md) | راه‌اندازی، قاعده‌ها، اصلاح‌ها و ترجمه‌ها |
 | [پشتیبانی](SUPPORT.md) | کجا بپرسید |
 | [امنیت](SECURITY.md) | گزارش آسیب‌پذیری |
 
@@ -227,7 +208,7 @@ npm run test:perf      # بودجهٔ سرعت و اندازه
 
 صفحه‌ای که بد دیده می‌شود را با فرم مخصوصش گزارش کنید و نشانی، حالت و موتور را بنویسید. اگر متنی فارسی، عربی یا عبری غلط یا ناجور است، اصلاحش بسیار خوش‌آمد است. و اگر Tintly به کارتان آمده، به مخزن ستاره بدهید تا دیگران هم پیدایش کنند.
 
-اگر Tintly چشم‌هایتان را آسوده‌تر کرده، می‌توانید [یک قهوه برایم بخرید](https://buymeacoffee.com/enaloo). انتظاری نیست و رسیدگی به گزارش‌ها هم هیچ فرقی نمی‌کند.
+اگر Tintly چشم‌هایتان را آسوده‌تر کرده، می‌توانید [از پروژه حمایت کنید](https://enaloo.com/support/). انتظاری نیست و رسیدگی به گزارش‌ها هم هیچ فرقی نمی‌کند.
 
 مشکل‌های امنیتی را از راه [SECURITY.md](SECURITY.md) گزارش کنید، نه در گزارش‌های عمومی.
 

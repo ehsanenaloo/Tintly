@@ -296,10 +296,10 @@
         }
         f?.insertBefore(transfer, f.firstChild);
       }
-      // The page's own address with a fragment is a reference to this document, even when the page has a <base> element.
-      const here = doc.URL.split('#')[0];
-      rootFilter = `url("${here}#${FILTER_ID}")`;
-      counterFilter = plus.counter ? `url("${here}#${COUNTER_ID}")` : 'none';
+      // Only a fragment. A full address stops matching the document when the page changes it with the history API,
+      // and the browser then drops the filter the next time the sheet is read. A fragment alone always means this document, also with a <base>.
+      rootFilter = `url("#${FILTER_ID}")`;
+      counterFilter = plus.counter ? `url("#${COUNTER_ID}")` : 'none';
       // The sliders of the light mode filter nothing back: the media stay as they are.
       if (eink) {
         // Calm pictures: gray (and a little darker when dimmed) in the filter, or put back as the page has them.
@@ -360,8 +360,15 @@
       return color.toHex({ r: own.r * a + 1 - a, g: own.g * a + 1 - a, b: own.b * a + 1 - a, a: 1 });
     }
     // The layer is an element of ours, since a page may use `html::before` itself. All important, so no page rule reaches it.
+    // The root filter does not reach the scrollbar of the window: it stays as the page has it, light on a dark page. The window gets a dark pair of
+    // its own; the scrollbar color is inherited, so the body resets it and the scrollers inside the inverted page keep their native look (inverted, they come out dark).
+    const barPair = (() => {
+      if (!theme.dark || eink || rootFilter === 'none' || themeSettings.systemControls === false) return '';
+      const { page, edge } = color.pageColors(theme);
+      return `html{scrollbar-color:${edge} ${page}!important}:where(body){scrollbar-color:auto}`;
+    })();
     const sheet = () =>
-      `@media screen{${rootFilter === 'none' ? '' : `html{filter:${rootFilter}!important}`}` +
+      `@media screen{${rootFilter === 'none' ? '' : `html{filter:${rootFilter}!important}`}${barPair}` +
       (fill === '' ? '' : `${CANVAS_TAG}[data-dk=canvas]{${`all:initial;position:fixed;inset:0;z-index:-2147483648;pointer-events:none;background:${fill}`.replace(/;|$/g, '!important;')}}`) +
       (restoreMedia ? `${MEDIA}{filter:${counterFilter}!important}iframe{filter:${frameFilter}!important}${NESTED}{filter:none!important}` : '') +
       '}';

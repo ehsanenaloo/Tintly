@@ -6,6 +6,23 @@ The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-31
+
+### Added
+
+- The interface is in 13 more languages.
+- A Shortcuts tab, with a shortcut for each mode.
+
+### Changed
+
+- Breaking: Sync uses a new format. Update every device to keep syncing.
+
+### Fixed
+
+- Pages load faster and no longer flash light colors in Dark mode.
+- Better contrast and colors on many pages.
+- Sync and settings no longer lose newer changes.
+
 ## [1.0.11] - 2026-10-20
 
 The first public release.
@@ -36,3 +53,7 @@ The first public release.
 - Custom CSS from an imported file or from sync stays off until you read it and turn it on.
 - Tintly does not follow a redirect when it reads a file of another site for the page you are on.
 - Before Tintly reads a file for a page, it checks that the page really uses the file. The browser then checks the address Tintly connects to, or the page reads the file itself. So the browser's protection of your local network also covers the files Tintly reads.
+
+[Unreleased]: https://github.com/ehsanenaloo/Tintly/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/ehsanenaloo/Tintly/compare/v1.0.11...v1.1.0
+[1.0.11]: https://github.com/ehsanenaloo/Tintly/releases/tag/v1.0.11

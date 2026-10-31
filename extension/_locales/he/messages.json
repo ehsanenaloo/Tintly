@@ -14,6 +14,21 @@
   "cmdSwitchEngine": {
     "message": "החלפת מנוע ערכת הנושא"
   },
+  "cmdModeDark": {
+    "message": "מעבר למצב כהה"
+  },
+  "cmdModeLight": {
+    "message": "מעבר למצב בהיר"
+  },
+  "cmdModePaper": {
+    "message": "מעבר למצב נייר"
+  },
+  "cmdModeEink": {
+    "message": "מעבר למצב E-ink"
+  },
+  "cmdModeOriginal": {
+    "message": "מעבר לצבעים מקוריים"
+  },
   "menuToggleSite": {
     "message": "הפעלה או כיבוי של Tintly באתר זה"
   }

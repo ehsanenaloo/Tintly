@@ -1,0 +1,35 @@
+{
+  "extName": {
+    "message": "Tintly - 深色、淺色、紙張、電子墨水與色覺輔助"
+  },
+  "extDescription": {
+    "message": "為每個網站提供深色、淺色、紙張和電子墨水模式，以及色覺輔助濾鏡。快速、私密，不收集任何資料。"
+  },
+  "cmdToggleExtension": {
+    "message": "開啟或關閉 Tintly"
+  },
+  "cmdToggleSite": {
+    "message": "在此網站開啟或關閉 Tintly"
+  },
+  "cmdSwitchEngine": {
+    "message": "切換主題引擎"
+  },
+  "cmdModeDark": {
+    "message": "切換到深色模式"
+  },
+  "cmdModeLight": {
+    "message": "切換到淺色模式"
+  },
+  "cmdModePaper": {
+    "message": "切換到紙張模式"
+  },
+  "cmdModeEink": {
+    "message": "切換到電子墨水模式"
+  },
+  "cmdModeOriginal": {
+    "message": "切換到原始顏色"
+  },
+  "menuToggleSite": {
+    "message": "在此網站開啟或關閉 Tintly"
+  }
+}

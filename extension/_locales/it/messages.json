@@ -1,0 +1,35 @@
+{
+  "extName": {
+    "message": "Tintly - Scuro, Chiaro, Carta, E-ink e visione dei colori"
+  },
+  "extDescription": {
+    "message": "Modalità scura, chiara, Carta ed E-ink e filtri per la visione dei colori per ogni sito web. Veloce e privato. Non raccoglie alcun dato."
+  },
+  "cmdToggleExtension": {
+    "message": "Attiva o disattiva Tintly"
+  },
+  "cmdToggleSite": {
+    "message": "Attiva o disattiva Tintly su questo sito"
+  },
+  "cmdSwitchEngine": {
+    "message": "Cambia il motore dei temi"
+  },
+  "cmdModeDark": {
+    "message": "Passa alla modalità scura"
+  },
+  "cmdModeLight": {
+    "message": "Passa alla modalità chiara"
+  },
+  "cmdModePaper": {
+    "message": "Passa alla modalità Carta"
+  },
+  "cmdModeEink": {
+    "message": "Passa alla modalità E-ink"
+  },
+  "cmdModeOriginal": {
+    "message": "Passa ai colori originali"
+  },
+  "menuToggleSite": {
+    "message": "Attiva o disattiva Tintly su questo sito"
+  }
+}

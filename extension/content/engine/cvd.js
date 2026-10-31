@@ -289,6 +289,7 @@
 
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const MEDIA_ID = 'dk-cvd-media';
+  // The filters are named by a fragment alone (`url("#id")`), never by the page's address: the page may change that address with the history API.
   // Pictures the page filters itself keep their own filter: the rule has no weight against any page rule.
   const MEDIA = ':where(img, video, canvas)';
   // A CSS background picture gets the filter on a box with no children and no text (an icon, a picture box) and on a pseudo element:
@@ -369,20 +370,19 @@
    * @returns {{ root: string, frame: string | null }}
    */
   function chain(m, svg, root, plus, back) {
-    const here = svg.ownerDocument.URL.split('#')[0];
     const fix = stepOf(m);
     const fp = plus ? svg.querySelector('#dk-fp') : null;
     if (fp) steps(fp, [fix]);
     else {
       filter(svg, 'dk-cvd', [fix]);
-      root = `${root === 'none' ? '' : `${root} `}url("${here}#dk-cvd")`;
+      root = `${root === 'none' ? '' : `${root} `}url("#dk-cvd")`;
     }
     // A filter with no inverse cannot be taken off a frame: the frame keeps the counter it had.
     if (back === null || !m.undo) return { root, frame: null };
     /** @type {Step[]} */
     const rest = back === 'plain' ? [['sRGB', 'matrix', '-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0'], ['sRGB', 'hueRotate', '180']] : back === '' ? [] : [['sRGB', 'matrix', back]];
     filter(svg, 'dk-cvd-undo', [[m.space === 'linear' ? 'linearRGB' : 'sRGB', 'matrix', svgValues(m.undo, m.undoOffset)], ...rest]);
-    return { root, frame: `url("${here}#dk-cvd-undo")` };
+    return { root, frame: `url("#dk-cvd-undo")` };
   }
 
   /**
@@ -406,7 +406,7 @@
     const root = doc.documentElement;
     const svg = defs(doc, 'cvd-defs');
     filter(svg, MEDIA_ID, [stepOf(m)]);
-    const url = `url("${doc.URL.split('#')[0]}#${MEDIA_ID}")`;
+    const url = `url("#${MEDIA_ID}")`;
     const style = doc.createElement('style');
     style.setAttribute('data-dk', 'cvd-media');
     // The variable lets the picture marks of the theme (images.js) keep the filter after their own.

@@ -9,7 +9,23 @@ import { RETRY_MS, hostPattern, overlaps, parseKey, reconcileScripts } from './r
 const ID = 'dk-early';
 const RESPECT_ID = 'dk-early-respect';
 const MAX_PATTERNS = 500;
-const FILES = Object.freeze({ hold: ['content/early/hold.js', 'content/early/sheet.js'], canvas: ['content/early/canvas.js', 'content/early/sheet.js'], respect: 'content/early/respect.css' });
+const FILES = Object.freeze({
+  hold: ['content/early/hold.js', 'content/early/sheet.js'],
+  canvas: ['content/early/canvas.js', 'content/early/sheet.js'],
+  holdPaper: ['content/early/hold-paper.js', 'content/early/sheet.js'],
+  canvasPaper: ['content/early/canvas-paper.js', 'content/early/sheet.js'],
+  holdEink: ['content/early/hold-eink.js', 'content/early/sheet.js'],
+  canvasEink: ['content/early/canvas-eink.js', 'content/early/sheet.js'],
+  respect: 'content/early/respect.css',
+});
+
+/** The look of a theme for the first paint: 'dark', 'paper' or 'eink'; null for the modes that keep the page's own first paint. @param {any} theme */
+function lookOf(theme) {
+  const raw = theme?.mode;
+  if (raw === 'light' || raw === 'original') return null;
+  if (raw === 'eink') return theme?.einkPreset === 'eink' ? 'eink' : 'paper';
+  return 'dark';
+}
 
 /**
  * The match pattern for a site pattern of the settings. A rule with a port, a path or `*.` is not the same set as the host pattern, and the gate
@@ -25,11 +41,10 @@ export function matchPatternsFor(pattern) {
 /**
  * What to register for these settings, or null when nothing should be.
  *
- * Dark mode registers the quick dark version. The E-ink and Paper mode registers nothing: the paper tone depends on the
- * settings and a registered file cannot, and the page is light, so there is no dark frame to prevent. The engine paints the
- * paper canvas at its first task. A registered rule for every element (to hold animations off until the engine is ready)
- * stays in the page for good and made every style update on a busy page several times as slow, so motion is cut by
- * the engine's own style instead. Light mode registers nothing. A site rule that names a different mode is left out.
+ * Dark mode registers the quick dark version. The E-ink and Paper mode register the quick version of their default tones (the engine
+ * puts its own, with the person's tones, at its first task): the page's own colors must not show for the first frames before the paper.
+ * Like the dark one it is a constructed sheet that leaves with the release; a registered rule for every element that stayed in the page
+ * made every style update on a busy page several times as slow, so motion is cut by the engine's own style instead. Light and Original register nothing. A site rule that names a different mode is left out.
  *
  * The hold is exact or absent. A host that has a rule the match patterns cannot say (a port, a path, `*.`), or that has a more specific
  * rule below it, gets no hold: the gate decides there. With more than 500 hosts to leave out or to list there is no hold at all.
@@ -40,14 +55,14 @@ export function planFor(settings, siteRules) {
   if (!settings || settings.enabled === false) return null;
   // A schedule is decided in the page.
   if (settings.automation && settings.automation.mode !== 'none') return null;
-  // Only the dark mode has a dark first paint; the light, E-ink and original modes keep the page's own first paint.
-  const raw = settings.theme?.mode;
-  const mode = raw === 'eink' || raw === 'light' || raw === 'original' ? raw : 'dark';
-  if (mode !== 'dark') return null;
-  const js = settings.holdPaint === false ? FILES.canvas : FILES.hold;
+  // Dark, Paper and E-ink have a first paint of their own; the light and original modes keep the page's own.
+  const mode = lookOf(settings.theme);
+  if (mode === null) return null;
+  const quick = settings.holdPaint !== false;
+  const js = mode === 'paper' ? (quick ? FILES.holdPaper : FILES.canvasPaper) : mode === 'eink' ? (quick ? FILES.holdEink : FILES.canvasEink) : quick ? FILES.hold : FILES.canvas;
   const entries = Object.entries(siteRules ?? {}).filter(([, r]) => r && typeof r === 'object');
   // A rule with its own mode needs the first paint of that mode, which this file does not give.
-  const otherMode = (/** @type {any} */ r) => typeof r?.theme?.mode === 'string' && r.theme.mode !== mode;
+  const otherMode = (/** @type {any} */ r) => typeof r?.theme?.mode === 'string' && lookOf(r.theme) !== mode;
   if (settings.listMode === 'onlyListed') {
     /** @type {Set<string>} */
     const hosts = new Set();
@@ -74,7 +89,7 @@ export function planFor(settings, siteRules) {
   const forced = new Set();
   for (const [key, r] of entries) if (r.enabled === true) for (const p of matchPatternsFor(key)) forced.add(p);
   const respectOut = [...new Set([...excludeMatches, ...forced])].sort();
-  const respect = settings.respectOnlyLight === false || respectOut.length > MAX_PATTERNS ? null : { excludeMatches: respectOut };
+  const respect = mode !== 'dark' || settings.respectOnlyLight === false || respectOut.length > MAX_PATTERNS ? null : { excludeMatches: respectOut };
   return { matches: ['http://*/*', 'https://*/*'], excludeMatches, js, respect };
 }
 

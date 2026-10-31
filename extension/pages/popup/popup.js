@@ -10,7 +10,8 @@ import { mountThemeSwitch } from '../../shared/theme-switch.js';
 import { engineHints, radioGroup, syncRange } from '../../shared/widgets.js';
 import { EINK_RESET, einkValues } from '../../shared/settings.js';
 import { isTransient, saveErrorKind, sendWithRetry } from '../../shared/save-error.js';
-import { readState } from '../../shared/store.js';
+import { createWriteOrder } from '../../shared/write-order.js';
+import { STATE_KEYS, readState } from '../../shared/store.js';
 import { patternFor, siteEnabled } from '../../shared/match.js';
 
 const SLIDERS = /** @type {const} */ ({
@@ -159,7 +160,7 @@ function renderControls() {
     syncRange(el);
     $(`${name}-out`).textContent = numbers.format(theme[name]);
   }
-  $('controls').toggleAttribute('data-off', !settings.enabled);
+  setControlsOff(!settings.enabled);
   $('hero').toggleAttribute('data-on', settings.enabled);
 }
 
@@ -258,11 +259,13 @@ async function toggleSiteTheme() {
   if (!info) return;
   const turnOff = !info.off;
   await flush();
-  const rule = turnOff ? info.offRule : info.onRule;
-  const reply = await sendWithRetry(() => send({ type: 'dk.site.set', pattern: info.key, rule }));
+  // Only the flag changes; the worker merges it into the rule as it is now. `onRule` keeps the flag only when a fix turns the theme off.
+  const flag = turnOff ? false : info.onRule?.theme?.useSiteDark === true ? true : null;
+  const edit = flag === null ? { patch: {}, remove: ['theme.useSiteDark'] } : { patch: { theme: { useSiteDark: flag } } };
+  const reply = /** @type {any} */ (await sendWithRetry(() => send({ type: 'dk.site.patch', pattern: info.key, ...edit })));
   if (reply?.ok) {
-    if (rule === null) delete state.siteRules[info.key];
-    else state.siteRules[info.key] = rule;
+    if (reply.rule === null) delete state.siteRules[info.key];
+    else state.siteRules[info.key] = reply.rule;
     showError('');
     // The page restarts its theme; until the new status arrives the row shows the other state.
     state.tab = { ...(state.tab ?? {}), status: turnOff ? 'on' : state.tab?.status };
@@ -279,13 +282,21 @@ async function releasePin() {
   const pin = state.pin;
   if (!pin || pin.kind === 'schedule') return;
   await flush();
-  const reply = await sendWithRetry(() =>
-    pin.kind === 'rule' ? send({ type: 'dk.site.set', pattern: pin.key, rule: pin.clear }) : send({ type: 'dk.fix.set', pattern: pin.key, fix: pin.clear }),
-  );
+  const key = `mode:${pin.key}`;
+  const id = writeOrder.begin(key);
+  // The worker decides about the empty record by the order of the matches of this page.
+  const pageUrl = typeof tab.url === 'string' && tab.url.length <= 4096 ? { url: tab.url } : {};
+  // A rule loses only its mode, merged by the worker into the rule as it is now.
+  const release = () =>
+    pin.kind === 'rule'
+      ? send({ type: 'dk.site.patch', pattern: pin.key, patch: {}, remove: ['theme.mode'], keepEmpty: pin.keep === true, ...pageUrl })
+      : send({ type: 'dk.fix.release', pattern: pin.key, fallback: pin.clear, keepEmpty: pin.keep === true, ...pageUrl });
+  const reply = /** @type {any} */ (await sendWithRetry(writeOrder.guard(key, id, release)));
+  if (reply?.code === 'superseded') return;
   if (reply?.ok) {
     if (pin.kind === 'rule') {
-      if (pin.clear === null) delete state.siteRules[pin.key];
-      else state.siteRules[pin.key] = pin.clear;
+      if (reply.rule === null) delete state.siteRules[pin.key];
+      else state.siteRules[pin.key] = reply.rule;
     }
     state.pin = null;
     renderPin();
@@ -389,6 +400,12 @@ function queue(/** @type {Record<string, any>} */ patch) {
   timer = setTimeout(() => void flush(), SAVE_DELAY_MS);
 }
 
+/**
+ * Writes of this window that may change the same field of a record. A retry of an older one gives up when a newer one has started,
+ * so it never reverses it. The keys are `switch` (the site switch) and `mode:<pattern>` (the mode of a rule or a fix).
+ */
+const writeOrder = createWriteOrder();
+
 /** Saves run one after the other, so a retry of an older change never lands after a newer one. */
 let saving = Promise.resolve();
 
@@ -414,18 +431,27 @@ async function save() {
   const edits = siteEdits;
   if (Object.keys(patch).length === 0 && !hasSite) return;
   // Only the fields changed here are sent: the worker merges them into the rule as it is now, so a change made in another window stays.
+  /** @type {import('../../shared/save-error.js').SaveReply[]} */
   const replies = await Promise.all([
     Object.keys(patch).length ? sendWithRetry(() => send({ type: 'dk.settings.patch', patch }), closing ? 0 : undefined) : { ok: true },
-    hasSite ? sendWithRetry(() => send({ type: 'dk.site.patch', pattern, patch: sitePatch }), closing ? 0 : undefined) : { ok: true },
+    hasSite ? sendWithRetry(guardMode(pattern, sitePatch, () => send({ type: 'dk.site.patch', pattern, patch: sitePatch })), closing ? 0 : undefined) : { ok: true },
   ]);
-  if (hasSite && replies[1]?.ok) siteTaken = Math.max(siteTaken, edits);
+  // A write that a newer one replaced is not an error; the newer one decides.
+  if (hasSite && (replies[1]?.ok || replies[1]?.code === 'superseded')) siteTaken = Math.max(siteTaken, edits);
   // A change that failed for a reason that may pass waits for the next save, under the changes made since. One the worker refused
   // for its content would only be refused again.
   if (Object.keys(patch).length && isTransient(replies[0])) pending = merge(patch, pending);
   if (hasSite && isTransient(replies[1]) && sitePattern === pattern) sitePending = merge(sitePatch, sitePending);
-  const reply = replies.find((r) => !r?.ok) ?? replies[0];
-  showError(reply?.ok ? '' : saveErrorText(reply));
+  const reply = replies.find((r) => !r?.ok && r?.code !== 'superseded') ?? replies[0];
+  showError(reply?.ok || reply?.code === 'superseded' ? '' : saveErrorText(reply));
   setTimeout(() => void refreshStatus(), STATUS_REFRESH_MS);
+}
+
+/** A site save that sets the mode of a rule is ordered with the button that takes the mode out. @param {string} pattern @param {Record<string, any>} sitePatch @param {() => Promise<any>} sendIt */
+function guardMode(pattern, sitePatch, sendIt) {
+  if (sitePatch.theme?.mode === undefined) return sendIt;
+  const key = `mode:${pattern}`;
+  return writeOrder.guard(key, writeOrder.begin(key), sendIt);
 }
 
 /** Ask the worker for the parts only it can tell: the pin, the rules for the site's own dark theme and the status of the tab. Returns false when it refuses. */
@@ -455,7 +481,10 @@ async function setSite(/** @type {boolean} */ enabled) {
   if (!pattern) return;
   await flush();
   // The worker sets the rule that decides for this page (a path rule can decide below the site) and answers with the page's state.
-  const reply = /** @type {any} */ (await sendWithRetry(() => send({ type: 'dk.site.switch', url: /** @type {string} */ (tab.url), enabled })));
+  const id = writeOrder.begin('switch');
+  const reply = /** @type {any} */ (await sendWithRetry(writeOrder.guard('switch', id, () => send({ type: 'dk.site.switch', url: /** @type {string} */ (tab.url), enabled }))));
+  // A newer choice of the switch is on its way and shows its own result.
+  if (reply?.code === 'superseded') return;
   if (reply?.ok) {
     state.siteRules[reply.pattern] = { ...(state.siteRules[reply.pattern] ?? {}), enabled };
     if (state.site) state.site.enabled = reply.enabled;
@@ -488,12 +517,17 @@ async function setListMode(value) {
 /** Save a change to the language and look of the pages (this device only). */
 const saveUi = (/** @type {Record<string, unknown>} */ ui) => send({ type: 'dk.ui.set', ui });
 
+/** With Tintly off the controls are dimmed and cannot be used: a change would only wait for the switch. */
+function setControlsOff(/** @type {boolean} */ off) {
+  $('controls').toggleAttribute('data-off', off);
+  $('controls').toggleAttribute('inert', off);
+}
 function wire() {
   $('notice-x').addEventListener('click', () => showError(''));
   input('master').addEventListener('change', (e) => queue({ enabled: /** @type {HTMLInputElement} */ (e.target).checked }));
   input('master').addEventListener('change', () => {
     renderMaster();
-    $('controls').toggleAttribute('data-off', !input('master').checked);
+    setControlsOff(!input('master').checked);
     $('hero').toggleAttribute('data-on', input('master').checked);
   });
   input('site').addEventListener('change', (e) => void setSite(/** @type {HTMLInputElement} */ (e.target).checked));
@@ -628,9 +662,13 @@ async function loadFailed() {
 
 async function start() {
   // Every read goes out at once: the page does not wait for the worker, and no read waits for another.
-  const stateRead = readState(chrome.storage.local).catch(() => null);
+  // early.js has started three of them while the modules loaded; a read it could not start or that failed is made again here.
+  const early = /** @type {any} */ (globalThis).__dkEarly;
+  delete (/** @type {any} */ (globalThis).__dkEarly);
+  const stored = { get: () => (early?.state ?? chrome.storage.local.get([...STATE_KEYS])).catch(() => chrome.storage.local.get([...STATE_KEYS])) };
+  const stateRead = readState(/** @type {any} */ (stored)).catch(() => null);
   // An extension page that a frame or an unusual host opens may lack `tabs` or `storage.session`: the window then asks the worker instead.
-  const query = (async () => chrome.tabs.query({ active: true, currentWindow: true }))().catch(() => []);
+  const query = (async () => early?.tabs ?? chrome.tabs.query({ active: true, currentWindow: true }))().catch(() => (async () => chrome.tabs.query({ active: true, currentWindow: true }))()).catch(() => []);
   const sessionKey = (/** @type {any[]} */ list) => (typeof list[0]?.id === 'number' ? `tab:${list[0].id}` : null);
   const statusRead = query.then(async (list) => {
     const key = sessionKey(list);
@@ -651,7 +689,7 @@ async function start() {
   /** @type {any} */
   let status;
   try {
-    [i18n, active, read, status] = await Promise.all([initI18n(ui), query, stateRead, statusRead, loadInstallType()]);
+    [i18n, active, read, status] = await Promise.all([initI18n(ui), query, stateRead, statusRead, loadInstallType(early?.self ?? null)]);
   } catch {
     // Even the language could not be read: the window still says so, in the language that needs no storage.
     await loadFailed();

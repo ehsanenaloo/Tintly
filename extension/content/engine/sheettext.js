@@ -383,6 +383,15 @@
         return n;
       }
 
+      /** Count a rule inside a style rule, or a keyframe block. Returns false when the limit is passed. */
+      function nested() {
+        if (++budget.rules > maxRules) {
+          budget.capped = true;
+          return false;
+        }
+        return true;
+      }
+
       /** The text of a prelude without comments. @param {number} a @param {number} b */
       function clean(a, b) {
         const raw = s.slice(a, b);
@@ -407,34 +416,47 @@
       }
 
       /**
-       * The body of a style rule, or of a group inside one: declarations and nested rules, up to the closing brace.
-       * @param {number} depth @param {string} selector
-       * @returns {string}
+       * @typedef {{ depth: number, text: string, items: { name: string, value: string, important: boolean, kind: number }[], first: boolean,
+       *   controls: boolean, covered: Set<string> | null, head: string, up: BodyFrame | null }} BodyFrame
        */
-      function body(depth, selector) {
-        let text = '';
-        /** @type {{ name: string, value: string, important: boolean, kind: number }[]} */
-        let items = [];
-        let first = true;
-        const controls = selector !== '' && isControl(selector);
+      /** An open body: of a style rule (depth 0), or of a rule or group nested in one. @param {number} depth @param {string} selector @param {string} head @param {BodyFrame | null} up @returns {BodyFrame} */
+      function openBody(depth, selector, head, up) {
         if (depth === 0) S.fill = null;
-        const covered = cover !== null && depth === 0 && selector !== '' ? cover(selector) : null;
-        const flush = () => {
-          if (items.length) text += declsText(items, first && controls, base, S.siteOn ? S.found : null, first ? covered : null);
-          items = [];
-          first = false;
+        return {
+          depth, text: '', items: [], first: true, head, up,
+          controls: selector !== '' && isControl(selector),
+          covered: cover !== null && depth === 0 && selector !== '' ? cover(selector) : null,
         };
+      }
+
+      /** @param {BodyFrame} f */
+      function flush(f) {
+        if (f.items.length) f.text += declsText(f.items, f.first && f.controls, base, S.siteOn ? S.found : null, f.first ? f.covered : null);
+        f.items = [];
+        f.first = false;
+      }
+
+      /**
+       * The body of a style rule: declarations and nested rules, up to the closing brace. Nested bodies are frames, not calls,
+       * so the work can stop after a nested rule: then the open frame comes back, and a later call with it goes on. The text
+       * comes back when the rule is closed. Each nested rule counts against the budget; on a limit or bad text the answer is ''.
+       * @param {BodyFrame} f
+       * @returns {string | BodyFrame}
+       */
+      function body(f) {
         for (;;) {
           const i = ws(S.i, false);
-          if (i >= n) {
-            S.i = n;
-            break;
+          if (i >= n || s.charCodeAt(i) === 125) {
+            S.i = i >= n ? n : i + 1;
+            flush(f);
+            const up = f.up;
+            if (up === null) return f.text;
+            if (f.text) up.text += `${f.head}{${f.text}}`;
+            f = up;
+            if ((++S.tick & 15) === 0) return f;
+            continue;
           }
           const c = s.charCodeAt(i);
-          if (c === 125) {
-            S.i = i + 1;
-            break;
-          }
           if (c === 59) {
             S.i = i + 1;
             continue;
@@ -444,48 +466,44 @@
             while (k < n && isIdent(s.charCodeAt(k))) k++;
             const name = s.slice(i + 1, k).toLowerCase();
             const j = scan(k);
-            if (S.bad) break;
+            if (S.bad) return '';
             if (j < n && s.charCodeAt(j) === 123) {
-              if (GROUPS.has(name) && depth + 1 < maxDepth) {
-                flush();
+              if (GROUPS.has(name) && f.depth + 1 < maxDepth) {
+                if (!nested()) return '';
+                flush(f);
                 const head = `@${name}${clean(k, j) ? ` ${clean(k, j)}` : ''}`;
                 S.i = j + 1;
-                const inner = body(depth + 1, '');
-                if (S.bad) break;
-                if (inner) text += `${head}{${inner}}`;
+                f = openBody(f.depth + 1, '', head, f);
               } else S.i = skipBlock(j + 1);
             } else S.i = j < n && s.charCodeAt(j) === 59 ? j + 1 : j;
             continue;
           }
           let j = scan(i);
-          if (S.bad) break;
+          if (S.bad) return '';
           // A custom property may hold a block: `--x: { a: b }`.
           while (j < n && s.charCodeAt(j) === 123 && c === 45 && s.charCodeAt(i + 1) === 45) {
             j = scan(skipBlock(j + 1));
-            if (S.bad) break;
+            if (S.bad) return '';
           }
           if (j < n && s.charCodeAt(j) === 123) {
-            flush();
+            flush(f);
             const sel = clean(i, j);
             S.i = j + 1;
-            if (depth + 1 >= maxDepth) {
+            if (f.depth + 1 >= maxDepth) {
               S.i = skipBlock(S.i);
               continue;
             }
-            const inner = body(depth + 1, sel);
-            if (S.bad) break;
-            if (inner) text += `${sel}{${inner}}`;
+            if (!nested()) return '';
+            f = openBody(f.depth + 1, sel, sel, f);
             continue;
           }
           const d = declaration(i, j);
           if (d !== null && d.kind !== 0) {
-            items.push(d);
-            if (depth === 0 && d.name === 'fill') S.fill = d;
+            f.items.push(d);
+            if (f.depth === 0 && d.name === 'fill') S.fill = d;
           }
           S.i = j < n && s.charCodeAt(j) === 59 ? j + 1 : j;
         }
-        flush();
-        return text;
       }
 
       /** The declarations of one keyframe block, copied whole. Returns the text and whether a color was themed. */
@@ -597,12 +615,14 @@
                     S.bad = 'keyframes';
                     return false;
                   }
+                  if (!nested()) return false;
                   const key = clean(f, g);
                   S.i = g + 1;
                   const part = frameBody();
                   if (S.bad) return false;
                   if (part.color) color = true;
                   frames += `${key}{${part.text}}`;
+                  if ((++S.tick & 15) === 0) yield 0;
                 }
                 // The copy keeps the prefix: a prefix the browser does not read stays unread, as in the page.
                 if (color) emit(`@${name} ${label}{${frames}}`);
@@ -693,8 +713,13 @@
             const selector = clean(i, j);
             S.i = j + 1;
             const bodyAt = S.i;
-            const inner = body(0, selector);
-            if (S.bad) return false;
+            let open = body(openBody(0, selector, '', null));
+            while (typeof open !== 'string') {
+              yield 0;
+              open = body(open);
+            }
+            const inner = open;
+            if (S.bad || budget.capped) return false;
             if (siteSink) {
               const moved = siteApi.rewriteSelectors(selector);
               if (moved !== '') {

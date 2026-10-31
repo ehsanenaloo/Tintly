@@ -10,12 +10,26 @@
 
   const ATTR = 'data-dk-img';
   const BG_ATTR = 'data-dk-bg';
+  /** A picture that the page multiplies over a light tile, and the boxes around it that do the same: shown as they are on a dark page. */
+  const BLEND_ATTR = 'data-dk-bl';
+  /** The empty layer of a rating (a light shape under a colored layer of about its size) is muted: an SVG of it, or a masked box (the BG mark `empty`). */
+  const EMPTY_ATTR = 'data-dk-empty';
+  const EMPTY_FALLBACK = '#4a4d54';
+  const STAR_MAX_SVG = 400;
+  const STAR_MAX_SIDE = 64;
+  const STAR_HOST_MAX = 12;
+  const STAR_BUDGET_MS = 6;
+  const STAR_LOOKS = 4;
+  const STAR_SHAPES = 'path,circle,ellipse,rect,polygon,use';
   const SAMPLE = 32;
   const MIN_SIDE = 12;
   const MAX_SIDE = 6000;
   const MAX_CACHE = 500;
   const MAX_ELEMENTS = 1500;
   const CONCURRENT = 2;
+  // The cropped copy of a file of another origin is decoded here: the same pixel cap as the worker's copy, and a time limit.
+  const CROP_PIXELS = 16_000_000;
+  const CROP_MS = 3000;
   // E-ink and Paper (`flip`): pictures up to FLIP_SIDE that are light marks wait, FLIP_BATCH at a time, for a read of the page's own filter.
   const FLIP_SIDE = 400;
   const FLIP_BATCH = 24;
@@ -100,7 +114,7 @@
   const HIDE = 'background-image:none!important';
   const WALL = 'background-color:var(--dk-ground,#888)!important;background-blend-mode:difference!important';
   const TILE_CSS = `[${BG_ATTR}="tile"]{${HIDE}}[${BG_ATTR}="wall"]{${WALL}}[${ATTR}="wall"],[${BG_ATTR}="overlay"]{mix-blend-mode:difference}[${BG_ATTR}="lines"]{background-blend-mode:difference}`;
-  const CSS = `@media screen{${TILE_CSS}[${ATTR}="invert"],[${BG_ATTR}="invert"]{filter:invert(1) hue-rotate(180deg) var(--dk-cvd-media,)!important}[${ATTR}="dim"],[${BG_ATTR}="dim"]{filter:brightness(.9) var(--dk-cvd-media,)!important}[${ATTR}="plate"]{background-color:#fff!important}[${ATTR}="flip"]{filter:var(--dk-cvd-media,none)!important}}`;
+  const CSS = `@media screen{${TILE_CSS}[${ATTR}="invert"],[${BG_ATTR}="invert"]{filter:invert(1) hue-rotate(180deg) var(--dk-cvd-media,)!important}[${ATTR}="dim"],[${BG_ATTR}="dim"]{filter:brightness(.9) var(--dk-cvd-media,)!important}[${ATTR}="plate"]{background-color:#fff!important}[${ATTR}="flip"]{filter:var(--dk-cvd-media,none)!important}[${BLEND_ATTR}]{mix-blend-mode:normal!important}[${EMPTY_ATTR}][${EMPTY_ATTR}] :is(${STAR_SHAPES}):is(${STAR_SHAPES}){fill:var(--dk-empty,${EMPTY_FALLBACK})!important}[${BG_ATTR}="empty"]{background-color:var(--dk-empty,${EMPTY_FALLBACK})!important}}`;
 
   /** @param {Uint8ClampedArray | number[]} rgba @param {string} filter */
   function filtered(rgba, filter) {
@@ -163,7 +177,7 @@
   /** Verdicts and tones by address, kept over a restart (a mode switch). */
   const kept = { cache: new Map(), surfaces: new Map() };
 
-  /** With `eink` only CSS pictures are marked here and `<img>` is calm.js's; with `light` only surfaces. @param {{ ignore?: string[], eink?: boolean, light?: boolean, einkMark?: boolean, fetchImage?: (url: string) => Promise<{ mime: string, base64?: string, sample?: string } | null> }} [options] */
+  /** With `eink` only CSS pictures are marked here and `<img>` is calm.js's; with `light` only surfaces. @param {{ ignore?: string[], eink?: boolean, light?: boolean, einkMark?: boolean, fetchImage?: (url: string, sample?: boolean) => Promise<{ mime: string, base64?: string, sample?: string } | null> }} [options] */
   function start(options = {}) {
     const doc = document;
     /** @type {Map<string, 'keep' | 'dim' | 'invert' | 'plate' | 'flip'>} */
@@ -172,6 +186,13 @@
     const queue = new Set();
     /** @type {Set<HTMLImageElement>} */
     const marked = new Set();
+    /** @type {Set<Element>} */
+    const blended = new Set();
+    /** @type {Set<Element>} */
+    const emptied = new Set();
+    /** @type {WeakMap<Element, number>} how often the star pass has judged an SVG */
+    const judged = new WeakMap();
+    let tone = '';
     const stats = { analyzed: 0, fetched: 0, failed: 0, invert: 0, dim: 0, keep: 0, plate: 0, flip: 0, batches: 0, bgInvert: 0, bgDim: 0, bgGray: 0, bgTile: 0, bgSkipped: 0, bgPhotos: 0, bgCapped: 0 };
     const eink = options.eink === true;
     const dark = !eink && options.light !== true;
@@ -200,6 +221,100 @@
     const sheet = dark ? CSS : `@media screen{${TILE_CSS}${flip ? `[${ATTR}="flip"]{filter:brightness(0)!important}` : ''}}`;
     style.textContent = sheet;
     (doc.head ?? doc.documentElement).append(style);
+
+    /** The muted tone of an empty layer: the page color, a little lighter. It is read from the themed page, so it follows the person's tones. */
+    function setTone() {
+      const c = /** @type {any} */ (dk).color;
+      let parsed = null;
+      for (const el of [doc.documentElement, doc.body]) {
+        if (!el) continue;
+        const p = c.parseColor(getComputedStyle(el).backgroundColor);
+        if (p && p.a > 0.5) {
+          parsed = p;
+          break;
+        }
+      }
+      if (!parsed) return;
+      const hex = [parsed.r, parsed.g, parsed.b].map((v) => Math.round((v * 0.78 + 0.22) * 255).toString(16).padStart(2, '0')).join('');
+      if (tone === hex) return;
+      tone = hex;
+      style.textContent = `${sheet}:root{--dk-empty:#${hex}}`;
+    }
+
+    /** @param {Element} svg @returns {boolean} every shape is a light neutral fill */
+    function lightNeutralShapes(svg) {
+      const c = /** @type {any} */ (dk).color;
+      let seen = 0;
+      for (const shape of svg.querySelectorAll(STAR_SHAPES)) {
+        // A shape that is not looked at could be colored, and the empty-layer fill reaches every shape: more than the bound is no.
+        if (++seen > 8) return false;
+        const p = c.parseColor(getComputedStyle(shape).fill);
+        if (!p || p.a < 0.5) return false;
+        const [l, chroma] = c.toOklch(p);
+        if (l < 0.6 || chroma > 0.03) return false;
+      }
+      return seen > 0;
+    }
+
+    /** @param {Element} svg @returns {boolean} some shape has a color */
+    function coloredShapes(svg) {
+      const c = /** @type {any} */ (dk).color;
+      let seen = 0;
+      for (const shape of svg.querySelectorAll(STAR_SHAPES)) {
+        if (++seen > 8) break;
+        const p = c.parseColor(getComputedStyle(shape).fill);
+        if (p && p.a >= 0.5 && c.toOklch(p)[1] > 0.06) return true;
+      }
+      return false;
+    }
+
+    /** @param {DOMRect} a @param {DOMRect} b @returns {boolean} the two boxes lie on each other and are about as big */
+    function stacked(a, b) {
+      const area = (/** @type {DOMRect} */ r) => r.width * r.height;
+      const w = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+      const h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+      if (w <= 0 || h <= 0) return false;
+      const ratio = area(a) / Math.max(area(b), 1);
+      return ratio >= 0.4 && ratio <= 2.5 && w * h >= 0.5 * Math.min(area(a), area(b));
+    }
+
+    /**
+     * The empty layer of a rating: a small SVG with only light neutral shapes that another SVG of about its size, with colored shapes,
+     * lies on (the filled stars, cut to a width). It would show as a pale halo on the dark page, so it takes a muted tone. Only
+     * SVGs that share a box with one to eleven others are looked at, and a pass has a time limit.
+     */
+    function starPass() {
+      if (dead || !dark || !doc.body || doc.documentElement.getAttribute('data-dk-state') !== 'ready') return;
+      const svgs = doc.getElementsByTagName('svg');
+      if (svgs.length < 2) return;
+      const began = performance.now();
+      let count = 0;
+      for (const svg of svgs) {
+        if (++count > STAR_MAX_SVG || performance.now() - began > STAR_BUDGET_MS) break;
+        const looks = judged.get(svg) ?? 0;
+        if (looks >= STAR_LOOKS || svg.hasAttribute(EMPTY_ATTR) || (skip !== '' && svg.matches(skip))) continue;
+        judged.set(svg, looks + 1);
+        let host = svg.parentElement;
+        for (let hop = 0; host && hop < 3 && host.getElementsByTagName('svg').length < 2; hop++) host = host.parentElement;
+        if (!host) continue;
+        const near = host.getElementsByTagName('svg');
+        if (near.length < 2 || near.length > STAR_HOST_MAX) continue;
+        const mine = svg.getBoundingClientRect();
+        if (mine.width < 4 || mine.height < 4 || Math.max(mine.width, mine.height) > STAR_MAX_SIDE) {
+          if (mine.width === 0) judged.set(svg, looks);
+          continue;
+        }
+        if (!lightNeutralShapes(svg)) continue;
+        for (const other of near) {
+          if (other === svg || !stacked(mine, other.getBoundingClientRect()) || !coloredShapes(other)) continue;
+          setTone();
+          svg.setAttribute(EMPTY_ATTR, '');
+          emptied.add(svg);
+          break;
+        }
+      }
+    }
+
     const keeper = keepApi ? keepApi.create() : null;
     keeper?.track(style, () => (doc.head ?? doc.documentElement).append(style));
 
@@ -208,9 +323,10 @@
     /** @type {any} */
     const session = {
       doc, dark, eink, options, skip, cache, surfaces: kept.surfaces, stats, keeper, sheet, jobs: bgJobs,
-      read: (/** @type {HTMLImageElement} */ img, /** @type {string} */ src) => read(img, src),
+      read: (/** @type {HTMLImageElement} */ img, /** @type {string} */ src, /** @type {Crop | null} */ crop) => read(img, src, crop),
       pixelsOf: (/** @type {ImageBitmapSource} */ source, /** @type {number} */ width, /** @type {number} */ height) => pixelsOf(source, width, height),
       pump: () => pump(),
+      emptyTone: () => setTone(),
       setStyle: (/** @type {string} */ text) => {
         style.textContent = text;
       },
@@ -219,49 +335,73 @@
       bg: null,
     };
 
-    /** @param {ImageBitmapSource} source @returns {Uint8ClampedArray} */
-    function pixelsOf(source, width = SAMPLE, height = SAMPLE) {
+    /** @typedef {{ sx: number, sy: number, sw: number, sh: number }} Crop  a part of a picture, in its own pixels */
+
+    /** @param {ImageBitmapSource} source @param {Crop | null} [crop] @returns {Uint8ClampedArray} */
+    function pixelsOf(source, width = SAMPLE, height = SAMPLE, crop = null) {
       const canvas = new OffscreenCanvas(width, height);
       const ctx = /** @type {OffscreenCanvasRenderingContext2D} */ (canvas.getContext('2d', { willReadFrequently: true }));
-      ctx.drawImage(/** @type {CanvasImageSource} */ (source), 0, 0, width, height);
+      if (crop) ctx.drawImage(/** @type {CanvasImageSource} */ (source), crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, width, height);
+      else ctx.drawImage(/** @type {CanvasImageSource} */ (source), 0, 0, width, height);
       return ctx.getImageData(0, 0, width, height).data;
     }
 
-    /** @param {HTMLImageElement} img @param {string} src */
-    async function read(img, src) {
+    /** @param {HTMLImageElement} img @param {string} src @param {Crop | null} [crop] */
+    async function read(img, src, crop = null) {
       try {
-        return pixelsOf(img);
+        return pixelsOf(img, SAMPLE, SAMPLE, crop);
       } catch {
         // An image of another origin taints the canvas: the worker sends a copy.
       }
       if (!options.fetchImage || /^(data|blob):/i.test(src)) return null;
-      const file = await options.fetchImage(src);
+      // A part of the file is decoded here: a source too big to decode safely is refused before the fetch.
+      if (crop && !(img.naturalWidth > 0 && img.naturalHeight > 0 && img.naturalWidth * img.naturalHeight <= CROP_PIXELS)) return null;
+      const file = await options.fetchImage(src, crop === null);
       if (!file) return null;
       stats.fetched += 1;
       // The worker sends the 32 by 32 copy when it can make one, else the file.
       if (typeof file.sample === 'string') {
+        if (crop) return null;
         const px = bytesOf(file.sample);
         return px.length === SAMPLE * SAMPLE * 4 ? new Uint8ClampedArray(px.buffer) : null;
       }
       if (typeof file.base64 !== 'string') return null;
       const bytes = bytesOf(file.base64);
-      if (file.mime === 'image/svg+xml') return svgPixels(bytes);
-      const bitmap = await createImageBitmap(new Blob([bytes], { type: file.mime }), { resizeWidth: SAMPLE, resizeHeight: SAMPLE });
+      if (file.mime === 'image/svg+xml') return svgPixels(bytes, crop);
+      const blob = new Blob([bytes], { type: file.mime });
+      const resize = { resizeWidth: SAMPLE, resizeHeight: SAMPLE };
+      if (!crop) {
+        const bitmap = await createImageBitmap(blob, resize);
+        try {
+          return pixelsOf(bitmap);
+        } finally {
+          bitmap.close();
+        }
+      }
+      const made = createImageBitmap(blob, Math.floor(crop.sx), Math.floor(crop.sy), Math.max(1, Math.round(crop.sw)), Math.max(1, Math.round(crop.sh)), resize);
+      /** @type {ReturnType<typeof setTimeout> | undefined} */
+      let timer;
+      const bitmap = await Promise.race([made, new Promise((resolve) => (timer = setTimeout(() => resolve(null), CROP_MS)))]).finally(() => clearTimeout(timer));
+      if (!bitmap) {
+        // A decode that comes in late is closed when it arrives.
+        made.then((late) => late.close(), () => {});
+        return null;
+      }
       try {
-        return pixelsOf(bitmap);
+        return bitmap.width === SAMPLE && bitmap.height === SAMPLE ? pixelsOf(bitmap) : null;
       } finally {
         bitmap.close();
       }
     }
 
-    /** @param {Uint8Array} bytes @returns {Promise<Uint8ClampedArray | null>} */
-    async function svgPixels(bytes) {
+    /** @param {Uint8Array} bytes @param {Crop | null} [crop] @returns {Promise<Uint8ClampedArray | null>} */
+    async function svgPixels(bytes, crop = null) {
       const url = URL.createObjectURL(new Blob([/** @type {BlobPart} */ (bytes)], { type: 'image/svg+xml' }));
       try {
         const copy = new Image();
         copy.src = url;
         await copy.decode();
-        return pixelsOf(copy);
+        return pixelsOf(copy, SAMPLE, SAMPLE, crop);
       } catch {
         return null;
       } finally {
@@ -269,9 +409,26 @@
       }
     }
 
+    /**
+     * A product photo on a white ground that the page multiplies over a light tile makes the white vanish. Over the dark tile of the
+     * dark mode the same multiplication makes the photo black, so the picture and each box around it that multiplies are shown as they are.
+     * A box that multiplies blends its whole group, so a picture that does not multiply itself is looked at too.
+     * @param {HTMLImageElement} img
+     */
+    function unblend(img) {
+      const own = getComputedStyle(img).mixBlendMode === 'multiply';
+      let depth = 0;
+      for (let el = /** @type {HTMLElement | null} */ (img); el && el !== doc.body && depth < 6; el = el.parentElement, depth += 1) {
+        if (el === img ? !own : blended.has(el) || getComputedStyle(el).mixBlendMode !== 'multiply') continue;
+        el.setAttribute(BLEND_ATTR, '');
+        blended.add(el);
+      }
+    }
+
     /** @param {HTMLImageElement} img */
     async function analyze(img) {
       if (dead || !img.isConnected) return;
+      if (dark && !blended.has(img)) unblend(img);
       const src = img.currentSrc || img.src;
       if (!src) return;
       const w = img.naturalWidth;
@@ -389,7 +546,10 @@
     const onLoad = (/** @type {Event} */ event) => {
       if (event.target instanceof HTMLImageElement) consider(event.target);
     };
-    const onWindowLoad = () => scan(doc);
+    const onWindowLoad = () => {
+      scan(doc);
+      starPass();
+    };
     const onContentLoaded = () => scan(doc);
     if (dark || flip) {
       doc.addEventListener('load', onLoad, true);
@@ -413,12 +573,20 @@
       }
     };
     const onScrollLook = () => {
-      if (performance.now() - lookAt > 1500) lookForPictures();
+      if (performance.now() - lookAt > 1500) {
+        lookForPictures();
+        starPass();
+      }
     };
     addEventListener('scroll', onScrollLook, { passive: true });
     addEventListener('resize', onScrollLook, { passive: true });
     addEventListener('load', lookForPictures, { once: true });
-    const lookTimers = [500, 1500, 4000, 9000].map((t) => setTimeout(lookForPictures, t));
+    const lookTimers = [500, 1500, 4000, 9000].map((t) =>
+      setTimeout(() => {
+        lookForPictures();
+        starPass();
+      }, t),
+    );
     ns.imagebg?.attach(session);
 
     return {
@@ -445,6 +613,12 @@
         for (const img of marked) img.removeAttribute(ATTR);
         for (const img of doc.querySelectorAll(`[${ATTR}]`)) img.removeAttribute(ATTR);
         marked.clear();
+        for (const el of blended) el.removeAttribute(BLEND_ATTR);
+        for (const el of doc.querySelectorAll(`[${BLEND_ATTR}]`)) el.removeAttribute(BLEND_ATTR);
+        blended.clear();
+        for (const el of emptied) el.removeAttribute(EMPTY_ATTR);
+        for (const el of doc.querySelectorAll(`[${EMPTY_ATTR}]`)) el.removeAttribute(EMPTY_ATTR);
+        emptied.clear();
       },
     };
   }

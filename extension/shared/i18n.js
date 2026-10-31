@@ -6,6 +6,19 @@ const LOADERS = Object.freeze({
   en: () => import('./locales/en.js'),
   ar: () => import('./locales/ar.js'),
   he: () => import('./locales/he.js'),
+  es: () => import('./locales/es.js'),
+  pt: () => import('./locales/pt.js'),
+  ru: () => import('./locales/ru.js'),
+  de: () => import('./locales/de.js'),
+  fr: () => import('./locales/fr.js'),
+  zh: () => import('./locales/zh.js'),
+  'zh-TW': () => import('./locales/zh-TW.js'),
+  ko: () => import('./locales/ko.js'),
+  ja: () => import('./locales/ja.js'),
+  hi: () => import('./locales/hi.js'),
+  id: () => import('./locales/id.js'),
+  it: () => import('./locales/it.js'),
+  tr: () => import('./locales/tr.js'),
 });
 export const LOCALES = Object.freeze(Object.keys(LOADERS));
 /** Show a look on the page: 'light' or 'dark' is forced, 'system' follows the browser. @param {string} value */
@@ -30,6 +43,8 @@ const catalogs = new Map();
 export function pickLocale(stored, browserLanguages) {
   if (stored && LOCALES.includes(stored)) return stored;
   for (const tag of browserLanguages) {
+    // Chinese in the traditional script (Taiwan, Hong Kong, Macau or `Hant`) has its own catalog; the other Chinese gets the simplified one.
+    if (/^zh[-_](?:hant|tw|hk|mo)(?![a-z])/i.test(tag)) return 'zh-TW';
     const raw = tag.toLowerCase().split(/[-_]/)[0];
     const base = Object.hasOwn(LEGACY, raw) ? LEGACY[/** @type {'iw'} */ (raw)] : raw;
     if (LOCALES.includes(base)) return base;

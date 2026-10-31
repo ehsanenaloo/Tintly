@@ -9,18 +9,18 @@
 ## Type of change
 
 - [ ] Bug fix
-- [ ] Engine fix for a page pattern (with a fixture and a test)
+- [ ] Engine fix for a page pattern (with a small page that shows it)
 - [ ] Site fix data
 - [ ] New feature
 - [ ] Translation
 - [ ] Documentation
-- [ ] Maintenance or CI
+- [ ] Maintenance
 
 ## How I tested it
 
 <!-- Browser and version, the steps you followed, what you saw, and one failure case.
-Say what you ran, such as `npm run check` or `npm run test:browser`, and what you tried by hand.
-For a change to the engine, the gate or the manifest, add the result of `npm run test:perf` before and after. -->
+Say what you tried by hand, on which pages, and what you saw.
+For a change to the engine, the gate or the manifest, say how much work it adds to a page and how you measured it. -->
 
 ## Screenshots
 
@@ -32,16 +32,15 @@ For a change to the engine, the gate or the manifest, add the result of `npm run
 
 ## Checklist
 
-- [ ] `npm run check` passes
-- [ ] I added or updated a test, or I explained why the change cannot be tested
+- [ ] I described a small page or the steps that show the problem, so a test can be added
 - [ ] The change is focused and does one thing
-- [ ] A fix for a page rebuilds the pattern in a fixture, and engine code names no site or host
+- [ ] A fix for a page describes the pattern with a small page, and engine code names no site or host
 - [ ] I tried the change in a real browser, including a failure case (or I explained why not)
 - [ ] No new permission, host, network request or storage key (or it was agreed in an issue first)
-- [ ] The version was raised if I changed `extension/`
+- [ ] I did not change the version (the maintainer raises it)
 - [ ] Interface text is in all four language files with the same placeholders
 - [ ] The change works with the keyboard and in a right-to-left language
-- [ ] I checked the speed budgets if I touched the engine, the gate or the manifest
+- [ ] If I touched the engine, the gate or the manifest, I said how the change affects page speed
 - [ ] `CHANGELOG.md` and the docs are updated if a user can see the change
 - [ ] `docs/PRIVACY.md` is updated if data handling or permissions changed
 - [ ] Screenshots and test files contain no private data

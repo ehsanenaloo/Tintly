@@ -1,0 +1,35 @@
+{
+  "extName": {
+    "message": "Tintly - ダーク、ライト、ペーパー、E-ink、色覚サポート"
+  },
+  "extDescription": {
+    "message": "すべてのウェブサイトにダーク、ライト、ペーパー、E-inkモードと色覚サポートフィルターを適用します。高速でプライベート。データは一切収集しません。"
+  },
+  "cmdToggleExtension": {
+    "message": "Tintlyをオンまたはオフにする"
+  },
+  "cmdToggleSite": {
+    "message": "このサイトでTintlyをオンまたはオフにする"
+  },
+  "cmdSwitchEngine": {
+    "message": "テーマエンジンを切り替える"
+  },
+  "cmdModeDark": {
+    "message": "ダークモードに切り替える"
+  },
+  "cmdModeLight": {
+    "message": "ライトモードに切り替える"
+  },
+  "cmdModePaper": {
+    "message": "ペーパーモードに切り替える"
+  },
+  "cmdModeEink": {
+    "message": "E-inkモードに切り替える"
+  },
+  "cmdModeOriginal": {
+    "message": "元の色に切り替える"
+  },
+  "menuToggleSite": {
+    "message": "このサイトでTintlyをオンまたはオフにする"
+  }
+}

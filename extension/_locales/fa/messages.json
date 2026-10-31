@@ -14,6 +14,21 @@
   "cmdSwitchEngine": {
     "message": "تغییر موتور تم"
   },
+  "cmdModeDark": {
+    "message": "تغییر به حالت تاریک"
+  },
+  "cmdModeLight": {
+    "message": "تغییر به حالت روشن"
+  },
+  "cmdModePaper": {
+    "message": "تغییر به حالت کاغذ"
+  },
+  "cmdModeEink": {
+    "message": "تغییر به حالت E-ink"
+  },
+  "cmdModeOriginal": {
+    "message": "تغییر به رنگ‌های اصلی"
+  },
   "menuToggleSite": {
     "message": "روشن یا خاموش کردن Tintly برای این سایت"
   }

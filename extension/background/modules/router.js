@@ -28,11 +28,12 @@ const IMPORT_CHARS = 1024 * 1024 + 4096;
  *   icon: { apply: (tabId: number, status: string) => Promise<void> | void },
  *   data: { forHost: (host: string, pathname: string, userFixes: any) => Promise<any> },
  *   ondemand?: { inject: (name: unknown, who: { tabId: number, frameId: number }) => Promise<Reply> },
+ *   sync?: { replace: (confirmed: boolean) => Promise<{ ok: boolean, code?: string }> },
  *   register?: { sync: () => Promise<void>, readonly failed: boolean, readonly plan: { matches: string[], excludeMatches: string[] } | null | undefined },
  *   tabs?: { get: (tabId: number) => Promise<{ url?: string, favIconUrl?: string }> },
  * }} deps
  */
-export function createRouter({ runtimeId, extensionOrigin, state, net, icon, data, tabs, ondemand, register }) {
+export function createRouter({ runtimeId, extensionOrigin, state, net, icon, data, tabs, ondemand, register, sync }) {
   /**
    * Who sent this. Extension pages are known by their address, content scripts by the tab and frame that the browser
    * attaches. A web page cannot make either of these up.
@@ -101,7 +102,9 @@ export function createRouter({ runtimeId, extensionOrigin, state, net, icon, dat
       const rest = without(ruleTheme);
       const { theme: _theme, ...others } = rule;
       const clear = Object.keys(rest).length ? { ...others, theme: rest } : others;
-      return { kind: 'rule', mode: ruleTheme.mode, preset: ruleTheme.einkPreset ?? null, key: ruleKey, clear: Object.keys(clear).length ? clear : null };
+      // `keep`: a record left empty must stay, since a rule of a wider key with a mode would pin the page again (the first key that matches decides).
+      const keep = keys.slice(keys.indexOf(ruleKey) + 1).some((k) => Object.hasOwn(s.siteRules, k) && isObject(s.siteRules[k]) && modeOf(s.siteRules[k].theme));
+      return { kind: 'rule', mode: ruleTheme.mode, preset: ruleTheme.einkPreset ?? null, key: ruleKey, clear: Object.keys(clear).length ? clear : null, keep };
     }
     const found = await data.forHost(page.host, page.pathname, s.userFixes);
     const fix = found.user ?? found.builtin;
@@ -110,7 +113,11 @@ export function createRouter({ runtimeId, extensionOrigin, state, net, icon, dat
       const userKey = found.user !== null && isObject(s.userFixes) ? keys.find((k) => Object.hasOwn(s.userFixes, k)) : undefined;
       const rest = without(fixTheme);
       const { theme: _theme, ...dynamic } = fix.dynamic;
-      return { kind: 'fix', mode: fixTheme.mode, preset: fixTheme.einkPreset ?? null, key: userKey ?? patternFor(url), clear: { ...fix, dynamic: Object.keys(rest).length ? { ...dynamic, theme: rest } : dynamic } };
+      const wider = (/** @type {any} */ f) => isObject(f) && isObject(f.dynamic) && !!modeOf(f.dynamic.theme);
+      const keep =
+        userKey !== undefined &&
+        (keys.slice(keys.indexOf(userKey) + 1).some((k) => Object.hasOwn(s.userFixes, k) && wider(s.userFixes[k])) || wider(found.builtin));
+      return { kind: 'fix', mode: fixTheme.mode, preset: fixTheme.einkPreset ?? null, key: userKey ?? patternFor(url), clear: { ...fix, dynamic: Object.keys(rest).length ? { ...dynamic, theme: rest } : dynamic }, keep };
     }
     const auto = s.settings?.automation;
     if (isObject(auto) && auto.behavior === 'scheme' && auto.mode !== 'none') return { kind: 'schedule' };
@@ -168,13 +175,13 @@ export function createRouter({ runtimeId, extensionOrigin, state, net, icon, dat
     // Change some fields of a site rule, merged with the rule as it is now (another window may have changed other fields).
     'dk.site.patch': {
       from: 'page',
-      fields: { pattern: isString(300), patch: isObject, remove: (v) => Array.isArray(v) && v.length <= 100 && v.every(isString(80)) },
-      optional: ['remove'],
-      run: (m) => state.patchSite(m.pattern, m.patch, m.remove ?? []),
+      fields: { pattern: isString(300), patch: isObject, remove: (v) => Array.isArray(v) && v.length <= 100 && v.every(isString(80)), keepEmpty: isBool, url: isString(4096) },
+      optional: ['remove', 'keepEmpty', 'url'],
+      run: (m) => state.patchSite(m.pattern, m.patch, m.remove ?? [], m.keepEmpty === true, m.url),
     },
     // The site switch of a page: the rule that decides for this address gets the value, and the reply says the state of the page.
     'dk.site.switch': { from: 'page', fields: { url: isString(4096), enabled: isBool }, run: (m) => state.toggleSite(m.url, m.enabled) },
-    'dk.preset.save': { from: 'page', fields: { preset: isObject }, run: (m) => state.savePreset(m.preset) },
+    'dk.preset.save': { from: 'page', fields: { preset: isObject, ifAbsent: isBool }, optional: ['ifAbsent'], run: (m) => state.savePreset(m.preset, m.ifAbsent === true) },
     'dk.preset.delete': { from: 'page', fields: { id: isString(40) }, run: (m) => state.deletePreset(m.id) },
     'dk.import': {
       from: 'page',
@@ -188,6 +195,12 @@ export function createRouter({ runtimeId, extensionOrigin, state, net, icon, dat
       optional: ['ifAbsent'],
       run: (m) => state.setFix(m.pattern, m.fix, m.ifAbsent === true),
     },
+    'dk.fix.release': {
+      from: 'page',
+      fields: { pattern: isString(300), fallback: (v) => v === null || isObject(v), keepEmpty: isBool, url: isString(4096) },
+      optional: ['keepEmpty', 'url'],
+      run: (m) => state.releaseFixMode(m.pattern, m.fallback, m.keepEmpty === true, m.url),
+    },
     // Turn on custom CSS that arrived by import or sync, after the settings page showed it. `css` is the text that was shown.
     'dk.css.enable': {
       from: 'page',
@@ -198,6 +211,8 @@ export function createRouter({ runtimeId, extensionOrigin, state, net, icon, dat
     'dk.ui.set': { from: 'page', fields: { ui: isObject }, run: (m) => state.setUi(m.ui) },
     'dk.reset': { from: 'page', fields: { confirmed: isBool }, run: (m) => (m.confirmed === true ? state.reset() : { ok: false, code: 'unconfirmed' }) },
     'dk.export': { from: 'page', fields: {}, run: () => state.exportText() },
+    // Replace an unreadable snapshot in the sync account with this device's data. The worker checks again that it is unreadable.
+    'dk.sync.replace': { from: 'page', fields: { confirmed: isBool }, run: (m) => (sync ? /** @type {Promise<Reply>} */ (sync.replace(m.confirmed === true)) : { ok: false, code: 'unavailable' }) },
     // Bring the registration of the content scripts to the stored settings now. The worker does it on every change; the call is for a page that must know it is done.
     'dk.register.sync': {
       from: 'page',

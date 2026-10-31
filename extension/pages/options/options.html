@@ -35,6 +35,7 @@
     <button id="tab-appearance" class="tab" type="button" role="tab" aria-controls="panel-appearance" data-tab="appearance" data-icon="drop"><span data-i18n="tab.appearance"></span></button>
     <button id="tab-sites" class="tab" type="button" role="tab" aria-controls="panel-sites" data-tab="sites" data-icon="globe"><span data-i18n="tab.sites"></span></button>
     <button id="tab-schedule" class="tab" type="button" role="tab" aria-controls="panel-schedule" data-tab="schedule" data-icon="clock"><span data-i18n="tab.schedule"></span></button>
+    <button id="tab-shortcuts" class="tab" type="button" role="tab" aria-controls="panel-shortcuts" data-tab="shortcuts" data-icon="keyboard"><span data-i18n="tab.shortcuts"></span></button>
     <button id="tab-advanced" class="tab" type="button" role="tab" aria-controls="panel-advanced" data-tab="advanced" data-icon="code"><span data-i18n="tab.advanced"></span></button>
     <button id="tab-data" class="tab" type="button" role="tab" aria-controls="panel-data" data-tab="data" data-icon="database"><span data-i18n="tab.data"></span></button>
     <button id="tab-about" class="tab" type="button" role="tab" aria-controls="panel-about" data-tab="about" data-icon="info"><span data-i18n="tab.about"></span></button>
@@ -84,6 +85,19 @@
       <option value="en" lang="en">English</option>
       <option value="ar" lang="ar">العربية</option>
       <option value="he" lang="he">עברית</option>
+      <option value="es" lang="es">Español</option>
+      <option value="pt" lang="pt-BR">Português (Brasil)</option>
+      <option value="ru" lang="ru">Русский</option>
+      <option value="de" lang="de">Deutsch</option>
+      <option value="fr" lang="fr">Français</option>
+      <option value="zh" lang="zh-CN">简体中文</option>
+      <option value="zh-TW" lang="zh-TW">繁體中文</option>
+      <option value="ko" lang="ko">한국어</option>
+      <option value="ja" lang="ja">日本語</option>
+      <option value="hi" lang="hi">हिन्दी</option>
+      <option value="id" lang="id">Bahasa Indonesia</option>
+      <option value="it" lang="it">Italiano</option>
+      <option value="tr" lang="tr">Türkçe</option>
     </select></div>
   <div class="item"><label for="uiTheme" data-i18n="opt.uiTheme"></label>
     <select id="uiTheme">
@@ -94,11 +108,6 @@
   <div class="item"><label class="check"><span data-i18n="opt.nudge"></span><input class="toggle" role="switch" id="supportNudge" type="checkbox"></label></div>
 </section>
 
-<section class="card" data-section>
-  <h2 data-i18n="opt.shortcuts"></h2>
-  <ul id="shortcut-list" class="plain"></ul>
-  <div class="item"><button id="shortcut-open" class="btn" type="button" data-i18n="opt.shortcutsOpen"></button></div>
-</section>
 </div>
 
 <div id="panel-appearance" class="panel" role="tabpanel" aria-labelledby="tab-appearance" hidden>
@@ -294,6 +303,24 @@
 </section>
 </div>
 
+<div id="panel-shortcuts" class="panel" role="tabpanel" aria-labelledby="tab-shortcuts" hidden>
+<section class="card" data-section>
+  <h2 data-i18n="opt.shortcuts"></h2>
+  <ul id="shortcut-list" class="plain"></ul>
+  <div class="item"><button id="shortcut-open" class="btn" type="button" data-i18n="opt.shortcutsOpen"></button></div>
+</section>
+
+<section class="card" data-section>
+  <h2 data-i18n="opt.shortcutsHelpTitle"></h2>
+  <ol class="steps">
+    <li data-i18n="opt.shortcutsHelp1"></li>
+    <li data-i18n="opt.shortcutsHelp2"></li>
+    <li data-i18n="opt.shortcutsHelp3"></li>
+  </ol>
+  <p class="hint" data-i18n="opt.shortcutsHelpNote"></p>
+</section>
+</div>
+
 <div id="panel-advanced" class="panel" role="tabpanel" aria-labelledby="tab-advanced" hidden>
 <section class="card" data-section>
   <h2 data-i18n="opt.cssTitle"></h2>
@@ -325,6 +352,13 @@
   <h2 data-i18n="opt.syncTitle"></h2>
   <div class="item"><label class="check"><span data-i18n="opt.sync"></span><input class="toggle" role="switch" type="checkbox" data-setting="syncEnabled"></label></div>
   <div class="item"><label class="check"><span data-i18n="opt.syncSites"></span><input class="toggle" role="switch" type="checkbox" data-setting="syncIncludeSites"></label></div>
+  <div id="sync-too-large" class="box" role="status" hidden>
+    <p data-i18n="opt.syncTooLarge"></p>
+  </div>
+  <div id="sync-broken" class="box" role="status" hidden>
+    <p data-i18n="opt.syncBroken"></p>
+    <button id="sync-replace" class="btn btn-danger" type="button" data-i18n="opt.syncReplace"></button>
+  </div>
 </section>
 <section class="card" data-section>
   <h2 data-i18n="opt.resetTitle"></h2>

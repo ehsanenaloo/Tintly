@@ -504,9 +504,40 @@
 }
 
 /* Same edges as the content cards. The About tab shows the same links itself. */
+/* Fixed to the bottom of the window, in the column of the cards, so it does not move with the length of a tab. */
 .footer-mount {
-  inline-size: 100%;
-  margin-block: var(--s-2) var(--s-6);
+  position: fixed;
+  inset-block-end: 0;
+  inset-inline-start: calc((100% - min(100%, 1040px)) / 2 + var(--s-6) + 216px + var(--s-8));
+  inline-size: calc(min(100%, 1040px) - 2 * var(--s-6) - 216px - var(--s-8));
+  z-index: 10;
+  padding-block: var(--s-2) var(--s-4);
+  background: var(--bg);
+}
+
+/* Room under the last card for the fixed footer. */
+.content {
+  padding-block-end: 9rem;
+}
+
+@media (max-width: 760px) {
+  .footer-mount {
+    inset-inline: var(--s-4);
+    inline-size: auto;
+  }
+}
+
+/* A short window would lose most of the page to the footer: it goes back into the flow. */
+@media (max-height: 560px) {
+  .footer-mount {
+    position: static;
+    inline-size: 100%;
+    padding-block: var(--s-2) var(--s-6);
+  }
+
+  .content {
+    padding-block-end: 0;
+  }
 }
 
 body[data-tab="about"]:not([data-searching]) .footer-mount {
@@ -880,4 +911,11 @@ details.more[open] > summary {
 
 .cards .fields input[type="text"] {
   text-overflow: ellipsis;
+}
+
+.steps {
+  margin: 0 0 12px;
+  padding-inline-start: 22px;
+  display: grid;
+  gap: 6px;
 }

@@ -14,6 +14,21 @@
   "cmdSwitchEngine": {
     "message": "Switch the theme engine"
   },
+  "cmdModeDark": {
+    "message": "Switch to Dark mode"
+  },
+  "cmdModeLight": {
+    "message": "Switch to Light mode"
+  },
+  "cmdModePaper": {
+    "message": "Switch to Paper mode"
+  },
+  "cmdModeEink": {
+    "message": "Switch to E-ink mode"
+  },
+  "cmdModeOriginal": {
+    "message": "Switch to Original colors"
+  },
   "menuToggleSite": {
     "message": "Turn Tintly on or off for this site"
   }

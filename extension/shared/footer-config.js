@@ -8,16 +8,16 @@ import { REPO_URL, storeReviewUrl } from './store-link.js';
 export const LINKS = Object.freeze(/** @type {{ site: string, help: string, support: string, github: string }} */ ({
   site: 'https://www.enaloo.com',
   help: 'https://enaloo.com/apps/tintly/',
-  support: 'https://buymeacoffee.com/enaloo',
+  support: 'https://enaloo.com/support/',
   github: REPO_URL,
 }));
 
 let installType = '';
 
 /** Learn how this copy was installed. Call once before the footer is built; it needs no permission and may fail. */
-export async function loadInstallType() {
+export async function loadInstallType(/** @type {Promise<any> | null} */ pending = null) {
   try {
-    const self = await chrome.management.getSelf();
+    const self = await (pending ?? chrome.management.getSelf());
     installType = typeof self?.installType === 'string' ? self.installType : '';
   } catch {
     installType = '';

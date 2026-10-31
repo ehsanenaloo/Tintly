@@ -149,7 +149,8 @@
     const { splitTopLevel, splitSpaces, colorOf } = env;
     /**
      * A gradient of the E-ink and Paper mode. With a translucent or transparent stop it is a glow, a fade or a scrim and is dropped
-     * (`none`); with only opaque stops it becomes one solid color, the themed average. Hard stops (a progress bar) are left to the
+     * (`none`), except a linear fade to a light color (white to nothing, the edge of a clipped text): that one hides what runs under it,
+     * as on the page, and takes the normal path with its colors themed; with only opaque stops it becomes one solid color, the themed average. Hard stops (a progress bar) are left to the
      * normal path. A stop that is not a plain color (`var()`, `currentcolor`) cannot be judged: a radial or conic gradient with
      * one is a glow or a halo and is dropped, a linear one takes the normal path.
      * @param {string} inner the text between the parentheses @param {string} kind the name of the gradient function, lower case
@@ -183,7 +184,12 @@
         lastPosition = position;
         stops.push(found);
       }
-      if (stops.some((c) => c.a < 0.98)) return 'none';
+      if (stops.some((c) => c.a < 0.98)) {
+        const lit = stops.filter((c) => c.a >= 0.02);
+        const ground = (/** @type {{ r: number, g: number, b: number }} */ c) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b >= 0.85 && Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) <= 0.12;
+        if (!unknown && lit.length > 0 && /^(?:-webkit-|-moz-)?(?:repeating-)?linear-gradient$/.test(kind) && lit.every(ground)) return null;
+        return 'none';
+      }
       if (unknown) return /^(?:-webkit-|-moz-)?(?:repeating-)?(?:radial|conic)-gradient$/.test(kind) ? 'none' : null;
       if (stops.length < 2) return null;
       const n = stops.length;

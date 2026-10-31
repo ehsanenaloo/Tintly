@@ -13,6 +13,7 @@ import { confirmClick, engineHints, syncRange, tabList } from '../../shared/widg
 import { EINK_FIELDS, EINK_RESET, cssReachesOut, defaultTheme, fixCss, heldCss, ruleCss } from '../../shared/settings.js';
 import { createSay } from '../../shared/say.js';
 import { saveErrorKind, sendWithRetry } from '../../shared/save-error.js';
+import { createWriteOrder } from '../../shared/write-order.js';
 import { mountEink } from './eink.js';
 import { mountColorVision } from './color-vision.js';
 import { mountPalettes } from './palettes.js';
@@ -31,7 +32,7 @@ const SITE_NUMBERS = /** @type {const} */ (['brightness', 'contrast', 'sepia', '
 const SAVE_DELAY_MS = 250;
 const RESET_WINDOW_MS = 5000;
 const MAX_IMPORT_BYTES = 1024 * 1024 + 4096;
-const TABS = ['general', 'appearance', 'sites', 'schedule', 'advanced', 'data', 'about'];
+const TABS = ['general', 'appearance', 'sites', 'schedule', 'shortcuts', 'advanced', 'data', 'about'];
 
 const $ = (/** @type {string} */ id) => /** @type {HTMLElement} */ (document.getElementById(id));
 const input = (/** @type {string} */ id) => /** @type {HTMLInputElement} */ ($(id));
@@ -159,6 +160,7 @@ async function saveNow() {
   if (Object.keys(patch).length === 0) return;
   await tracked(async () => {
     const reply = await sendWithRetry(() => send({ type: 'dk.settings.patch', patch }));
+    markSave('', reply?.ok !== true);
     if (reply?.ok) say(t('opt.saved'));
     else {
       say(saveErrorText(reply));
@@ -166,6 +168,19 @@ async function saveNow() {
       renderAll();
     }
   });
+}
+
+/**
+ * The saves whose last try failed: '' for the general settings, else the site pattern. A recovery of the account waits for this
+ * to be empty: a settled promise says only that the save ended, and a second recovery must not forget the first one's failure.
+ * @type {Set<string>}
+ */
+const failedSaves = new Set();
+
+/** @param {string} key @param {boolean} failed */
+function markSave(key, failed) {
+  if (failed) failedSaves.add(key);
+  else failedSaves.delete(key);
 }
 
 /** Saves that have been sent and not answered. A change the worker reports meanwhile is shown when the last one ends. */
@@ -188,11 +203,53 @@ async function tracked(job) {
   }
 }
 
+/**
+ * The edits of open site rows that wait for their pause, by row: `run` sends one at once, `drop` forgets it. The site saves
+ * that are running are kept too, so a reset or an import can wait for them.
+ * @type {Map<HTMLElement, { pattern: string, run: () => Promise<unknown>, drop: () => void }>}
+ */
+const siteWaits = new Map();
+/** @type {Set<Promise<unknown>>} */
+const siteSaves = new Set();
+
+/**
+ * The newest save or delete started for each site pattern. An older one that is still waiting to retry gives up, so it never
+ * lands after a newer edit or brings back a rule that was deleted. It is kept by pattern, not by row, as rows are rebuilt.
+ */
+const siteOrder = createWriteOrder();
+
+/** Start an operation on a site rule. @param {string} pattern */
+const beginSiteOp = (pattern) => siteOrder.begin(pattern);
+
+/** The end of the last operation on each site pattern. @type {Map<string, Promise<unknown>>} */
+const siteTail = new Map();
+
+/** Run a send after the operations started before it on the same pattern have ended: one still on its way must not land after this one. @template T @param {string} pattern @param {() => Promise<T>} start */
+function afterEarlier(pattern, start) {
+  const run = (siteTail.get(pattern) ?? Promise.resolve()).then(start);
+  const tail = run.catch(() => undefined);
+  siteTail.set(pattern, tail);
+  void tail.then(() => {
+    if (siteTail.get(pattern) === tail) siteTail.delete(pattern);
+  });
+  return run;
+}
+
+/** A send for one operation: a try that comes after a newer operation started is not made. @param {string} pattern @param {number} id @param {() => Promise<any>} send */
+const ordered = (pattern, id, send) => siteOrder.guard(pattern, id, send);
+
+/** Send every waiting site edit now. */
+function runSiteWaits() {
+  return Promise.all([...siteWaits.values()].map((w) => w.run()));
+}
+
 /** Drop the changes that wait for their save and let the saves that are running end, before a reset or an import replaces everything. */
 async function dropPending() {
   clearTimeout(timer);
   pending = {};
-  await saving;
+  failedSaves.clear();
+  for (const w of [...siteWaits.values()]) w.drop();
+  await Promise.all([saving, ...siteSaves]);
 }
 
 /** The text for a refused save: a field the worker does not know means the extension needs a reload. @param {any} reply */
@@ -219,6 +276,7 @@ async function refresh() {
   try {
     await load();
     renderSettings();
+    void renderSyncBroken();
     renderHold();
     renderSchedule();
     if (!document.activeElement?.closest('#site-list')) renderSites();
@@ -365,18 +423,44 @@ function ruleDiff(before, after) {
   return { patch, remove };
 }
 
+/** The rule each pattern was last sent as, until a save of it is acknowledged: an earlier send may still land (a retry, an answer that never came). @type {Map<string, any>} */
+const sentRules = new Map();
+
+/** @param {{ patch: Record<string, any>, remove: string[] }} a @param {{ patch: Record<string, any>, remove: string[] }} b */
+function mergeDiffs(a, b) {
+  const plain = (/** @type {unknown} */ v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+  const patch = { ...a.patch };
+  for (const [key, value] of Object.entries(b.patch)) patch[key] = plain(value) && plain(patch[key]) ? { ...patch[key], ...value } : value;
+  return { patch, remove: [...new Set([...a.remove, ...b.remove])] };
+}
+
 /** Save the fields of a site that the editor changed; a change made in another window to other fields stays. */
 function saveSiteFields(/** @type {string} */ pattern, /** @type {any} */ before, /** @type {any} */ after) {
   return tracked(async () => {
-    const { patch, remove } = ruleDiff(before ?? {}, after ?? {});
-    if (Object.keys(patch).length === 0 && remove.length === 0) return true;
-    const reply = /** @type {any} */ (await sendWithRetry(() => send({ type: 'dk.site.patch', pattern, patch, remove })));
+    let { patch, remove } = ruleDiff(before ?? {}, after ?? {});
+    // An earlier send may still land. What it wrote and this edit does not hold is taken back too, so an edit that returns to the
+    // stored value (no difference) still replaces the older one.
+    const sent = sentRules.get(pattern);
+    if (sent !== undefined) ({ patch, remove } = mergeDiffs({ patch, remove }, ruleDiff(sent, after ?? {})));
+    if (Object.keys(patch).length === 0 && remove.length === 0) {
+      markSave(pattern, false);
+      return true;
+    }
+    sentRules.set(pattern, after ?? {});
+    const id = beginSiteOp(pattern);
+    const reply = /** @type {any} */ (await afterEarlier(pattern, () => sendWithRetry(ordered(pattern, id, () => send({ type: 'dk.site.patch', pattern, patch, remove })))));
+    if (reply?.code === 'superseded') return false;
     if (!reply?.ok) {
+      markSave(pattern, true);
       say(saveErrorText(reply));
       return false;
     }
+    // A newer edit started while this one was on its way: it tracks what was sent and decides what the row shows.
+    if (!siteOrder.current(pattern, id)) return false;
     if (reply.rule === null) delete state.siteRules[pattern];
     else state.siteRules[pattern] = reply.rule;
+    sentRules.delete(pattern);
+    markSave(pattern, false);
     say(t('opt.saved'));
     return true;
   });
@@ -384,13 +468,19 @@ function saveSiteFields(/** @type {string} */ pattern, /** @type {any} */ before
 
 function saveSite(/** @type {string} */ pattern, /** @type {any} */ rule) {
   return tracked(async () => {
-    const reply = await sendWithRetry(() => send({ type: 'dk.site.set', pattern, rule }));
+    sentRules.delete(pattern);
+    const id = beginSiteOp(pattern);
+    const reply = await afterEarlier(pattern, () => sendWithRetry(ordered(pattern, id, () => send({ type: 'dk.site.set', pattern, rule }))));
+    if (reply?.code === 'superseded') return false;
     if (!reply?.ok) {
+      markSave(pattern, true);
       say(saveErrorText(reply));
       return false;
     }
+    if (!siteOrder.current(pattern, id)) return false;
     if (rule === null) delete state.siteRules[pattern];
     else state.siteRules[pattern] = state.siteRules[pattern]?.cssHeld === true && rule.css !== undefined ? { ...rule, cssHeld: true } : rule;
+    markSave(pattern, false);
     say(t('opt.saved'));
     return true;
   });
@@ -478,6 +568,7 @@ function siteCard(/** @type {string} */ pattern, /** @type {any} */ rule) {
   toggle.addEventListener('click', () => open(body.hidden === true));
   /** @type {any} */ (li).dkOpen = () => open(true);
   confirmClick(remove, t('opt.deleteConfirm'), async () => {
+    siteWaits.get(li)?.drop();
     const kept = structuredClone(state.siteRules[pattern]);
     if (!(await saveSite(pattern, null))) return;
     openSites.delete(pattern);
@@ -569,21 +660,34 @@ function siteFields(li, pattern, rule, summary) {
   queueMicrotask(() => {
     if (li.querySelector('[data-f="enabled"]')) shown = siteRuleFrom(li, rule);
   });
-  const change = () => {
+  const drop = () => {
     clearTimeout(wait);
+    siteWaits.delete(li);
+  };
+  const run = () => {
+    drop();
+    const next = siteRuleFrom(li, state.siteRules[pattern]);
+    const job = saveSiteFields(pattern, shown ?? state.siteRules[pattern], next).then((ok) => {
+      if (ok) shown = next;
+      if (ok) summary.textContent = siteSummary(state.siteRules[pattern] ?? next ?? {});
+      // An edit that was refused waits for the next try (a recovery of the account sends it again).
+      else if (failedSaves.has(pattern) && li.isConnected && !siteWaits.has(li)) siteWaits.set(li, { pattern, run, drop });
+    });
+    const settled = job.catch(() => undefined);
+    siteSaves.add(settled);
+    void settled.then(() => siteSaves.delete(settled));
+    return settled;
+  };
+  const change = () => {
+    drop();
     const bad = cssProblem(css.value);
     problem.hidden = !bad;
     css.setAttribute('aria-invalid', String(!!bad));
     let numbersOk = true;
     for (const key of SITE_NUMBERS) numbersOk = checkNumber(/** @type {HTMLInputElement} */ (li.querySelector(`[data-f="${key}"]`)), limits[key], true) && numbersOk;
     if (bad || !numbersOk) return;
-    wait = setTimeout(() => {
-      const next = siteRuleFrom(li, state.siteRules[pattern]);
-      void saveSiteFields(pattern, shown ?? state.siteRules[pattern], next).then((ok) => {
-        if (ok) shown = next;
-        if (ok) summary.textContent = siteSummary(state.siteRules[pattern] ?? next ?? {});
-      });
-    }, SAVE_DELAY_MS);
+    wait = setTimeout(() => void run(), SAVE_DELAY_MS);
+    siteWaits.set(li, { pattern, run, drop });
   };
   fields.addEventListener('input', change);
   fields.addEventListener('change', change);
@@ -633,6 +737,11 @@ function showNone(note, none) {
 
 function renderSites() {
   const list = $('site-list');
+  // The rows go away: an edit that waits is sent now, unless its rule is gone meanwhile.
+  for (const w of [...siteWaits.values()]) {
+    if (Object.hasOwn(state.siteRules, w.pattern)) void w.run();
+    else w.drop();
+  }
   list.replaceChildren();
   const patterns = Object.keys(state.siteRules).sort();
   // A search looks through every site, so the list is whole while it runs.
@@ -824,7 +933,7 @@ function renderPresets() {
       }
       await load();
       renderPresets();
-      deleted(t('opt.deletedPreset', { name: kept.name }), kept, () => restoreItem({ type: 'dk.preset.save', preset: kept }, () => renderPresets(), '#preset-list', kept.name));
+      deleted(t('opt.deletedPreset', { name: kept.name }), kept, () => restoreItem({ type: 'dk.preset.save', preset: kept, ifAbsent: true }, () => renderPresets(), '#preset-list', kept.name));
     }, { announce: (m) => say(m) });
     li.setAttribute('role', 'group');
     li.setAttribute('aria-label', preset.name);
@@ -845,6 +954,16 @@ function commandName(name) {
       return t('cmd.toggle_site');
     case 'switch_engine':
       return t('cmd.switch_engine');
+    case 'mode_dark':
+      return t('cmd.mode_dark');
+    case 'mode_light':
+      return t('cmd.mode_light');
+    case 'mode_paper':
+      return t('cmd.mode_paper');
+    case 'mode_eink':
+      return t('cmd.mode_eink');
+    case 'mode_original':
+      return t('cmd.mode_original');
     default:
       return null;
   }
@@ -1027,8 +1146,52 @@ function renderSchedule() {
   void renderAlarm();
 }
 
+/** The notice for a Sync account whose data cannot be read. The worker keeps the record; it counts only while Sync is on. */
+async function renderSyncBroken() {
+  let broken = false;
+  try {
+    const record = (await chrome.storage.local.get('syncBroken')).syncBroken;
+    broken = state?.settings.syncEnabled === true && record !== null && typeof record === 'object';
+  } catch {
+    // The notice is only a help.
+  }
+  $('sync-broken').hidden = !broken;
+}
+
+/** The notice for settings that are too large for the Sync account: they are saved here, and the worker keeps the record while it holds. */
+async function renderSyncTooLarge() {
+  let large = false;
+  try {
+    const record = (await chrome.storage.local.get('syncTooLarge')).syncTooLarge;
+    large = state?.settings.syncEnabled === true && record !== null && typeof record === 'object';
+  } catch {
+    // The notice is only a help.
+  }
+  $('sync-too-large').hidden = !large;
+}
+
+async function replaceSync() {
+  // The edits that wait, and the ones that were refused before, are saved first, so the copy that goes to the account has them; a refused replace loses nothing.
+  await Promise.all([flush(), runSiteWaits()]);
+  await Promise.all([saving, ...siteSaves]);
+  // An edit that could not be saved is not in the copy that would go to the account: nothing is replaced, and the error stays.
+  const unsaved = failedSaves.size > 0;
+  // A refused general save was undone on screen (the page reloaded the stored values), so the copy matches what is shown.
+  failedSaves.delete('');
+  if (unsaved) {
+    say(t('popup.saveError'));
+    return;
+  }
+  const reply = await send({ type: 'dk.sync.replace', confirmed: true });
+  if (reply?.ok) say(t('opt.syncReplaceDone'));
+  else say(reply?.code === 'newer' ? t('opt.syncReplaceNewer') : t('opt.syncReplaceFailed'));
+  void renderSyncBroken();
+}
+
 function renderAll() {
   renderSettings();
+  void renderSyncBroken();
+  void renderSyncTooLarge();
   renderHold();
   renderSites();
   renderPresets();
@@ -1121,12 +1284,15 @@ function wire() {
   input('contextMenu').addEventListener('change', (e) => void toggleContextMenu(/** @type {HTMLInputElement} */ (e.target).checked));
   $('shortcut-open').addEventListener('click', () => {
     try {
-      void chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+      void chrome.tabs.create({ url: `${navigator.userAgent.includes('Edg/') ? 'edge' : 'chrome'}://extensions/shortcuts` });
     } catch {
       say(t('popup.saveError'));
     }
   });
   $('export').addEventListener('click', async () => {
+    // The file holds the edits made just before the click.
+    await Promise.all([flush(), runSiteWaits()]);
+    await Promise.all(siteSaves);
     const reply = await send({ type: 'dk.export' });
     if (reply?.ok) download('tintly-settings.json', reply.text);
     else say(t('popup.saveError'));
@@ -1141,6 +1307,7 @@ function wire() {
       box.value = '';
     });
   });
+  confirmClick($('sync-replace'), t('opt.syncReplaceConfirm'), replaceSync, { announce: (m) => say(m), ms: RESET_WINDOW_MS });
   confirmClick($('reset'), t('opt.resetConfirm'), resetAll, { announce: (m) => say(m), ms: RESET_WINDOW_MS });
   for (const id of ['locale', 'uiTheme']) {
     input(id).addEventListener('change', async () => {
@@ -1162,12 +1329,17 @@ function wire() {
     sitesShown += SITE_PAGE;
     renderSites();
   });
-  addEventListener('pagehide', () => void flush());
+  addEventListener('pagehide', () => {
+    void flush();
+    void runSiteWaits();
+  });
 }
 
 /** A change made in the popup shows here at once. It is watched from before the first read, so a change between the read and the first render is not lost. */
 function watchStorage() {
   chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.syncBroken) void renderSyncBroken();
+    if (area === 'local' && changes.syncTooLarge) void renderSyncTooLarge();
     if (area !== 'local' || !(changes.settings || changes.siteRules || changes.presets || changes.userFixes)) return;
     void refresh();
   });

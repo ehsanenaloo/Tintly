@@ -11,18 +11,17 @@
 اختر لأي صفحة مظهرًا داكنًا أو فاتحًا أو شبيهًا بالورق أو رماديًا بنمط E-ink. وإذا كنت تجد صعوبة في التمييز بين الأحمر والأخضر، يساعدك Tintly على إبراز الفرق بينهما. اضبط كل موقع مرة واحدة، وستبقى إعداداته محفوظة لزياراتك التالية. كل شيء يتم على جهازك.
 
 [![User guide](https://img.shields.io/badge/User%20guide-Read%20online-0f766e?logo=readthedocs&logoColor=white&style=for-the-badge)](https://enaloo.com/apps/tintly/)
-[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/enaloo)
+[![Support Tintly](https://img.shields.io/badge/Support%20Tintly-FFDD00?style=for-the-badge&logoColor=black)](https://enaloo.com/support/)
 
-[![CI](https://github.com/ehsanenaloo/Tintly/actions/workflows/ci.yml/badge.svg)](https://github.com/ehsanenaloo/Tintly/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/ehsanenaloo/Tintly?include_prereleases&label=release)](https://github.com/ehsanenaloo/Tintly/releases)
 [![Manifest V3](https://img.shields.io/badge/manifest-V3-blue.svg)](../extension/manifest.json)
 [![Browsers](https://img.shields.io/badge/browsers-Chrome%20%7C%20Edge%20%7C%20Firefox-informational.svg)](#التثبيت)
-[![Languages](https://img.shields.io/badge/interface-en%20%7C%20fa%20%7C%20ar%20%7C%20he-orange.svg)](#languages)
+[![Languages](https://img.shields.io/badge/interface-en%20%7C%20fa%20%7C%20ar%20%7C%20he%20%7C%20es%20%7C%20pt%20%7C%20ru%20%7C%20de%20%7C%20fr%20%7C%20zh%20%7C%20zh--TW%20%7C%20ko%20%7C%20ja%20%7C%20hi%20%7C%20id%20%7C%20it%20%7C%20tr-orange.svg)](#languages)
 [![Analytics](https://img.shields.io/badge/analytics-none-lightgrey.svg)](#الخصوصية-أساس-التصميم)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](../LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/ehsanenaloo/Tintly?style=social)](https://github.com/ehsanenaloo/Tintly/stargazers)
 
-<a href="https://enaloo.com/apps/tintly/"><img src="assets/before-after.png" width="860" alt="مقال قبل Tintly على اليسار وبسمة داكنة على اليمين"></a>
+<a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-five-modes.png" width="860" alt="صفحة مقال واحدة بخمسة أوضاع جنبًا إلى جنب: الأصلي والفاتح والورق وE-ink والداكن"></a>
 
 </div>
 
@@ -114,18 +113,16 @@
 
 <table>
   <tr>
-    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/toolbar-window.png" alt="صفحة مقال داكنة مع نافذة شريط أدوات Tintly"></a></td>
-    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/paper-and-eink.png" alt="المقال نفسه بوضع الورق على اليسار وبوضع E-ink على اليمين"></a></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-dark.png" alt="مقال قبل Tintly ومع الوضع الداكن"></a></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-toolbar.png" alt="نافذة شريط أدوات Tintly وعناصر التحكم الرئيسية فيها"></a></td>
   </tr>
   <tr>
-    <td align="center"><sub>نافذة شريط الأدوات: وضع العرض وإعدادات عمى الألوان وأشرطة التمرير والإعدادات المحفوظة</sub></td>
-    <td align="center"><sub>الورق وE-ink للقراءة</sub></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-reading.png" alt="مقال بوضع الورق وبوضع E-ink"></a></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-color-vision.png" alt="لوحة حالة قبل تصحيح الألوان ومع تصحيح ضعف رؤية اللون الأخضر"></a></td>
   </tr>
   <tr>
-    <td colspan="2"><a href="https://enaloo.com/apps/tintly/"><img src="assets/settings.png" alt="صفحة إعدادات Tintly بمظهر داكن"></a></td>
-  </tr>
-  <tr>
-    <td colspan="2" align="center"><sub>صفحة الإعدادات: المواقع والجدول الزمني واللوحات والنسخ الاحتياطي</sub></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-sites-schedule.png" alt="إعدادات المواقع والجدولة"></a></td>
+    <td width="50%"><a href="https://enaloo.com/apps/tintly/"><img src="assets/banner-private.png" alt="الخصوصية في Tintly: بلا تتبّع، بلا حساب، مفتوح المصدر"></a></td>
   </tr>
 </table>
 
@@ -154,10 +151,8 @@
 
 | المتصفح | أدنى إصدار | الطريقة |
 |---|---|---|
-| Chrome وEdge | 119 | استنسخ هذا المستودع وشغّل `npm install` وافتح `chrome://extensions` وفعّل Developer mode واختر **Load unpacked**. اختر المجلد `extension/` |
-| Firefox | 128 | شغّل `npm run build:firefox`. في `about:debugging` حمّل ملف zip من المجلد `dist/` كإضافة مؤقتة |
-
-ستتوفر الإضافة قريبًا في متاجر المتصفحات. تابع المستودع لتصلك أخبار النشر.
+| Chrome وEdge | 119 | ثبّتها من Chrome Web Store أو Edge Add-ons. ولتشغيل الشيفرة المصدرية، استنسخ هذا المستودع وافتح `chrome://extensions` وفعّل Developer mode واختر **Load unpacked**. اختر المجلد `extension/` |
+| Firefox | 128 | ثبّتها من Firefox Add-ons. يحتاج Firefox إلى حزمة خاصة به يبنيها المشرف على المشروع من المجلد `extension/` |
 
 ---
 
@@ -165,9 +160,9 @@
 
 ## اللغات
 
-تتوفر الواجهة بالإنجليزية والفارسية والعربية والعبرية. وفي اللغات الثلاث الأخيرة، يتكيّف تخطيط النافذة بالكامل مع اتجاه الكتابة من اليمين إلى اليسار. لتصحيح نص أو إضافة لغة، اقرأ [TRANSLATING.md](../docs/TRANSLATING.md) (بالإنجليزية) أو استخدم [نموذج تصحيح الترجمة](https://github.com/ehsanenaloo/Tintly/issues/new?template=translation_fix.yml).
+تتوفر الواجهة بالإنجليزية والفارسية والعربية والعبرية والإسبانية والبرتغالية (البرازيل) والروسية والألمانية والفرنسية والصينية (المبسطة) والصينية (التقليدية) والكورية واليابانية والهندية والإندونيسية والإيطالية والتركية. وفي الفارسية والعربية والعبرية، يتكيّف تخطيط النافذة بالكامل مع اتجاه الكتابة من اليمين إلى اليسار. لتصحيح نص أو إضافة لغة، اقرأ [TRANSLATING.md](../docs/TRANSLATING.md) (بالإنجليزية) أو استخدم [نموذج تصحيح الترجمة](https://github.com/ehsanenaloo/Tintly/issues/new?template=translation_fix.yml).
 
-أُعدّت ترجمات الواجهة بمساعدة الترجمة الآلية. إذا قدّمت ترجمة سلسة وطبيعية بلغتك الأم، فسننشرها باسمك.
+كل الترجمات ما عدا الإنجليزية آلية، ولم يراجعها بعدُ أي ناطق أصلي. إذا كانت إحدى هذه اللغات هي لغتك الأم وحسّنت نصوصها، فسننشر عملك باسمك. ابدأ من [TRANSLATING.md](../docs/TRANSLATING.md) (بالإنجليزية) أو من نموذج تصحيح الترجمة.
 
 ---
 
@@ -193,20 +188,7 @@
 
 ## التطوير
 
-Node.js الإصدار 22 أو أحدث.
-
-```bash
-npm install
-npm run check          # فحوص ثابتة وفحص الأنواع واختبارات الوحدة
-npm run build          # حزمة Chrome وEdge في dist/
-npm run build:firefox  # حزمة Firefox في dist/
-npm run lint:firefox   # يبني حزمة Firefox ويشغّل مدقق الإضافات
-npm run test:browser   # Chromium حقيقي؛ شغّل npx playwright install chromium مرة واحدة
-npm run test:firefox   # Firefox حقيقي؛ يجب أن يكون مثبتًا
-npm run test:perf      # التحقق من حدود الأداء والحجم
-```
-
-الملف `.npmrc` يضبط `ignore-scripts=true`، فتثبيت حزمة لا يشغّل أبدًا سكربت التثبيت الخاص بها. المزيد في [docs/TESTING.md](../docs/TESTING.md) و[docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) (بالإنجليزية).
+لا توجد خطوة بناء، ولا حاجة إلى تثبيت أي أداة. حمّل المجلد `extension/` في Chrome أو Edge كما في قسم [التثبيت](#التثبيت)، وأجرِ تعديلك، ثم اضغط زر إعادة تحميل الإضافة. يتولى المشرف على المشروع الفحوص والاختبارات وبناء حزم المتاجر. التفاصيل في [ARCHITECTURE.md](../docs/ARCHITECTURE.md) و[CONTRIBUTING.md](CONTRIBUTING.md) (بالإنجليزية).
 
 ---
 
@@ -218,9 +200,8 @@ npm run test:perf      # التحقق من حدود الأداء والحجم
 | [سياسة الخصوصية](../docs/PRIVACY.md) | ما يُقرأ وما يُحفظ وما يُرسل |
 | [الترجمة](../docs/TRANSLATING.md) | كيف تصحح نصًا أو تضيف لغة (بالإنجليزية) |
 | [البنية](../docs/ARCHITECTURE.md) | المحركات وبيئات تنفيذ الشيفرة وعامل الخدمة وتدفق البيانات |
-| [الاختبار](../docs/TESTING.md) | مجموعات الاختبار وطريقة تشغيلها |
 | [سجل التغييرات](../CHANGELOG.md) | ما الذي تغيّر |
-| [المساهمة](CONTRIBUTING.md) | الإعداد والقواعد والاختبارات والإصلاحات والترجمات |
+| [المساهمة](CONTRIBUTING.md) | الإعداد والقواعد والإصلاحات والترجمات |
 | [الدعم](SUPPORT.md) | طرق الحصول على المساعدة |
 | [الأمان](SECURITY.md) | الإبلاغ عن ثغرة |
 
@@ -234,7 +215,7 @@ npm run test:perf      # التحقق من حدود الأداء والحجم
 - **ساعد في تحسين النصوص.** نرحّب باقتراحاتك لتحسين النصوص الفارسية والعربية والعبرية.
 - **امنح المستودع نجمة إن أفادك.** يساعد ذلك الآخرين على العثور عليه.
 
-إذا جعل Tintly القراءة أريح لعينيك، يمكنك دعم المشروع من خلال [شراء قهوة](https://buymeacoffee.com/enaloo). الدعم اختياري تمامًا ولا يؤثر في طريقة التعامل مع البلاغات.
+إذا جعل Tintly القراءة أريح لعينيك، يمكنك [دعم المشروع](https://enaloo.com/support/). الدعم اختياري تمامًا ولا يؤثر في طريقة التعامل مع البلاغات.
 
 أبلغ عن المشكلات الأمنية بشكل خاص، وفق إرشادات [SECURITY.md](SECURITY.md).
 

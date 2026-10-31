@@ -423,7 +423,7 @@ export function createNet({ fetchImpl = (...a) => fetch(...a), now = () => Date.
   // itself with CORS (`readInPage`): the browser checks that connection, and the page gets nothing it could not read itself. So
   // there is no time between a check and the fetch, and nothing a page can do turns a check off.
   // Every store below is kept apart by the asker's partition (`partitionOf`), so a page cannot time what was fetched for another site.
-  /** @type {Map<string, { at: number, bytes: number, payload: any }>} */
+  /** @type {Map<string, { at: number, bytes: number, payload: any, ttl?: number }>} */
   const cache = new Map();
   let cacheBytes = 0;
   /** @type {Map<string, number[]>} */
@@ -444,14 +444,40 @@ export function createNet({ fetchImpl = (...a) => fetch(...a), now = () => Date.
     return false;
   }
 
-  /** @param {string} key @param {any} payload @param {number} bytes */
-  function remember(key, payload, bytes) {
+  /**
+   * How long an answer may be served from the byte cache: nothing when the server says `no-store` or `no-cache`, or a lifetime of 0;
+   * the declared lifetime when it is shorter than the cache's own; else the cache's own.
+   * @param {Headers} headers @returns {number} milliseconds, 0 for "do not keep it"
+   */
+  function lifetimeOf(headers) {
+    const control = (headers.get('cache-control') ?? '').toLowerCase();
+    if (control === '' && /no-cache/i.test(headers.get('pragma') ?? '')) return 0;
+    if (/(?:^|[\s,])(?:no-store|no-cache)(?:$|[\s,=])/.test(control)) return 0;
+    const max = /(?:^|[\s,])max-age\s*=\s*"?(\d+)/.exec(control);
+    // The age of the answer on arrival: the larger of the Age header and the time since its Date.
+    const received = now();
+    const sent = Date.parse(headers.get('date') ?? '');
+    const header = Number(headers.get('age'));
+    const spent = Math.max(Number.isFinite(header) && header > 0 ? header * 1000 : 0, Number.isNaN(sent) ? 0 : received - sent);
+    let left = Infinity;
+    if (max) left = Number(max[1]) * 1000 - spent;
+    else if (headers.has('expires')) {
+      // An unreadable date means "already stale".
+      const end = Date.parse(headers.get('expires') ?? '');
+      left = Number.isNaN(end) ? 0 : end - (Number.isNaN(sent) ? received : sent) - spent;
+    }
+    return Math.max(0, Math.min(LIMITS.CACHE_TTL_MS, left));
+  }
+
+  /** @param {string} key @param {any} payload @param {number} bytes @param {number} [ttl] */
+  function remember(key, payload, bytes, ttl = LIMITS.CACHE_TTL_MS) {
+    if (ttl <= 0) return;
     const old = cache.get(key);
     if (old) {
       cache.delete(key);
       cacheBytes -= old.bytes;
     }
-    cache.set(key, { at: now(), bytes, payload });
+    cache.set(key, { at: now(), bytes, payload, ttl });
     cacheBytes += bytes;
     for (const [k, v] of cache) {
       if (cache.size <= LIMITS.CACHE_ENTRIES && cacheBytes <= LIMITS.CACHE_BYTES) break;
@@ -609,7 +635,7 @@ export function createNet({ fetchImpl = (...a) => fetch(...a), now = () => Date.
             ? { ok: true, mime, sample, url: final.url.href }
             : { ok: true, mime, base64: encodeBase64(bytes), url: final.url.href };
       // What the cache holds: the characters of a sheet, the base64 text of a picture (a third more than its bytes) or its small copy.
-      remember(key, payload, payload.text !== undefined ? bytes.length : (payload.sample ?? payload.base64).length);
+      remember(key, payload, payload.text !== undefined ? bytes.length : (payload.sample ?? payload.base64).length, lifetimeOf(response.headers));
       return payload;
     } catch (error) {
       return { ok: false, code: error && /** @type {any} */ (error).name === 'AbortError' ? 'timeout' : 'network' };
@@ -645,7 +671,7 @@ export function createNet({ fetchImpl = (...a) => fetch(...a), now = () => Date.
       missing.delete(base);
     }
     const known = cache.get(key);
-    if (known && now() - known.at < LIMITS.CACHE_TTL_MS) {
+    if (known && now() - known.at < (known.ttl ?? LIMITS.CACHE_TTL_MS)) {
       // Move it to the end, so the oldest entry is the one dropped first.
       cache.delete(key);
       cache.set(key, known);

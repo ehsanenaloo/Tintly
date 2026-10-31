@@ -5,7 +5,8 @@ import { DARK_IDS, LIGHT_IDS, paletteLabels } from './palettes.js';
 
 export const SCHEMA_VERSION = 2;
 export const ENGINES = Object.freeze(['auto', 'dynamic', 'filter', 'filterPlus', 'static']);
-export const SECTIONS = Object.freeze(['settings', 'siteRules', 'presets', 'userFixes', 'darkSites', 'ui']);
+import { SECTIONS } from './sections.js';
+export { SECTIONS };
 
 /** @typedef {{ errors: string[], strict: boolean }} Ctx */
 /** @typedef {{ ok: true, value: any } | { ok: false }} Result */

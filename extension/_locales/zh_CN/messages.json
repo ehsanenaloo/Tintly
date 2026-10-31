@@ -1,0 +1,35 @@
+{
+  "extName": {
+    "message": "Tintly - 深色、浅色、纸张、电子墨水与色觉辅助"
+  },
+  "extDescription": {
+    "message": "为每个网站提供深色、浅色、纸张和电子墨水模式，以及色觉辅助滤镜。快速、私密，不收集任何数据。"
+  },
+  "cmdToggleExtension": {
+    "message": "开启或关闭 Tintly"
+  },
+  "cmdToggleSite": {
+    "message": "在此网站上开启或关闭 Tintly"
+  },
+  "cmdSwitchEngine": {
+    "message": "切换主题引擎"
+  },
+  "cmdModeDark": {
+    "message": "切换到深色模式"
+  },
+  "cmdModeLight": {
+    "message": "切换到浅色模式"
+  },
+  "cmdModePaper": {
+    "message": "切换到纸张模式"
+  },
+  "cmdModeEink": {
+    "message": "切换到电子墨水模式"
+  },
+  "cmdModeOriginal": {
+    "message": "切换到原始颜色"
+  },
+  "menuToggleSite": {
+    "message": "在此网站上开启或关闭 Tintly"
+  }
+}

@@ -45,4 +45,4 @@ Passwords, tokens, private pages, or screenshots that show private data. Issues 
 - Only the latest code is supported. Please update before you report a bug.
 - Please be kind. The [Code of Conduct](CODE_OF_CONDUCT.md) applies in every issue, discussion and pull request.
 
-If you want to support the project, you can [buy the maintainer a coffee](https://buymeacoffee.com/enaloo). It is not expected and changes nothing about how issues are handled.
+If you want to support the project, you can [support the project](https://enaloo.com/support/). It is not expected and changes nothing about how issues are handled.

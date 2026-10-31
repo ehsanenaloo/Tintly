@@ -24,6 +24,9 @@
   const MAX_ELEMENTS = 15000;
   const LOADING_GIVE_UP_MS = 10000;
   const MEDIA_TAGS = new Set(['IMG', 'VIDEO', 'PICTURE', 'OBJECT', 'EMBED']);
+  // Text found on a picture: the other text in the box that holds both is tested at its own place (lines between two grid rows).
+  const NEIGHBOR_SCOPE = 400;
+  const NEIGHBOR_TESTS = 30;
 
   /** @param {Element} e */
   function hasOwnText(e) {
@@ -39,12 +42,16 @@
     return p.length > 3 ? Number(p[3]) : 1;
   }
 
+  /** A background clipped to the text paints the glyphs, not a box. @param {CSSStyleDeclaration} cs */
+  const clipsText = (cs) => /\btext\b/.test(cs.backgroundClip || cs.getPropertyValue('-webkit-background-clip'));
+
   /** @param {Element} e @returns {'media' | 'paint' | 'none'} */
   function painting(e) {
     if (MEDIA_TAGS.has(e.tagName)) return 'media';
     if (e.tagName === 'CANVAS') return 'none';
     if (e.tagName === 'IFRAME') return 'paint';
     const cs = getComputedStyle(e);
+    if (clipsText(cs)) return 'none';
     const image = cs.backgroundImage;
     if (image && image !== 'none') return /url\(/.test(image) && !/gradient\(/.test(image) ? 'media' : 'paint';
     return alphaOf(cs.backgroundColor) > 0.5 ? 'paint' : 'none';
@@ -78,6 +85,8 @@
     let emptyPasses = 0;
     let stride = 1;
     let phase = 0;
+    // Passes done in the present round of a strided sweep: a round has to test every cell once, which takes stride squared passes.
+    let round = 0;
     let hitMs = 0;
     let hitSamples = 0;
     /** @type {number | null} */
@@ -102,6 +111,73 @@
         if (sc.at < all.length && performance.now() > until) return null;
       }
       return sc;
+    }
+
+    const range = doc.createRange();
+
+    /** The boxes of the lines of the element's own text. @param {Element} e @returns {DOMRect[]} */
+    function textBoxes(e) {
+      /** @type {DOMRect[]} */
+      const out = [];
+      for (let n = e.firstChild; n; n = n.nextSibling) {
+        if (n.nodeType !== 3 || !/\S/.test(n.textContent ?? '')) continue;
+        range.selectNodeContents(n);
+        for (const r of range.getClientRects()) if (r.width > 0 && r.height > 0) out.push(r);
+      }
+      return out;
+    }
+
+    /**
+     * Does the text of `e` lie on a picture where it is drawn? Hit tested at the middle of its first line: what is above it
+     * must paint nothing, and the first thing below it that paints must be a picture.
+     * @param {Element} e
+     */
+    function onPicture(e) {
+      const own = painting(e);
+      if (own !== 'none') return own === 'media';
+      const line = textBoxes(e)[0];
+      if (!line) return false;
+      const x = line.left + line.width / 2;
+      const y = line.top + line.height / 2;
+      if (x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) return false;
+      const stack = doc.elementsFromPoint(x, y);
+      const at = stack.indexOf(e);
+      if (at < 0) return false;
+      for (let i = 0; i < at; i++) if (painting(stack[i]) !== 'none') return false;
+      for (let i = at + 1; i < stack.length; i++) {
+        const s = stack[i];
+        if (s === doc.documentElement || s === doc.body) return false;
+        const p = painting(s);
+        if (p !== 'none') return p === 'media';
+      }
+      return false;
+    }
+
+    /**
+     * A grid point found `candidate` above `media`. The point may be in the box of the element but not on its text (a link whose
+     * box is stretched over a card by a pseudo-element): then the text is tested where it is drawn. When it is on the picture,
+     * the other text of the box that holds both is tested too.
+     * @param {Element} candidate @param {Element} media @param {number} x @param {number} y @param {Set<Element>} found @param {Set<Element>} scopes
+     */
+    function confirm(candidate, media, x, y, found, scopes) {
+      if (!isShape(candidate)) {
+        const on = textBoxes(candidate).some((r) => x >= r.left - 1 && x <= r.right + 1 && y >= r.top - 1 && y <= r.bottom + 1);
+        if (!on && !onPicture(candidate)) return;
+      }
+      found.add(candidate);
+      /** @type {Element | null} */
+      let scope = candidate.parentElement;
+      for (let hops = 0; scope && hops < 8 && !scope.contains(media); hops++) scope = scope.parentElement;
+      if (!scope || scope === doc.body || scope === doc.documentElement || !scope.contains(media) || scopes.has(scope)) return;
+      scopes.add(scope);
+      const all = scope.getElementsByTagName('*');
+      if (all.length > NEIGHBOR_SCOPE) return;
+      let tests = 0;
+      for (const n of all) {
+        if (n === candidate || kept.has(n) || found.has(n) || !hasOwnText(n)) continue;
+        if (++tests > NEIGHBOR_TESTS) break;
+        if (onPicture(n)) found.add(n);
+      }
     }
 
     function pictureCount() {
@@ -134,6 +210,8 @@
       if (elements > MAX_ELEMENTS) return;
       /** @type {Set<Element>} */
       const found = new Set();
+      /** The boxes whose text was tested in this pass. @type {Set<Element>} */
+      const scopes = new Set();
       const cols = Math.max(2, Math.min(COLS, Math.floor(w / CELL)));
       const rows = Math.max(2, Math.min(ROWS, Math.floor(h / CELL)));
       if (gridSize !== cols * rows) {
@@ -176,7 +254,9 @@
               break outer;
             }
             const at = performance.now();
-            const stack = doc.elementsFromPoint(((c + 0.5) * w) / cols, ((r + 0.5) * h) / rows);
+            const x = ((c + 0.5) * w) / cols;
+            const y = ((r + 0.5) * h) / rows;
+            const stack = doc.elementsFromPoint(x, y);
             if (began2 !== 0) {
               hitMs += performance.now() - at;
               hitSamples += 1;
@@ -197,7 +277,7 @@
                 continue;
               }
               const p = painting(e);
-              if (p === 'media') found.add(candidate);
+              if (p === 'media') confirm(candidate, e, x, y, found, scopes);
               if (p !== 'none') break;
             }
           }
@@ -210,6 +290,10 @@
       if (done) {
         cursor = 0;
         phase += 1;
+        // A strided pass tests one cell in stride squared. The rest of the round follows at once, not at the next scroll or timer.
+        round = stride > 1 ? round + 1 : 0;
+        if (round >= stride * stride) round = 0;
+        else later(Math.min(2000, Math.max(250, lastSpent * 10)));
       } else later(Math.min(2000, Math.max(60, lastSpent * 5)));
       // Reading the page's colors restyles it twice: it gets a task of its own.
       for (const e of found) toKeep.add(e);
@@ -225,7 +309,9 @@
       }
       passes += 1;
       spent += performance.now() - pass;
-      if (done && found.size === 0) {
+      // A find that cannot be kept (the budget is full, or the element is kept already) is no progress: the scan may sleep.
+      const progress = kept.size < MAX_KEPT && [...found].some((e) => !kept.has(e));
+      if (done && !progress) {
         if (++emptyPasses >= EMPTY_PASSES * stride * stride) sleepingOn = pictures;
       } else emptyPasses = 0;
     }
@@ -239,7 +325,7 @@
         const id = String(++counter);
         kept.set(el, id);
         el.setAttribute(ATTR, id);
-        rules.set(id, `[${ATTR}="${id}"]{${text}}`);
+        rules.set(id, `[${ATTR}="${id}"]${text}`);
         watched.observe(el, { attributes: true, attributeFilter: ['class', 'style'] });
       }
       writeRules();
@@ -247,7 +333,7 @@
 
     /**
      * @param {Element[]} list @param {boolean} keepRules  leave the kept rules in force (the elements are not kept yet)
-     * @returns {{ el: Element, text: string }[]}
+     * @returns {{ el: Element, text: string }[]} the rule after the attribute selector of each element
      */
     function readColors(list, keepRules) {
       /** @type {{ el: Element, text: string }[]} */
@@ -256,7 +342,11 @@
         const styleOf = r?.style ?? getComputedStyle;
         for (const el of list) {
           const cs = styleOf(el);
-          reads.push({ el, text: isShape(el) ? `fill:${cs.fill}!important;stroke:${cs.stroke}!important;` : `color:${cs.color}!important;` });
+          if (isShape(el)) reads.push({ el, text: `{fill:${cs.fill}!important;stroke:${cs.stroke}!important;}` });
+          // Text painted by a background clipped to it keeps that background and its fill. The E-ink mode replaces both with
+          // weighted rules, so this rule weighs as an id.
+          else if (clipsText(cs)) reads.push({ el, text: `:not(#dk-none){color:${cs.color}!important;background-image:${cs.backgroundImage}!important;-webkit-text-fill-color:${cs.webkitTextFillColor}!important;}` });
+          else reads.push({ el, text: `{color:${cs.color}!important;}` });
         }
       }, keepRules ? (/** @type {HTMLStyleElement} */ el) => el.getAttribute('data-dk') === 'keep' : null);
       return reads;
@@ -295,7 +385,7 @@
       guarded(() => {
         for (const { el, text } of readColors(list, false)) {
           const id = kept.get(el);
-          if (id !== undefined) rules.set(id, `[${ATTR}="${id}"]{${text}}`);
+          if (id !== undefined) rules.set(id, `[${ATTR}="${id}"]${text}`);
         }
         writeRules();
         refreshed += list.length;

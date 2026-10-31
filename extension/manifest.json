@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "__MSG_extName__",
   "short_name": "Tintly",
-  "version": "1.0.11",
+  "version": "1.1.0",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "minimum_chrome_version": "119",
@@ -54,6 +54,21 @@
     },
     "switch_engine": {
       "description": "__MSG_cmdSwitchEngine__"
+    },
+    "mode_dark": {
+      "description": "__MSG_cmdModeDark__"
+    },
+    "mode_light": {
+      "description": "__MSG_cmdModeLight__"
+    },
+    "mode_paper": {
+      "description": "__MSG_cmdModePaper__"
+    },
+    "mode_eink": {
+      "description": "__MSG_cmdModeEink__"
+    },
+    "mode_original": {
+      "description": "__MSG_cmdModeOriginal__"
     }
   },
   "content_security_policy": {

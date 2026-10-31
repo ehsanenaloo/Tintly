@@ -7,7 +7,7 @@
   const dk = /** @type {Record<string, any> | undefined} */ (globalThis.__dk);
   if (!dk || dk.leftovers) return;
   /** Attributes that only the engines write on page elements (a test keeps this list equal to the ones the files use). */
-  const MARKS = ['data-dk-go', 'data-dk-state', 'data-dk-i', 'data-dk-j', 'data-dk-k', 'data-dk-ph', 'data-dk-bw', 'data-dk-img', 'data-dk-bg', 'data-dk-r'];
+  const MARKS = ['data-dk-go', 'data-dk-state', 'data-dk-i', 'data-dk-j', 'data-dk-k', 'data-dk-ph', 'data-dk-bw', 'data-dk-img', 'data-dk-bg', 'data-dk-bl', 'data-dk-r', 'data-dk-empty'];
   /** Elements that the engines make and tag with `data-dk`. */
   const MADE = 'style[data-dk],svg[data-dk],span[data-dk="probe"]';
 

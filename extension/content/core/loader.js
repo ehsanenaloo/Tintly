@@ -326,7 +326,7 @@
     if (palette) void need('calm');
     const startCalm = () => drive('calm', d.eink, (c) => c.start(d.theme, { rootFilter: !filterKind }), at);
     const calm = palette ? palette.then((ok) => (ok && mine === gen ? startCalm() : true)) : startCalm();
-    const extras = drive('extras', d.on && !d.eink && wantsExtras(d.theme), (x) => x.sync(true, d.theme, d.kind), at);
+    const extras = drive('extras', d.on && !d.eink && wantsExtras(d.theme), (x) => x.sync(true, d.theme, d.kind, d.original === true), at);
     const reading = () => {
       // The page's own colors keep their own contrast.
       const want = d.on && !filterKind && !d.original && !!dk?.dynamic;

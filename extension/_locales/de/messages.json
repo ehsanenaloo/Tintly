@@ -1,0 +1,35 @@
+{
+  "extName": {
+    "message": "Tintly - Dunkel, Hell, Paper, E-ink und Farbsehen"
+  },
+  "extDescription": {
+    "message": "Dunkle, helle, Paper- und E-ink-Modi und Filter für Farbsehschwäche auf jeder Website. Schnell und privat. Es werden keine Daten gesammelt."
+  },
+  "cmdToggleExtension": {
+    "message": "Tintly ein- oder ausschalten"
+  },
+  "cmdToggleSite": {
+    "message": "Tintly auf dieser Website ein- oder ausschalten"
+  },
+  "cmdSwitchEngine": {
+    "message": "Design-Engine wechseln"
+  },
+  "cmdModeDark": {
+    "message": "Zum dunklen Modus wechseln"
+  },
+  "cmdModeLight": {
+    "message": "Zum hellen Modus wechseln"
+  },
+  "cmdModePaper": {
+    "message": "Zum Paper-Modus wechseln"
+  },
+  "cmdModeEink": {
+    "message": "Zum E-ink-Modus wechseln"
+  },
+  "cmdModeOriginal": {
+    "message": "Zu den Originalfarben wechseln"
+  },
+  "menuToggleSite": {
+    "message": "Tintly auf dieser Website ein- oder ausschalten"
+  }
+}

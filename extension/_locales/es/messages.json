@@ -1,0 +1,35 @@
+{
+  "extName": {
+    "message": "Tintly - Modo oscuro, claro, Paper, E-ink y visión del color"
+  },
+  "extDescription": {
+    "message": "Modos oscuro, claro, Paper y E-ink y filtros de visión del color para cada sitio web. Rápido y privado. No se recopilan datos."
+  },
+  "cmdToggleExtension": {
+    "message": "Activar o desactivar Tintly"
+  },
+  "cmdToggleSite": {
+    "message": "Activar o desactivar Tintly en este sitio"
+  },
+  "cmdSwitchEngine": {
+    "message": "Cambiar el motor de temas"
+  },
+  "cmdModeDark": {
+    "message": "Cambiar al modo oscuro"
+  },
+  "cmdModeLight": {
+    "message": "Cambiar al modo claro"
+  },
+  "cmdModePaper": {
+    "message": "Cambiar al modo Paper"
+  },
+  "cmdModeEink": {
+    "message": "Cambiar al modo E-ink"
+  },
+  "cmdModeOriginal": {
+    "message": "Cambiar a los colores originales"
+  },
+  "menuToggleSite": {
+    "message": "Activar o desactivar Tintly en este sitio"
+  }
+}

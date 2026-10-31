@@ -1,0 +1,35 @@
+{
+  "extName": {
+    "message": "Tintly - 다크, 라이트, 페이퍼, E-ink, 색각 보정"
+  },
+  "extDescription": {
+    "message": "모든 웹사이트에 다크, 라이트, 페이퍼, E-ink 모드와 색각 보정 필터를 적용합니다. 빠르고 비공개이며 데이터를 수집하지 않습니다."
+  },
+  "cmdToggleExtension": {
+    "message": "Tintly 켜기 또는 끄기"
+  },
+  "cmdToggleSite": {
+    "message": "이 사이트에서 Tintly 켜기 또는 끄기"
+  },
+  "cmdSwitchEngine": {
+    "message": "테마 엔진 바꾸기"
+  },
+  "cmdModeDark": {
+    "message": "다크 모드로 전환"
+  },
+  "cmdModeLight": {
+    "message": "라이트 모드로 전환"
+  },
+  "cmdModePaper": {
+    "message": "페이퍼 모드로 전환"
+  },
+  "cmdModeEink": {
+    "message": "E-ink 모드로 전환"
+  },
+  "cmdModeOriginal": {
+    "message": "원래 색상으로 전환"
+  },
+  "menuToggleSite": {
+    "message": "이 사이트에서 Tintly 켜기 또는 끄기"
+  }
+}

@@ -3,7 +3,7 @@
 // written in a single call. Short-lived data (tab status, watchdog marks) lives in `storage.session`.
 import { STATE_KEYS, ensureMigrated, planRemote, readState, writeState } from '../../shared/store.js';
 import { applyPatch, defaultState, fixCss, heldCss, holdIncoming, keepHold, normalizePattern, parseImport, ruleCss, serializeExport } from '../../shared/settings.js';
-import { siteEnabled, switchKey } from '../../shared/match.js';
+import { candidates, siteEnabled, switchKey } from '../../shared/match.js';
 
 /**
  * @typedef {import('../../shared/store.js').Area} Area
@@ -58,6 +58,39 @@ function deepFreeze(value) {
   Object.freeze(value);
   for (const key of Object.keys(value)) deepFreeze(/** @type {any} */ (value)[key]);
   return value;
+}
+
+/**
+ * Does a record under a key wider than `key` (one that matches the same page and comes later in the order of the matches) hold a theme
+ * mode? Then a record of `key` left empty must stay: the first key that matches decides, and the wider mode would pin the page again.
+ * The order is the one of the page the caller is on (`url`), so a wildcard key and a parent domain are looked at in their place. Without
+ * a page, the order of the key as an address is used, and a wildcard key has none.
+ * @param {any} records @param {string} key @param {(record: any) => any} themeOf @param {string} [url]
+ */
+function widerHoldsMode(records, key, themeOf, url) {
+  if (!isPlainObject(records)) return false;
+  /** @type {string[]} */
+  let order = [];
+  try {
+    if (typeof url === 'string') {
+      const page = new URL(url);
+      order = candidates(page.host, page.pathname);
+    }
+  } catch {
+    order = [];
+  }
+  if (!order.includes(key)) {
+    if (key.startsWith('*.')) return false;
+    const slash = key.indexOf('/');
+    order = candidates(slash < 0 ? key : key.slice(0, slash), slash < 0 ? '/' : key.slice(slash));
+  }
+  const at = order.indexOf(key);
+  if (at < 0) return false;
+  return order.slice(at + 1).some((k) => {
+    const record = Object.hasOwn(records, k) ? records[k] : null;
+    const theme = isPlainObject(record) ? themeOf(record) : null;
+    return isPlainObject(theme) && typeof theme.mode === 'string';
+  });
 }
 
 /**
@@ -213,7 +246,7 @@ export function createState({ local, session, now = () => Date.now(), newId = ra
      * (`null` removes a theme key). A rule left with no field is removed. Two windows that change different fields keep both.
      * @param {unknown} pattern @param {unknown} patch
      */
-    patchSite: (pattern, patch, /** @type {unknown} */ remove = []) =>
+    patchSite: (pattern, patch, /** @type {unknown} */ remove = [], keepEmpty = false, /** @type {string | undefined} */ url = undefined) =>
       queue(async () => {
         const key = normalizePattern(pattern);
         if (!key) return { ok: /** @type {const} */ (false), code: 'invalid', errors: ['pattern: is not a valid site pattern'] };
@@ -224,14 +257,14 @@ export function createState({ local, session, now = () => Date.now(), newId = ra
         const before = state.siteRules[key];
         const next = patchRule(isPlainObject(before) ? before : {}, /** @type {Record<string, unknown>} */ (patch), /** @type {string[]} */ (remove));
         const rules = { ...state.siteRules };
-        if (Object.keys(next).length === 0) delete rules[key];
+        if (Object.keys(next).length === 0 && !((keepEmpty || widerHoldsMode(state.siteRules, key, (r) => r.theme, url)) && isPlainObject(before))) delete rules[key];
         else rules[key] = keepHold(before, next, ruleCss);
         const r = await save({ siteRules: rules });
         return r.ok ? { ok: /** @type {const} */ (true), pattern: key, rule: rules[key] ?? null } : r;
       }).catch(failure),
 
-    /** A preset with an id replaces the preset of that id; without one, it is added under a new id. @param {Record<string, any>} preset `{ id?, name, theme }` */
-    savePreset: (preset) =>
+    /** A preset with an id replaces the preset of that id (unless `ifAbsent`); without one, it is added under a new id. @param {Record<string, any>} preset `{ id?, name, theme }` @param {boolean} [ifAbsent] */
+    savePreset: (preset, ifAbsent = false) =>
       queue(async () => {
         const state = await load();
         const taken = new Set(state.presets.map((/** @type {any} */ p) => p.id));
@@ -241,6 +274,8 @@ export function createState({ local, session, now = () => Date.now(), newId = ra
           for (let tries = 0; taken.has(id) && tries < 8; tries++) id = newId();
           if (taken.has(id)) return { ok: /** @type {const} */ (false), code: 'error' };
         }
+        // Undo of a delete: a preset of that id that came back meanwhile is kept.
+        if (ifAbsent && taken.has(id)) return { ok: /** @type {const} */ (true), id, created: false };
         const list = state.presets.filter((/** @type {any} */ p) => p.id !== id);
         if (list.length >= MAX_PRESETS) return { ok: /** @type {const} */ (false), code: 'invalid', errors: [`presets: at most ${MAX_PRESETS}`] };
         list.push({ id, name: preset.name, theme: preset.theme });
@@ -288,6 +323,33 @@ export function createState({ local, session, now = () => Date.now(), newId = ra
         else fixes[key] = isPlainObject(fix) ? keepHold(fixes[key], fix, fixCss) : fix;
         const r = await save({ userFixes: fixes });
         return ifAbsent && r.ok ? { ok: /** @type {const} */ (true), created: true, pattern: key } : r;
+      }).catch(failure),
+
+    /**
+     * Take the theme mode out of the fix of a pattern as it is stored now, so a change made since the caller looked stays. With no stored fix
+     * (the mode came from a built-in one) `fallback`, the built-in fix without the mode, is stored as the person's own.
+     * `keepEmpty` keeps a fix left empty as a record: a wider key with a mode would pin the page again, as the first key that matches decides.
+     * It is a hint from the caller; the stored records as they are now are looked at too, so a wider fix added meanwhile counts.
+     * `url` is the page the caller is on: the order of the matches is the one of that page.
+     * @param {unknown} pattern @param {unknown} fallback @param {boolean} [keepEmpty] @param {string} [url]
+     */
+    releaseFixMode: (pattern, fallback, keepEmpty = false, url = undefined) =>
+      queue(async () => {
+        const key = normalizePattern(pattern);
+        if (!key) return { ok: /** @type {const} */ (false), code: 'invalid', errors: ['pattern: is not a valid site pattern'] };
+        if (fallback !== null && !isPlainObject(fallback)) return { ok: /** @type {const} */ (false), code: 'invalid', errors: ['fallback: must be an object'] };
+        const state = await load();
+        const before = state.userFixes[key];
+        const fixes = { ...state.userFixes };
+        if (isPlainObject(before)) {
+          const { dynamic, ...others } = before;
+          const rest = isPlainObject(dynamic) ? patchRule(dynamic, {}, ['theme.mode']) : dynamic;
+          const next = isPlainObject(rest) && Object.keys(rest).length === 0 ? others : { ...others, ...(rest === undefined ? {} : { dynamic: rest }) };
+          if (Object.keys(next).length === 0 && !keepEmpty && !widerHoldsMode(state.userFixes, key, (r) => r.dynamic?.theme, url)) delete fixes[key];
+          else fixes[key] = keepHold(before, next, fixCss);
+        } else if (fallback === null) delete fixes[key];
+        else fixes[key] = keepHold(undefined, fallback, fixCss);
+        return save({ userFixes: fixes });
       }).catch(failure),
 
     /**

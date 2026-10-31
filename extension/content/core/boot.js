@@ -355,10 +355,10 @@
   }
 
   /** The worker fetches an image of another origin so it can be read. */
-  async function fetchImage(/** @type {string} */ url) {
+  async function fetchImage(/** @type {string} */ url, /** @type {boolean} */ sample = true) {
     try {
-      // The worker answers with a 32 by 32 copy (`sample`) when it can make one, else with the file (`base64`); images.js checks the types.
-      const reply = await chrome.runtime.sendMessage({ type: 'dk.net.image', url, sample: true });
+      // The worker answers with a 32 by 32 copy (`sample`) when it can make one, else with the file (`base64`); images.js checks the types. A part of a picture (a sprite) needs the file.
+      const reply = await chrome.runtime.sendMessage({ type: 'dk.net.image', url, sample });
       return reply && reply.ok === true ? { mime: String(reply.mime), base64: reply.base64, sample: reply.sample } : null;
     } catch {
       return null;
@@ -846,14 +846,27 @@
   const signal = listening.signal;
 
   // Copied rich text takes the computed colors, so the page's own colors show for one task while it copies.
+  // The switch-on runs at the start of the next frame or in the next task, whichever comes first, so no frame is drawn with the page's own colors. Text in a form control copies as plain text and needs none of this.
   const onCopy = () => {
+    const active = document.activeElement;
+    if (active instanceof HTMLTextAreaElement || active instanceof HTMLInputElement) return;
+    if (getSelection()?.isCollapsed !== false) return;
     const resume = dynamic.suspend();
     const others = [...document.querySelectorAll('style[data-dk]')].filter((el) => el instanceof HTMLStyleElement && !el.disabled);
     for (const el of others) /** @type {HTMLStyleElement} */ (el).disabled = true;
-    setTimeout(() => {
+    let done = false;
+    let frame = 0;
+    let timer = 0;
+    const back = () => {
+      if (done) return;
+      done = true;
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
       resume();
       for (const el of others) /** @type {HTMLStyleElement} */ (el).disabled = false;
-    }, 0);
+    };
+    frame = requestAnimationFrame(back);
+    timer = setTimeout(back, 0);
   };
   if (!svgDoc) {
     document.addEventListener('copy', onCopy, { capture: true, signal });

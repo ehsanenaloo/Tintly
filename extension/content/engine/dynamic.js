@@ -65,13 +65,26 @@
   // The text path writes smaller pieces: inserting one costs the browser about as much as writing it, and a piece is one slice.
   const TEXT_CHUNK_CHARS = 40000;
   const TEXT_LINK_MIN = 100;
+  /** Does a sheet hold at least `TEXT_LINK_MIN` rules, those inside one level of grouping rules included? A sheet wrapped in one layer shows a single rule. @param {CSSRuleList} rules */
+  function bigSheet(rules) {
+    let n = 0;
+    for (let i = 0; i < rules.length && n < TEXT_LINK_MIN; i++) {
+      n += 1;
+      const inner = /** @type {any} */ (rules[i]).cssRules;
+      if (inner) n += inner.length;
+    }
+    return n >= TEXT_LINK_MIN;
+  }
   const TEXT_MAX_CHARS = 6000000;
   const MOTION_MAX_CHARS = 30000;
   // The rules of a site's own dark theme that are copied: more than this and the sheet is not trusted to switch.
   const SITE_MAX_CHARS = 600000;
   const REPAIR_HOLD_MS = 200;
   const SITE_HINT = /dark/i;
-  const SCHEME_ONLY = /color-scheme\s*:[^;}]*\bonly\b/i;
+  // The value ends at a bracket too: `@media (prefers-color-scheme:dark),only screen` and `(prefers-color-scheme:dark){.a[href$=x-only]`
+  // name no scheme, and a false flag costs a read of the page with the engine off, a full restyle of a large page.
+  const SCHEME_ONLY = /color-scheme\s*:[^;{}()]*\bonly\b/i;
+  const SCHEME_ONLY_ALL = /color-scheme\s*:[^;{}()]*\bonly\b/gi;
   // The page's text must read on its background at this ratio (WCAG 1.4.3) for the site's own dark theme to be kept.
   const SITE_MIN_CONTRAST = 4.5;
   /** How long the quick dark version stays up for the engine that takes over from an engine that cannot read a sheet. */
@@ -239,7 +252,33 @@
     spareTransformers.delete(themeKey);
     transformer.setRepair(false);
     // In the E-ink and Paper mode a gradient is one solid color, or nothing when it fades.
-    const rw = rewrite.createRewriter(transformer, { resolve: resolveRelative, rootValue: (/** @type {string} */ name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim(), flatGradients: !!theme.eink, onUse: (/** @type {string} */ name, /** @type {number} */ bits) => want(name, bits) });
+    // The custom properties of the root are read in one go and kept: a read of one name restyles the page when the engine has
+    // inserted a piece since the last read, and repair mode reads hundreds of names between insertions (777 reads and ten
+    // restyles of 100 to 260 ms on a large repository page). A sheet that arrives later, or two seconds of age, take the copy away.
+    /** @type {Map<string, string> | null} */
+    let rootVars = null;
+    let rootVarsAt = 0;
+    let rootVarsStale = false;
+    const ROOT_VARS_MIN_MS = 250;
+    const ROOT_VARS_MAX_MS = 2000;
+    /** @param {string} name */
+    function rootValue(name) {
+      const style = getComputedStyle(document.documentElement);
+      const now = performance.now();
+      if (rootVars === null || now - rootVarsAt > ROOT_VARS_MAX_MS || (rootVarsStale && now - rootVarsAt > ROOT_VARS_MIN_MS)) {
+        const all = new Map();
+        for (let i = 0, n = style.length; i < n; i++) {
+          const key = style[i];
+          if (key.charCodeAt(0) === 45 && key.charCodeAt(1) === 45) all.set(key, style.getPropertyValue(key).trim());
+        }
+        rootVars = all;
+        rootVarsAt = now;
+        rootVarsStale = false;
+      }
+      // A browser that does not list custom properties gives an empty map: the name is read from the style itself.
+      return rootVars.get(name) ?? (rootVars.size === 0 ? style.getPropertyValue(name).trim() : '');
+    }
+    const rw = rewrite.createRewriter(transformer, { resolve: resolveRelative, rootValue, flatGradients: !!theme.eink, onUse: (/** @type {string} */ name, /** @type {number} */ bits) => want(name, bits) });
 
     /* ---------------- derived variables, by demand ---------------- */
 
@@ -412,7 +451,7 @@
       grown.clear();
       const began = performance.now();
       for (const [piece, rec] of templated) {
-        if (!piece.isConnected) {
+        if (!piece.isConnected && !waiting.has(piece)) {
           templated.delete(piece);
           continue;
         }
@@ -526,12 +565,60 @@
     let schemeChecks = 0;
     /** @returns {boolean} true when the page is left alone because of what it declares */
     function checkScheme() {
-      if (!schemeFlag || dead || schemeChecks >= 2) return false;
+      if (!schemeFlag || dead || schemeChecks >= 2 || !schemeMayApply()) return false;
       schemeChecks += 1;
       const kind = pageSchemeOnly();
       if (kind === null) return false;
       schemeChecks = 2;
       return options.onPageScheme?.(kind) === true;
+    }
+    // The selectors of the rules that say `only`, or null when one is not known (the style attribute, a nested rule): a
+    // rule that reaches neither the root nor the body cannot be what the read finds (the value is inherited), so no read.
+    /** @type {string[] | null} */
+    let schemeWhere = [];
+    const SCHEME_WHERE_MAX = 32;
+    /** The selector of the style rule whose declarations are read now, null when it is nested or not a rule. @type {string | null} */
+    let ruleSelector = null;
+    /** @param {string[] | null} selectors */
+    function noteScheme(selectors) {
+      if (schemeWhere !== null) {
+        if (selectors === null || schemeWhere.length + selectors.length > SCHEME_WHERE_MAX) schemeWhere = null;
+        else for (const sel of selectors) if (!schemeWhere.includes(sel)) schemeWhere.push(sel);
+      }
+      flagScheme();
+    }
+    function schemeMayApply() {
+      if (schemeWhere === null) return true;
+      const meta = doc.querySelector('meta[name="color-scheme" i]');
+      if (meta && /\bonly\b/i.test(meta.getAttribute('content') ?? '')) return true;
+      const root = doc.documentElement;
+      const body = doc.body;
+      return schemeWhere.some((sel) => {
+        try {
+          return root.matches(sel) || (body !== null && body.matches(sel));
+        } catch {
+          return true;
+        }
+      });
+    }
+    /**
+     * The selectors of the rules in a sheet's text that say `color-scheme: ... only`, or null when one cannot be told.
+     * @param {string} text @returns {string[] | null}
+     */
+    function onlySelectors(text) {
+      /** @type {string[]} */
+      const out = [];
+      for (const m of text.matchAll(SCHEME_ONLY_ALL)) {
+        const at = m.index ?? 0;
+        const open = text.lastIndexOf('{', at);
+        // A declaration after a nested rule belongs to the outer rule.
+        if (open < 0 || text.lastIndexOf('}', at) > open) return null;
+        const start = Math.max(text.lastIndexOf('}', open), text.lastIndexOf('{', open - 1), text.lastIndexOf(';', open)) + 1;
+        const sel = text.slice(start, open).trim();
+        if (sel === '' || sel.includes('&') || out.length >= SCHEME_WHERE_MAX) return null;
+        out.push(sel);
+      }
+      return out;
     }
     function flagScheme() {
       if (schemeFlag || dead || !options.onPageScheme) return;
@@ -573,6 +660,7 @@
       adoptFailed: 0,
       restored: 0,
       restoreGaveUp: 0,
+      keptCopies: 0,
       skippedUrls: 0,
       skippedEditable: 0,
       rescans: 0,
@@ -626,10 +714,31 @@
      * Without the hold (the quick version is not painted) the page is visible while it is themed, so the pieces are live at once.
      */
     let activated = false;
+    /** Pieces made while the quick version covers the page. They stay out of the document until they are switched on: even an inert style element costs a restyle of the whole page when it is inserted (65 ms each on a large repository page, one per frame). @type {Set<HTMLStyleElement>} */
+    const waiting = new Set();
+    /** The node a waiting piece goes after: the piece before it, or the sheet node. @type {WeakMap<HTMLStyleElement, Node>} */
+    const anchors = new WeakMap();
+    const inertNow = () => staged || (options.hold !== false && early !== null && !activated);
+    /** Put the waiting pieces into the page, in the order they were made, when they are no longer inert. A piece whose anchor left the page is dropped. */
+    function attachWaiting() {
+      if (waiting.size === 0 || inertNow()) return;
+      for (const piece of waiting) {
+        const anchor = anchors.get(piece);
+        if (anchor && anchor.isConnected) /** @type {ChildNode} */ (anchor).after(piece);
+      }
+      waiting.clear();
+    }
     function activatePieces() {
       if (activated) return;
       activated = true;
-      for (const piece of pieceMedia.keys()) if (piece.isConnected) setMedia(piece);
+      for (const piece of pieceMedia.keys()) if (piece.isConnected || waiting.has(piece)) setMedia(piece);
+      attachWaiting();
+    }
+
+    /** Take a piece out of the page, or out of the waiting list. @param {HTMLStyleElement} piece */
+    function drop(piece) {
+      waiting.delete(piece);
+      piece.remove();
     }
 
     /** @param {HTMLStyleElement} piece */
@@ -1010,7 +1119,7 @@
         const name = style[i];
         if (name === 'color-scheme') {
           const scheme = style.getPropertyValue(name);
-          if (!schemeFlag && SCHEME_ONLY.test(`color-scheme:${scheme}`)) flagScheme();
+          if (SCHEME_ONLY.test(`color-scheme:${scheme}`)) noteScheme(ruleSelector === null ? null : [ruleSelector]);
           if (found !== null) {
             if (siteApi.schemeOnlyLight(scheme)) found.onlyLight++;
             else if (siteApi.schemeHasDark(scheme)) found.scheme++;
@@ -1069,6 +1178,11 @@
 
     /** @param {CSSRule} rule */
     const isStyleRule = (rule) => rule instanceof CSSStyleRule;
+    /** Is the rule inside a style rule (nesting)? Its selector is then relative. @param {CSSRule} rule */
+    const nestedRule = (rule) => {
+      for (let p = rule.parentRule; p; p = p.parentRule) if (isStyleRule(p)) return true;
+      return false;
+    };
     /** @param {CSSRule} rule */
     const isNestedDeclarations = (rule) => rule.constructor && rule.constructor.name === 'CSSNestedDeclarations';
     /** @param {CSSRule} rule */
@@ -1152,12 +1266,14 @@
       const note = { unresolved: false };
       const controls = CONTROL_SELECTOR.test(rule.selectorText);
       deferNow = budget !== null && budget.defer;
+      ruleSelector = nestedRule(rule) ? null : rule.selectorText;
       /** @type {string} */
       let decls;
       try {
         decls = declarationsText(rule.style, baseUrl, false, note, controls, budget ? budget.found : null, repairing && siteMod ? siteMod.coverFor(rule.selectorText) : null);
       } finally {
         deferNow = false;
+        ruleSelector = null;
       }
       if (note.unresolved && budget) {
         budget.unresolved += 1;
@@ -1469,7 +1585,7 @@
       siteCounts.delete(node);
       const pieces = copies.get(node);
       if (pieces) {
-        if (!keepPieces) for (const piece of pieces) piece.remove();
+        if (!keepPieces) for (const piece of pieces) drop(piece);
         copies.delete(node);
       }
       const listener = loadListeners.get(node);
@@ -1489,6 +1605,7 @@
     /** @param {Node} node */
     function enqueue(node) {
       if (dead) return;
+      rootVarsStale = true;
       watchRootStyle(node);
       pending.add(node);
       void pump();
@@ -1512,7 +1629,7 @@
       try {
         await buildCopy(node);
       } finally {
-        if (old) for (const piece of old) piece.remove();
+        if (old) for (const piece of old) drop(piece);
       }
     }
 
@@ -1595,6 +1712,23 @@
         remoteHref = fetched.url;
         stats.fetched += 1;
       }
+      // A big sheet of another origin that the CSSOM shows is read from its text too: the text path costs a quarter of the CSSOM walk, and a
+      // walk of such a sheet that finds a shorthand with `var()` is followed by a second one with the text. The worker's answer is asked for
+      // once (six at a time); the sheet is looked at again when it is there, and a refusal leaves the CSSOM walk as it was. Only while the
+      // quick dark version is up: a sheet that arrives after it was let go is applied by the browser at once, and a wait for the worker would
+      // show the page's own light colors for a frame.
+      if (rules !== null && remoteText === null && stats.released === null && reader && !edited.has(node) && node instanceof HTMLLinkElement && bigSheet(rules) && otherOrigin(node.href)) {
+        const answer = remoteCache.get(node);
+        if (!answer || answer.href !== node.href) {
+          startFetch(node);
+          return;
+        }
+        if (answer.text !== null) {
+          remoteText = answer.text;
+          remoteHref = answer.url;
+          stats.fetched += 1;
+        }
+      }
       /** The same text as a style element that applies to nothing, for the CSSOM walk. @type {HTMLStyleElement | null} */
       let inert = null;
       const token = {};
@@ -1618,11 +1752,15 @@
           piece.textContent = `${MEDIA_OPEN}${filled.text}}`;
           templated.set(piece, filled.rec);
           if (templated.size > templatedPrune) {
-            for (const old of templated.keys()) if (!old.isConnected) templated.delete(old);
+            for (const old of templated.keys()) if (!old.isConnected && !waiting.has(old)) templated.delete(old);
             templatedPrune = Math.max(32, templated.size * 2);
           }
         } else piece.textContent = `${MEDIA_OPEN}${css}}`;
-        (pieces.length ? pieces[pieces.length - 1] : node).after(piece);
+        const anchor = pieces.length ? pieces[pieces.length - 1] : node;
+        if (inertNow()) {
+          anchors.set(piece, anchor);
+          waiting.add(piece);
+        } else anchor.after(piece);
         pieces.push(piece);
         stats.pieces += 1;
         if (stats.readyAt !== null) fillMarkers();
@@ -1645,7 +1783,7 @@
       if (reader && !edited.has(node)) {
         if (remoteText !== null) text = remoteText;
         else if (node instanceof HTMLStyleElement) text = node.textContent;
-        else if (rules && rules.length >= TEXT_LINK_MIN && node instanceof HTMLLinkElement) {
+        else if (rules && bigSheet(rules) && node instanceof HTMLLinkElement) {
           // The wait for the cache is not our time: close the slice before it and start a new one after it.
           sl.finish();
           text = await cachedText(node.href);
@@ -1654,7 +1792,7 @@
         // A sheet with rules and no text was built by script.
         if (text !== null && (text.length > TEXT_MAX_CHARS || (text.trim() === '' && rules !== null && rules.length > 0))) text = null;
         if (stale()) return;
-        if (text !== null && !schemeFlag && text.indexOf('color-scheme') >= 0 && SCHEME_ONLY.test(text)) flagScheme();
+        if (text !== null && schemeWhere !== null && text.indexOf('color-scheme') >= 0 && SCHEME_ONLY.test(text)) noteScheme(onlySelectors(text));
       }
       if (text !== null && siteState === 'on' && !repairing && !SITE_HINT.test(text)) return;
       const refusedKey = text === null ? '' : `${text.length}:${rules ? rules.length : -1}`;
@@ -1662,7 +1800,7 @@
       if (text !== null) {
         const verdict = await runText(text, baseUrl, rules, budget, insert, stale, wantSite, box);
         if (verdict === 'stale') {
-          for (const piece of pieces) piece.remove();
+          for (const piece of pieces) drop(piece);
           return;
         }
         if (verdict === 'ok') {
@@ -1670,7 +1808,7 @@
           siteText = box.site;
           siteFound = box.found;
         } else {
-          for (const piece of pieces) piece.remove();
+          for (const piece of pieces) drop(piece);
           pieces = [];
           budget = newBudget(null, true, namerFor(node));
           stats.textFallbacks += 1;
@@ -1723,7 +1861,7 @@
         }
       }
       if (stale() || budget.capped) {
-        for (const piece of pieces) piece.remove();
+        for (const piece of pieces) drop(piece);
         if (budget.capped && !dead) stats.capped += 1;
         return;
       }
@@ -1738,6 +1876,7 @@
       }
       if (pieces.length) {
         copies.set(node, pieces);
+        remember(node);
         stats.sheets += 1;
       }
       if (budget.layers) layerPaths.set(node, budget.layers.paths);
@@ -1968,6 +2107,16 @@
       }
     }
 
+    /** Is this address on a web origin other than the page's? @param {string} href */
+    function otherOrigin(href) {
+      try {
+        const url = new URL(href, doc.baseURI);
+        return (url.protocol === 'http:' || url.protocol === 'https:') && url.origin !== location.origin;
+      } catch {
+        return false;
+      }
+    }
+
     /** Ask the worker for the text of a stylesheet of another origin. @param {string} href @returns {Promise<{ text: string, url: string } | null>} */
     async function fetchRemoteText(href) {
       const kept = storedText(href);
@@ -2015,6 +2164,7 @@
       else {
         fillMarkers();
         siteMod?.finishRepair();
+        dropParked();
         maybeRelease();
         markReady();
       }
@@ -2056,7 +2206,8 @@
       if (/** @type {any} */ (globalThis).__dk?.calm?.holdsTransitions?.() === true) holdTransitions();
       options.onCommit?.();
       options.beforeCommit?.();
-      for (const piece of pieceMedia.keys()) if (piece.isConnected) setMedia(piece);
+      for (const piece of pieceMedia.keys()) if (piece.isConnected || waiting.has(piece)) setMedia(piece);
+      attachWaiting();
       base.removeAttribute('media');
       inlineStyle?.removeAttribute('media');
       attrStyle?.removeAttribute('media');
@@ -2116,7 +2267,7 @@
         for (const piece of pieces) {
           if (sitePieces.has(piece) === site) keep.push(piece);
           else {
-            piece.remove();
+            drop(piece);
             pieceMedia.delete(piece);
           }
         }
@@ -2131,6 +2282,7 @@
       siteReason = reason;
       keepOnly(false);
       for (const piece of pieceMedia.keys()) setMedia(piece);
+      attachWaiting();
     }
 
     /** The inline styles and the markup colors are not themed when the site's own theme shows: the observers stop and the rules go. */
@@ -2169,7 +2321,8 @@
       holdMs: REPAIR_HOLD_MS,
       show: () => {
         siteState = 'on';
-        for (const piece of pieceMedia.keys()) if (piece.isConnected) setMedia(piece);
+        for (const piece of pieceMedia.keys()) if (piece.isConnected || waiting.has(piece)) setMedia(piece);
+        attachWaiting();
       },
       adoptedCopies: () => {
         /** @type {CSSStyleSheet[]} */
@@ -2296,20 +2449,146 @@
       );
     }
 
+    /* ---------------- sheets that the page moves or replaces ---------------- */
+
+    // A page that moves its style elements (a framework that gathers them in the head) or puts the same rules into a new
+    // element (a CSS-in-JS library that takes over the server's style element) applies them again at once. A copy built
+    // again would leave the page in its own light colors until it is done, seconds on a busy page. So the pieces of a
+    // removed sheet are kept: a sheet that comes back unchanged gets them back after it, and the others go when the
+    // sheets that came meanwhile are themed.
+    /** Pieces of removed sheets, until the queue is empty. @type {Set<HTMLStyleElement>} */
+    const parked = new Set();
+    /** What a removed sheet had, for its return: pieces, its text or address, its counts of dark rules. @type {WeakMap<Node, { pieces: HTMLStyleElement[], source: string, site: any }>} */
+    const parkedOf = new WeakMap();
+    const PARK = {};
+    const PARK_RECHECK_MS = 250;
+    // An app that renders again puts the same rules into new style elements and drops the old ones (often with the copies,
+    // which sit next to them). The new element takes the copy of a gone one with the same text, so no frame waits for a
+    // copy built again. Small texts only, the latest few hundred.
+    /** @type {Map<string, Element>} */
+    const byText = new Map();
+    const BY_TEXT_MAX = 256;
+    const BY_TEXT_CHARS = 65536;
+
+    /** Note the text of a style element that has a copy. @param {Element} node */
+    function remember(node) {
+      if (!(node instanceof HTMLStyleElement)) return;
+      const text = node.textContent ?? '';
+      if (text.length > BY_TEXT_CHARS) return;
+      byText.delete(text);
+      byText.set(text, node);
+      const first = byText.size > BY_TEXT_MAX ? byText.entries().next().value : undefined;
+      if (first) {
+        byText.delete(first[0]);
+        if (!first[1].isConnected && copies.has(first[1])) park(first[1]);
+      }
+    }
+
+    /**
+     * The copy of a style element that left the page with the same text as `node`, or null.
+     * @param {Element} node @returns {{ pieces: HTMLStyleElement[], site: any, layers: any } | null}
+     */
+    function adopt(node) {
+      if (!(node instanceof HTMLStyleElement)) return null;
+      const text = node.textContent ?? '';
+      const old = byText.get(text);
+      if (!old || old === node || old.isConnected) return null;
+      byText.delete(text);
+      const layers = layerPaths.get(old);
+      const live = copies.get(old);
+      if (live) {
+        if (pending.has(old) || settleTimers.has(old) || edited.has(old)) return null;
+        const site = siteCounts.get(old);
+        dropCopy(old, true);
+        return { pieces: live, site, layers };
+      }
+      const kept = parkedOf.get(old);
+      parkedOf.delete(old);
+      if (!kept || kept.source !== text || kept.pieces.some((p) => !parked.has(p))) return null;
+      for (const piece of kept.pieces) parked.delete(piece);
+      return { pieces: kept.pieces, site: kept.site, layers };
+    }
+
+    /** The text of a style element or the address of a link: a sheet that comes back with the same one has the same rules. @param {Node} node */
+    function sourceOf(node) {
+      return node instanceof HTMLLinkElement ? node.href : node.textContent ?? '';
+    }
+
+    /** Keep the pieces of a sheet that left the page. @param {Element} node */
+    function park(node) {
+      const reusable = copies.has(node) && !pending.has(node) && !settleTimers.has(node) && !edited.has(node);
+      const site = siteCounts.get(node);
+      const pieces = dropCopy(node, true);
+      if (!pieces) return;
+      for (const piece of pieces) parked.add(piece);
+      if (reusable) parkedOf.set(node, { pieces, source: sourceOf(node), site });
+      later(PARK, dropParked);
+    }
+
+    /** Remove the kept pieces once nothing is left to theme. */
+    function dropParked() {
+      if (parked.size === 0 || dead) return;
+      if (pending.size || pumping || fetching.size || loadListeners.size) {
+        later(PARK, dropParked, PARK_RECHECK_MS);
+        return;
+      }
+      for (const piece of parked) drop(piece);
+      parked.clear();
+    }
+
+    /**
+     * A sheet node that is added again keeps its copy, which goes right after it, so it still comes later in the cascade.
+     * Returns false when the copy has to be built (none kept, or the sheet may have changed while it was out).
+     * @param {Element} node
+     */
+    function comeBack(node) {
+      let pieces = copies.get(node);
+      let same = true;
+      if (!pieces) {
+        const kept = parkedOf.get(node);
+        parkedOf.delete(node);
+        /** @type {{ pieces: HTMLStyleElement[], site: any, layers?: any } | null} */
+        let found = null;
+        if (kept && kept.source === sourceOf(node) && !kept.pieces.some((p) => !parked.has(p))) {
+          found = kept;
+          for (const piece of kept.pieces) parked.delete(piece);
+        } else found = adopt(node);
+        if (!found) return false;
+        pieces = found.pieces;
+        copies.set(node, pieces);
+        tokens.set(node, {});
+        remember(node);
+        if (found.site) siteCounts.set(node, found.site);
+        if (found.layers) layerPaths.set(node, found.layers);
+      } else same = !pending.has(node) && !settleTimers.has(node) && !edited.has(node);
+      let anchor = /** @type {ChildNode} */ (node);
+      for (const piece of pieces) {
+        if (!waiting.has(piece) && anchor.nextSibling !== piece) anchor.after(piece);
+        anchor = piece;
+      }
+      if (same) stats.keptCopies += 1;
+      return same;
+    }
+
+    /** @param {Element} el */
+    function arrived(el) {
+      if (!comeBack(el)) enqueue(el);
+    }
+
     /* ---------------- observing the document ---------------- */
 
     /** @param {Node} n @returns {boolean} a sheet node was found */
     function consider(n) {
       if (!(n instanceof Element)) return false;
       if (isSheetNode(n)) {
-        enqueue(n);
+        arrived(n);
         return true;
       }
       let found = false;
       if (n.childElementCount) {
         for (const el of n.querySelectorAll(SHEET_SELECTOR)) {
           if (isSheetNode(el)) {
-            enqueue(el);
+            arrived(el);
             found = true;
           }
         }
@@ -2317,19 +2596,25 @@
       return found;
     }
 
+    /** @param {Element} el */
+    function leave(el) {
+      // Moved within the same batch of changes: its add is handled by consider().
+      if (el.isConnected) return;
+      pending.delete(el);
+      const waiting = settleTimers.get(el);
+      if (waiting !== undefined) clearTimeout(waiting);
+      settleTimers.delete(el);
+      park(el);
+    }
+
     /** @param {Node} n @returns {boolean} a sheet node was found */
     function forget(n) {
       if (!(n instanceof Element)) return false;
       let found = copies.has(n) || pending.has(n) || dormant.has(n);
-      pending.delete(n);
-      const waiting = settleTimers.get(n);
-      if (waiting !== undefined) clearTimeout(waiting);
-      settleTimers.delete(n);
-      dropCopy(n);
+      leave(n);
       if (n.childElementCount) for (const el of n.querySelectorAll(SHEET_SELECTOR)) {
         found = true;
-        pending.delete(el);
-        dropCopy(el);
+        leave(el);
       }
       return found;
     }
@@ -2435,7 +2720,7 @@
         if (!node.isConnected) continue;
         for (let i = 0; i < pieces.length; i++) {
           const piece = pieces[i];
-          if (piece.isConnected) continue;
+          if (piece.isConnected || waiting.has(piece)) continue;
           const anchor = i > 0 ? pieces[i - 1] : node;
           if (anchor.isConnected && allowRestore(piece)) /** @type {ChildNode} */ (anchor).after(piece);
         }
@@ -3271,7 +3556,7 @@
     function visitAdded(n, onInline, sheets, rest = null) {
       if (hasInlineHint(n)) onInline(n);
       if (n.matches(ATTR_SELECTOR)) readAttrs(n);
-      if (sheets && isSheetNode(n) && !tokens.has(n) && !pending.has(n)) enqueue(n);
+      if (sheets && isSheetNode(n) && !tokens.has(n) && !pending.has(n)) arrived(n);
       if (!n.firstElementChild) return;
       if (rest && n.childElementCount > ADDED_SPLIT) {
         for (const child of n.children) rest.push(child);
@@ -3280,7 +3565,7 @@
       for (const el of n.querySelectorAll(ADDED_SELECTOR)) {
         const tag = el.localName;
         if ((tag === 'style' || tag === 'link') && sheets) {
-          if (isSheetNode(el) && !tokens.has(el) && !pending.has(el)) enqueue(el);
+          if (isSheetNode(el) && !tokens.has(el) && !pending.has(el)) arrived(el);
           continue;
         }
         if (hasInlineHint(el)) onInline(el);
@@ -3292,8 +3577,11 @@
     const addedRoots = [];
     let addedAt = 0;
     let addedPumping = false;
+    const ADD_OVERFLOW = {};
+    // Past the budget the elements are not followed one by one: one look at everything later finds them.
     const takeInline = (/** @type {Element} */ el) => {
       if (addBudget-- > 0) inlineQueue.add(el);
+      else later(ADD_OVERFLOW, () => void rescanInline(), INLINE_PAUSE_MS);
     };
 
     /** @param {Element} n */
@@ -3349,6 +3637,22 @@
       }
     }
 
+    /**
+     * A sheet applies the moment it is added, so the sheets of an added subtree are found in the callback, before a frame
+     * is drawn; the rest of a large subtree is looked at in slices. Found there, a sheet at the end of a subtree that an app
+     * renders into a container waited for the slices and the app's own long tasks between them, and frames showed its colors.
+     * The head is watched on its own. @param {Element} n
+     */
+    function sheetsAdded(n) {
+      if (doc.head?.contains(n)) return;
+      if (n.localName === 'style' || n.localName === 'link') {
+        if (isSheetNode(n) && !tokens.has(n) && !pending.has(n)) arrived(n);
+        return;
+      }
+      if (!n.firstElementChild) return;
+      for (const el of n.querySelectorAll(SHEET_SELECTOR)) if (isSheetNode(el) && !tokens.has(el) && !pending.has(el)) arrived(el);
+    }
+
     /** Elements that arrive after the first pass with a `style` attribute raise no attribute record, so look at what is added. */
     function startAddObserver() {
       addObserver = new MutationObserver((records) => {
@@ -3357,9 +3661,22 @@
           addWindowStart = now;
           addBudget = ADD_BUDGET;
         }
-        for (const r of records) for (const n of r.addedNodes) if (n instanceof Element) addedRoots.push(n);
+        for (const r of records) {
+          // A sheet removed deep in the body: the head and the body's own children are seen by the document observer.
+          if (copies.size) for (const n of r.removedNodes) forget(n);
+          for (const n of r.addedNodes) {
+            if (!(n instanceof Element)) continue;
+            addedRoots.push(n);
+            if (n.isConnected) sheetsAdded(n);
+          }
+        }
         if (!addedPumping) pumpAdded();
-        if (inlineQueue.size && inlineTimer === null) inlineTimer = setTimeout(drainInlineQueue, 40);
+        if (inlineQueue.size) {
+          // The inline colors of new elements are themed before the next frame, the first ones in document order for a few
+          // ms and the rest in short tasks after it, not after a timer that a busy page delays past several frames.
+          if (inlineTimer !== null) clearTimeout(inlineTimer);
+          drainInlineQueue();
+        }
       });
       addObserver.observe(doc, { childList: true, subtree: true });
     }
@@ -3439,8 +3756,11 @@
       loadListeners.clear();
       for (const [node, late] of lateListeners) node.removeEventListener('load', late);
       lateListeners.clear();
-      for (const pieces of copies.values()) for (const piece of pieces) piece.remove();
+      for (const pieces of copies.values()) for (const piece of pieces) drop(piece);
       copies.clear();
+      for (const piece of parked) drop(piece);
+      parked.clear();
+      waiting.clear();
       tokens.clear();
       pending.clear();
       base.remove();
@@ -3497,7 +3817,10 @@
         waiting: { pending: pending.size, pumping, listeners: loadListeners.size, fetching: fetching.size, inline: inlineDone, scan: scanDone },
         slices: { ...sl.stats },
         siteDark: { ...siteTotals(), ...siteCheck, state: siteState, reason: siteReason, repair: { ...repairInfo, covered: coverMap.size } },
+        schemeFlag,
+        schemeChecks,
         rootInline: rootInline.size,
+        parked: parked.size,
         colorCache: transformer.size,
         variants: { ...demandStats, names: demand.size, markers: templated.size },
         roots: watcher ? watcher.roots.size : 0,
