@@ -31,5 +31,29 @@
   },
   "menuToggleSite": {
     "message": "在此网站上开启或关闭 Tintly"
+  },
+  "floatOpen": {
+    "message": "更改 Tintly 模式"
+  },
+  "floatPinned": {
+    "message": "规则已设定此页面的模式"
+  },
+  "floatHide": {
+    "message": "在此网站上隐藏"
+  },
+  "floatDark": {
+    "message": "深色"
+  },
+  "floatLight": {
+    "message": "浅色"
+  },
+  "floatPaper": {
+    "message": "纸张"
+  },
+  "floatEink": {
+    "message": "E-ink"
+  },
+  "floatOriginal": {
+    "message": "原始颜色"
   }
 }

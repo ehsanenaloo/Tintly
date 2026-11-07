@@ -31,5 +31,29 @@
   },
   "menuToggleSite": {
     "message": "Ativar ou desativar o Tintly neste site"
+  },
+  "floatOpen": {
+    "message": "Mudar o modo do Tintly"
+  },
+  "floatPinned": {
+    "message": "Uma regra define o modo desta página"
+  },
+  "floatHide": {
+    "message": "Ocultar neste site"
+  },
+  "floatDark": {
+    "message": "Escuro"
+  },
+  "floatLight": {
+    "message": "Claro"
+  },
+  "floatPaper": {
+    "message": "Papel"
+  },
+  "floatEink": {
+    "message": "E-ink"
+  },
+  "floatOriginal": {
+    "message": "Cores originais"
   }
 }

@@ -110,5 +110,22 @@
     };
   }
 
-  dk.match = Object.freeze({ candidates, find, findEnabled, addressTester });
+  /**
+   * The rule of a page, and its on and off switch. A frame of another host with no rule of its own takes the rule of the top page.
+   * Only its own rule can force a page on.
+   * @param {Record<string, any> | null} rules @param {{ host: string, pathname: string }} site @param {string | null} outer
+   */
+  function forPage(rules, site, outer) {
+    const own = find(rules, site.host, site.pathname);
+    const ownSwitch = findEnabled(rules, site.host, site.pathname);
+    // The custom CSS of a rule is written for that site's own markup, so it stays out of the frames of other hosts.
+    const { css: _css, ...top } = (outer !== null && find(rules, outer, '/')) || {};
+    return {
+      rule: own ?? (outer !== null && Object.keys(top).length ? top : undefined),
+      switched: ownSwitch ?? (outer !== null ? findEnabled(rules, outer, '/') : undefined),
+      forced: ownSwitch?.enabled === true,
+    };
+  }
+
+  dk.match = Object.freeze({ candidates, find, findEnabled, forPage, addressTester });
 })();

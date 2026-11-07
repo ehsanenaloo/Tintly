@@ -134,6 +134,8 @@
     return { host: location.host, pathname: location.pathname };
   }
 
+  const pageHost = () => /** @type {string | null} */ (ns.pageHost ?? null);
+
   /** Did the page author ask for no theme? */
   function authorOff() {
     try {
@@ -177,6 +179,11 @@
   }
 
   const bucketKey = (/** @type {string} */ host) => `gb:${ns.bucketOf(host)}`;
+  /** The stored slice of the top page of a frame, or null. */
+  const outerKey = () => {
+    const host = pageHost();
+    return host === null ? null : bucketKey(host);
+  };
 
   /**
    * The data of the decision from the slice that the worker keeps for this host, or null when the copy is missing or was made for another revision of the data
@@ -188,14 +195,17 @@
     const meta = raw[META_KEY];
     if (asked !== key || !isObject(meta) || meta.v !== 1 || meta.rev !== (typeof raw.updatedAt === 'number' ? raw.updatedAt : null)) return null;
     const part = isObject(raw[key]) ? raw[key] : {};
+    const outer = outerKey();
+    const outerRules = outer !== null && isObject(raw[outer]) && isObject(raw[outer].r) ? raw[outer].r : {};
     const names = (/** @type {unknown} */ v) => (Array.isArray(v) ? v : []);
-    return { settings: raw.settings, siteRules: isObject(part.r) ? part.r : {}, userFixes: isObject(part.f) ? part.f : {}, darkSites: { add: names(part.a), remove: names(part.d) }, [SLICE]: key };
+    return { settings: raw.settings, siteRules: { ...outerRules, ...(isObject(part.r) ? part.r : {}) }, userFixes: isObject(part.f) ? part.f : {}, darkSites: { add: names(part.a), remove: names(part.d) }, [SLICE]: key };
   }
 
   /** Read what the decision needs: the slice for this host, or the sections when the copy cannot be used. */
   async function readStored() {
     const key = bucketKey(siteAddress().host);
-    const raw = await chrome.storage.local.get(['settings', 'updatedAt', META_KEY, key]);
+    const outer = outerKey();
+    const raw = await chrome.storage.local.get(['settings', 'updatedAt', META_KEY, key, ...(outer === null ? [] : [outer])]);
     return shaped(raw, key) ?? chrome.storage.local.get(KEYS);
   }
 
@@ -203,8 +213,7 @@
   function decide(stored) {
     const site = siteAddress();
     const settings = isObject(stored.settings) ? stored.settings : {};
-    const rule = match.find(isObject(stored.siteRules) ? stored.siteRules : null, site.host, site.pathname);
-    const switched = match.findEnabled(isObject(stored.siteRules) ? stored.siteRules : null, site.host, site.pathname);
+    const { rule, switched, forced } = match.forPage(isObject(stored.siteRules) ? stored.siteRules : null, site, pageHost());
     const siteOn = switched ? switched.enabled : settings.listMode !== 'onlyListed';
     const userFix = match.find(isObject(stored.userFixes) ? stored.userFixes : null, site.host, site.pathname);
     const fix = isObject(userFix) ? userFix : builtinFix;
@@ -224,7 +233,6 @@
     // "Turn on and off" is off outside the active hours; "switch scheme" stays on. Hours that cannot be judged count as off hours: the page stays as the page wrote it until the module comes.
     const scheduledOff = auto.active === false && auto.behavior === 'onOff';
     const scheduleWait = scheduleUnknown && auto.behavior === 'onOff';
-    const forced = switched?.enabled === true;
     authorSeen = authorOff();
     const authorOpt = authorSeen && !forced;
     const darkSites = isObject(stored.darkSites) ? stored.darkSites : {};
@@ -261,7 +269,9 @@
     const on = !idle && settings.enabled !== false && siteOn && !forcedColors && !scheduledOff && !scheduleWait && !skipDark && !authorOpt && !pageOpt;
     const staticData = isObject(fix) && isObject(fix.static) ? fix.static : null;
     const hasStatic = !!staticData && ['bg', 'fg', 'border'].some((k) => Array.isArray(staticData[k]) && staticData[k].length > 0);
-    const chosen = engine === 'filter' || engine === 'filterPlus' ? engine : engine === 'static' && hasStatic && mode !== 'original' ? 'static' : 'dynamic';
+    // A plain filter changes everything on the page, so on `auto` it sits on the root, where no picture, frame or late rule can miss it.
+    const wholePage = engine === 'auto' && /** @type {any} */ (ns.color)?.cvdPlain?.(ownTheme) === true;
+    const chosen = engine === 'filter' || engine === 'filterPlus' ? engine : wholePage ? 'filter' : engine === 'static' && hasStatic && mode !== 'original' ? 'static' : 'dynamic';
     // On `auto`, a page with a sheet the Dynamic engine cannot read goes to the Filter+ engine.
     const canFall = engine === 'auto' && chosen === 'dynamic' && wantsDark;
     const kind = canFall && unreachableFallback ? 'filterPlus' : chosen;
@@ -547,8 +557,19 @@
   /** The cleaning of what a build left whose world is gone (namespace.js). Every decision waits for it, so it never removes this build's work. */
   const cleaning = ns.leftover === true ? need('leftovers').then((ok) => ok && ns.leftovers.sweep()) : null;
 
+  // The runtime object as it was when this build started: its id is gone when the extension was updated, reloaded or removed.
+  const runtime = chrome.runtime;
+  const alive = () => {
+    try {
+      return !!runtime.id;
+    } catch {
+      return false;
+    }
+  };
+
   async function apply() {
     if (retired) return;
+    if (!alive()) return retire();
     deferredApply = false;
     clearTimeout(firstTimer);
     firstWaiting = false;
@@ -557,6 +578,10 @@
     try {
       if (cleaning) {
         await cleaning;
+        if (mine !== applyNo) return;
+      }
+      if (ns.askedPage) {
+        await ns.pageAnswer();
         if (mine !== applyNo) return;
       }
       // The first call uses the read of prefetch.js.
@@ -599,6 +624,10 @@
         report(decision.status);
         return;
       }
+      // The optional button, in the top frame only. The module decides by the status.
+      const floats = stored.settings?.floatSites;
+      if ((stored.settings?.floatButton || (floats?.length && match.candidates(siteAddress().host, '/').some((/** @type {string} */ c) => floats.includes(c)))) && top === self) void need('float').then(() => ns.float?.sync(decision));
+      else ns.float?.hide();
       if (!decision.on && untouched(decision)) stopWatches();
       else watchPage(decision.route);
       // Never more than three flashes in a second (WCAG 2.3.1): a second flip waits until 340 ms after the last.
@@ -626,7 +655,8 @@
       if (recheck) prober?.watchRoot();
       wake(next);
       const invertCss = invert.length ? `@media screen{${invert.join(',')}{filter:invert(1) hue-rotate(180deg)!important}}` : '';
-      setCss(decision.on ? [css, invertCss].filter(Boolean).join('\n') : '');
+      const rim = ns.frameCare(!decision.on && mode === 'dark' && (decision.status === 'dark-detected' || decision.status === 'page-scheme'), decision.on && isObject(stored.settings) && stored.settings.listMode === 'onlyListed', signal, setCss);
+      setCss(decision.on ? [css, invertCss].filter(Boolean).join('\n') : rim);
       // The Dynamic engine sorts images on a dark page; in E-ink mode calm.js calms the pictures and the module marks CSS backgrounds.
       const einkImages = eink ? ns.color.einkSettings(decision.theme).einkImages : 'off';
       const ig = JSON.stringify(ignoreImage);
@@ -750,6 +780,7 @@
     } catch {
       // A decision that a newer one replaced leaves the page to it.
       if (mine !== applyNo) return;
+      if (!alive()) return retire();
       // The page is released here, so no later decision holds it again.
       firstLoad = false;
       dynamic.stop();
@@ -876,21 +907,13 @@
   addEventListener('hashchange', routeChanged, { signal });
   /** @type {any} */ (window).navigation?.addEventListener?.('currententrychange', routeChanged, { signal });
 
-  // The runtime object as it was when this build started: its id is gone when the extension was updated, reloaded or removed.
-  const runtime = chrome.runtime;
-  const alive = () => {
-    try {
-      return !!runtime.id;
-    } catch {
-      return false;
-    }
-  };
   const onStorage = (/** @type {Record<string, any>} */ changes, /** @type {string} */ area) => {
     if (area !== 'local') return;
     const sliced = kept !== null && typeof kept[SLICE] === 'string';
     const mine = sliced ? /** @type {string} */ (kept?.[SLICE]) : '';
     const source = SOURCE.some((k) => k in changes);
-    const copy = META_KEY in changes || (mine !== '' && mine in changes);
+    const outerSlice = outerKey();
+    const copy = META_KEY in changes || (mine !== '' && mine in changes) || (outerSlice !== null && outerSlice in changes);
     if (!source && !copy && !('settings' in changes)) return;
     unreachableFallback = false;
     if (sliced) {
@@ -1009,7 +1032,7 @@
     each(() => dynamic.stop());
     each(() => ns.filter?.stop());
     each(() => ns.staticEngine?.stop());
-    for (const name of ['images', 'backdrop', 'calm', 'extras', 'readability']) each(() => ns[name]?.stop?.());
+    for (const name of ['images', 'backdrop', 'calm', 'extras', 'readability', 'float']) each(() => ns[name]?.stop?.());
     each(() => cssKeeper?.stop());
     each(() => document.querySelector('style[data-dk="css"]')?.remove());
     tell('scheme', false);

@@ -1530,3 +1530,63 @@ dialog .link-row .icon {
     box-shadow: none;
   }
 }
+
+/* ----- the small info button and its text ----- */
+.label-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-inline-size: 0;
+}
+
+.info-btn {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: 18px;
+  block-size: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.info-btn:hover,
+.info-btn[aria-expanded="true"] {
+  background: var(--surface-2);
+  color: var(--accent);
+}
+
+.info-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.info-tip {
+  position: fixed;
+  inset: auto;
+  max-inline-size: min(280px, calc(100vw - 16px));
+  margin: 0;
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+  color: var(--ink);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .info-tip:popover-open {
+    animation: info-in var(--dur-fast) var(--ease-out);
+  }
+}
+
+@keyframes info-in {
+  from {
+    transform: translateY(-3px);
+  }
+}

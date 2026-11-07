@@ -9,6 +9,7 @@ import { mountFooter } from '../../shared/footer.js';
 import { mountMenu } from '../../shared/menu.js';
 import { mountThemeSwitch } from '../../shared/theme-switch.js';
 import { buildAbout } from '../../shared/about.js';
+import { mountInfo } from '../../shared/info.js';
 import { confirmClick, engineHints, syncRange, tabList } from '../../shared/widgets.js';
 import { EINK_FIELDS, EINK_RESET, cssReachesOut, defaultTheme, fixCss, heldCss, ruleCss } from '../../shared/settings.js';
 import { createSay } from '../../shared/say.js';
@@ -1207,6 +1208,7 @@ let currentTab = TABS[0];
 
 function wireShell() {
   hydrateIcons();
+  mountInfo(() => t);
   const tabs = /** @type {HTMLElement[]} */ ([...document.querySelectorAll('[role="tab"]')]);
   const tabsApi = tabList(tabs, (tab) => {
     currentTab = /** @type {string} */ (tab.dataset.tab);

@@ -6,6 +6,25 @@ The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-07
+
+### Added
+
+- A floating button on the page to change the mode.
+
+### Changed
+
+- New installs start in Original mode.
+- A simpler toolbar window, with clearer presets and help buttons.
+- Grayscale and inverted filters cover the whole page.
+
+### Fixed
+
+- Better colors, contrast and pictures in Dark on many pages.
+- Faster loading and less flicker on heavy pages.
+- Frames follow the mode of their page.
+- Clearer translations and screen reader names.
+
 ## [1.1.0] - 2026-10-31
 
 ### Added
@@ -29,31 +48,19 @@ The first public release.
 
 ### Added
 
-- Five modes for every web page: Dark, Light, Paper, E-ink and Original. Original keeps the page's own colors.
-- Four ways to color a page: Dynamic, Filter, Filter+ and Static.
-- Color vision correction for red, green or blue color weakness, with a strength from 0 to 100 percent. It moves colors that look alike apart. Pictures, video and icons follow it unless you turn that off.
-- Grayscale, grayscale inverted and inverted filters in the Original mode, with Intensity and Color boost settings.
-- Paper and E-ink modes for reading, with a Color setting, grayer pictures, underlined links and an option to stop animations.
-- A toolbar window with the main switch, a switch for the current site, mode, engine, brightness, contrast, sepia, grayscale and presets. It can save a change for all sites or for one site.
-- A choice to run on all sites or only on the sites you turn on.
-- A settings page with colors, palettes, font, text stroke, scrollbar and selection colors, custom CSS, site rules, presets, import and export, optional sync and a reset.
-- Schedules by hours, by sunset and sunrise at your place, or by the dark mode of your system.
-- Site fixes for one site: extra CSS, elements to invert or leave alone, and style sheets to skip.
-- Pages that are already dark are left alone. When a page has a dark theme of its own, Tintly can switch it on.
-- A page can ask Tintly to leave it alone with a meta tag named `tintly` with the content `off`, or the attribute `data-tintly="off"`.
-- Dark logos and charts are inverted, very bright photos are dimmed, and square codes keep a white plate so they can be scanned.
-- Text keeps a contrast of at least 4.5 to 1, and outlines and form borders keep 3 to 1.
-- Interface in English, Persian, Arabic and Hebrew, left to right and right to left, with a light and a dark look.
-- The toolbar window, the settings page and the fix editor work with the keyboard.
-- Links to report a problem and to suggest a feature in About. A welcome page opens once after a fresh install, and the browser opens a short survey after removal.
+- Dark, Light, Paper, E-ink and Original modes for every page.
+- Color vision correction and grayscale filters.
+- Brightness, contrast, sepia, palettes, fonts and custom CSS.
+- Rules, presets and fixes for each site.
+- Schedules by time, by sunset and sunrise, or by the system.
+- Pages that are already dark are left alone.
+- Interface in English, Persian, Arabic and Hebrew, with keyboard support.
 
 ### Security
 
-- Tintly makes no network request except to fetch the style sheets and pictures of the page you are on. It has no analytics, no account and no remote settings.
-- Custom CSS from an imported file or from sync stays off until you read it and turn it on.
-- Tintly does not follow a redirect when it reads a file of another site for the page you are on.
-- Before Tintly reads a file for a page, it checks that the page really uses the file. The browser then checks the address Tintly connects to, or the page reads the file itself. So the browser's protection of your local network also covers the files Tintly reads.
+- No analytics, no account and no remote settings.
 
-[Unreleased]: https://github.com/ehsanenaloo/Tintly/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/ehsanenaloo/Tintly/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/ehsanenaloo/Tintly/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/ehsanenaloo/Tintly/compare/v1.0.11...v1.1.0
 [1.0.11]: https://github.com/ehsanenaloo/Tintly/releases/tag/v1.0.11

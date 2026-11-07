@@ -104,12 +104,15 @@ body.popup {
 
 .main > .controls {
   flex: 1 1 auto;
+  /* Without this the rows of one mode, half a pixel taller than the room, would make the card grow. */
+  min-block-size: 0;
 }
 
 .controls {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto 1fr;
+  /* The card of the modes fills what is left, so it keeps one size in every mode. */
+  grid-template-rows: minmax(0, 1fr);
   gap: 8px;
 }
 
@@ -128,17 +131,78 @@ body.popup {
 }
 
 .hero {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  block-size: 68px;
-  padding-block: 8px;
-  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  overflow: hidden;
+  padding: 0;
+  transition: border-color var(--dur) var(--ease);
 }
 
 .hero[data-on] {
   border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+}
+
+.hero-top {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  block-size: 64px;
+  padding: 8px var(--s-3);
+}
+
+.hero[data-on] .hero-top {
   background: var(--hero-wash);
+}
+
+.site-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  block-size: 34px;
+  padding-inline: var(--s-3);
+  border-block-start: 1px solid var(--line);
+  font-size: var(--fs-xs);
+  line-height: 1.25;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.site-row[hidden] {
+  display: none;
+}
+
+.site-row-text {
+  display: grid;
+  min-inline-size: 0;
+}
+
+.site-row small {
+  overflow: hidden;
+  font-size: 0.6875rem;
+  color: var(--ink-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+input.toggle-sm {
+  inline-size: 36px;
+  block-size: 20px;
+}
+
+input.toggle-sm::after {
+  inline-size: 14px;
+  block-size: 14px;
+}
+
+input.toggle-sm:checked::after {
+  inset-inline-start: 19px;
+}
+
+input.toggle-sm:active:not(:disabled)::after {
+  inline-size: 18px;
+}
+
+input.toggle-sm:checked:active:not(:disabled)::after {
+  inset-inline-start: 15px;
 }
 
 .hero-tile {
@@ -221,13 +285,6 @@ body.popup {
   block-size: 28px;
 }
 
-.site {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  padding-block: 8px;
-}
-
 /* The mode of this page is fixed by a site rule, a fix or a schedule: the notice and its button take the place of the mode control, which would change nothing here. */
 .pin {
   display: flex;
@@ -281,28 +338,22 @@ body.popup {
   text-decoration: none;
 }
 
-.site .tile {
-  inline-size: 32px;
-  block-size: 32px;
+.hero .tile.has-icon {
+  background: var(--surface-2, transparent);
+  box-shadow: none;
 }
 
-.site .tile.has-icon {
-  background: var(--surface-2, transparent);
+.hero .tile.has-icon.icon-swap {
+  background: var(--ink);
 }
 
 .site-icon {
-  inline-size: 20px;
-  block-size: 20px;
-  border-radius: 4px;
+  inline-size: 24px;
+  block-size: 24px;
+  border-radius: 5px;
   object-fit: contain;
 }
 
-.site-text {
-  flex: 1;
-  min-inline-size: 0;
-}
-
-/* Where the changes of the window go: all sites or this site. It takes the place of the word Mode, so the window keeps its height. */
 .sr-only {
   position: absolute;
   inline-size: 1px;
@@ -312,66 +363,77 @@ body.popup {
   white-space: nowrap;
 }
 
-.scope {
+/* The switch of the whole extension: small, in the header, used rarely. */
+input[type="checkbox"].power:not(.toggle) {
+  position: relative;
   flex: none;
-}
-
-.scope[hidden] {
-  display: none;
-}
-
-.scope {
-  padding: 1px;
-  margin-block: -3px;
-}
-
-.scope > button {
-  min-block-size: 18px;
-  padding: 0 7px;
-  font-size: var(--fs-xs);
-  white-space: nowrap;
-}
-
-.site-text label {
-  display: block;
-  font-size: var(--fs-xs);
-  line-height: 1.3;
-  color: var(--ink-3);
-  cursor: pointer;
-}
-
-/* Where Tintly works: all sites but the ones turned off, or only the ones turned on. It sits on the line of a label, so the card keeps its height. */
-.site-text .list-mode {
-  display: block;
-  max-inline-size: 100%;
-  min-block-size: 0;
-  block-size: 1.3em;
-  field-sizing: content;
+  inline-size: 28px;
+  block-size: 28px;
   margin: 0;
-  margin-inline-start: -2px;
-  padding-block: 0;
-  padding-inline: 2px 16px;
-  background-position: right 2px center;
-  background-size: 10px 10px;
-  border-color: transparent;
-  border-radius: var(--r-sm);
-  background-color: transparent;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-2);
   color: var(--ink-3);
-  font-size: var(--fs-xs);
-  line-height: 1.3;
-  text-overflow: ellipsis;
   cursor: pointer;
+  appearance: none;
 }
 
-[dir="rtl"] .site-text .list-mode {
-  background-position: left 2px center;
+input[type="checkbox"].power:not(.toggle)::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  inline-size: auto;
+  block-size: auto;
+  border: 0;
+  background: currentColor;
+  transform: none;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M12 3v9M6.3 6.8a8 8 0 1 0 11.4 0'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
-.site-text .list-mode:hover {
-  border-color: var(--control-line);
+input[type="checkbox"].power:not(.toggle):checked {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+input[type="checkbox"].power:not(.toggle):checked::after {
+  inset: 6px;
+  inline-size: auto;
+  block-size: auto;
+  border: 0;
+  background: currentColor;
+  transform: none;
+}
+
+input[type="checkbox"].power:not(.toggle):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+input[type="checkbox"].power:not(.toggle):disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+@media (forced-colors: active) {
+  input[type="checkbox"].power:not(.toggle) {
+    border: 1px solid ButtonText;
+  }
+
+  input[type="checkbox"].power:not(.toggle):checked {
+    background: Highlight;
+  }
+
+  input[type="checkbox"].power:not(.toggle)::after {
+    background: ButtonText;
+  }
+
+  input[type="checkbox"].power:not(.toggle):checked::after {
+    background: HighlightText;
+  }
 }
 
 .host {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -380,14 +442,18 @@ body.popup {
   line-height: 1.35;
 }
 
+.more-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 5px;
+}
+
 .theme {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.theme > .presets-box {
-  margin-block-start: auto;
+  gap: 6px;
+  padding-block: 8px;
 }
 
 /* The engine select is a cell of the slider grid (the sixth one) in Dark and Light, and the third in Paper and E-ink. Its label is set like the slider labels, the select takes the place of the track. */
@@ -416,15 +482,6 @@ body.popup {
   grid-column: 1 / -1;
 }
 
-/* The color vision select shares the line of the mode label. Its negative margin keeps the line, and so the window, at its height. */
-.mode-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-2);
-  min-inline-size: 0;
-}
-
 .cvd-cell {
   display: flex;
   align-items: center;
@@ -438,7 +495,7 @@ body.popup {
   white-space: nowrap;
 }
 
-.mode-head .cvd-cell select {
+.cvd-cell select {
   min-inline-size: 0;
   max-inline-size: 150px;
   min-block-size: 22px;
@@ -532,19 +589,76 @@ body.popup {
 .presets-box {
   display: grid;
   gap: 6px;
+  /* The presets sit at the bottom of the card, whatever is above them. */
+  margin-block-start: auto;
 }
 
 .presets-box[hidden] {
   display: none;
 }
 
+.presets-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  block-size: 18px;
+}
+
+.presets-nav {
+  display: flex;
+  gap: 2px;
+}
+
+.presets-nav[hidden] {
+  display: none;
+}
+
+.presets-nav button {
+  display: grid;
+  place-items: center;
+  inline-size: 26px;
+  block-size: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--fs-md);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.presets-nav button:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.presets-nav button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.presets-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-inline-size: 0;
+}
+
+.preset-default {
+  flex: none;
+}
+
 .presets {
   display: flex;
+  flex: 1;
+  min-inline-size: 0;
   gap: var(--s-2);
   /* Room for the focus ring, which the scrolling row would cut off. */
   margin-block: -4px;
   padding-block: 4px;
-  padding-inline-end: var(--s-4);
+  padding-inline: 0 var(--s-4);
   list-style: none;
   overflow-x: auto;
   scrollbar-width: none;
@@ -556,6 +670,10 @@ body.popup {
   mask-image: linear-gradient(to left, #000 calc(100% - var(--s-4)), transparent);
 }
 
+.presets[data-scrolled] {
+  mask-image: linear-gradient(to right, transparent, #000 var(--s-4), #000 calc(100% - var(--s-4)), transparent);
+}
+
 .presets:empty {
   display: none;
 }
@@ -564,29 +682,49 @@ body.popup {
   flex: none;
 }
 
-.presets button {
+.presets button,
+.preset-default {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   min-block-size: 28px;
   max-inline-size: 180px;
   padding-inline: var(--s-3);
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
   border: 1px solid var(--line-strong);
   border-radius: var(--r-pill);
-  background: var(--surface);
-  color: var(--ink);
+  background: var(--chip-bg, var(--surface));
+  color: var(--chip-ink, var(--ink));
   font: inherit;
   font-size: var(--fs-sm);
   cursor: pointer;
   transition: background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
 }
 
-.presets button:hover {
-  border-color: var(--accent);
-  background: var(--accent-soft);
+.presets button span,
+.preset-default span {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.presets button:active {
+.presets button svg,
+.preset-default svg {
+  flex: none;
+}
+
+.presets button:hover,
+.preset-default:hover {
+  border-color: var(--accent);
+}
+
+.presets button[aria-pressed="true"],
+.preset-default[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.presets button:active,
+.preset-default:active {
   transform: scale(0.96);
 }
 

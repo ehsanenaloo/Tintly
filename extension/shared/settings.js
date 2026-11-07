@@ -131,6 +131,7 @@ export function isSafeSelector(s) {
 /* ------------------------------------------------------------------ */
 
 /** @typedef {any} Spec */
+const FLOAT_PLACE = { min: 0, max: 1000 };
 const bool = () => ({ kind: 'bool' });
 const int = (/** @type {{min:number,max:number}} */ r) => ({ kind: 'int', min: r.min, max: r.max });
 const num = (/** @type {number} */ min, /** @type {number} */ max) => ({ kind: 'num', min, max });
@@ -216,6 +217,8 @@ const THEME_PARTIAL = obj(THEME_FIELDS, true);
 const SETTINGS = obj({
   enabled: bool(),
   listMode: oneOf(['allExcept', 'onlyListed']),
+  floatButton: bool(),
+  floatSites: arr(pattern(), L.FLOAT_ON_SITES),
   engine: oneOf(ENGINES),
   detectDark: bool(),
   respectOnlyLight: bool(),
@@ -291,6 +294,7 @@ const SECTION_SPECS = {
   ui: obj({
     locale: oneOf(['auto', ...LOCALES]),
     uiTheme: oneOf(['system', 'light', 'dark']),
+    float: map(obj({ x: int(FLOAT_PLACE), y: int(FLOAT_PLACE), hide: bool() }, true), L.FLOAT_SITES),
     support: obj({ installedAt: int(L.TIMESTAMP), lastShownAt: int(L.TIMESTAMP), shownCount: int(L.SHOWN_COUNT), optOut: bool() }),
   }),
 };
@@ -301,7 +305,7 @@ const SECTION_SPECS = {
 
 export function defaultTheme() {
   return {
-    mode: 'dark',
+    mode: 'original',
     brightness: 100,
     contrast: 100,
     sepia: 0,
@@ -394,6 +398,8 @@ export function defaultSettings() {
   return {
     enabled: true,
     listMode: 'allExcept',
+    floatButton: false,
+    floatSites: [],
     engine: 'auto',
     detectDark: true,
     respectOnlyLight: true,
@@ -421,7 +427,7 @@ const SECTION_DEFAULTS = {
   presets: () => [],
   userFixes: () => Object.create(null),
   darkSites: () => ({ add: [], remove: [] }),
-  ui: () => ({ locale: 'auto', uiTheme: 'system', support: { installedAt: 0, lastShownAt: 0, shownCount: 0, optOut: false } }),
+  ui: () => ({ locale: 'auto', uiTheme: 'system', float: {}, support: { installedAt: 0, lastShownAt: 0, shownCount: 0, optOut: false } }),
 };
 
 export function defaultState() {
@@ -927,4 +933,15 @@ export function parseImport(text) {
   errors.push(...r.errors);
   if (errors.length || !r.value) return fail('invalid-data', errors.slice(0, L.MAX_ERRORS));
   return { ok: true, state: r.value, summary: summarize(r.value) };
+}
+
+export const MODE_CHOICES = Object.freeze(['dark', 'light', 'paper', 'eink', 'original']);
+
+/**
+ * The change one choice of mode makes: the mode and, for Paper and E-ink, the style. A new style starts from its own defaults.
+ * @param {string} choice @param {{ einkPreset?: string }} theme the theme the choice replaces
+ */
+export function modePatch(choice, theme) {
+  if (choice === 'dark' || choice === 'light' || choice === 'original') return { theme: { mode: choice } };
+  return { theme: { mode: 'eink', einkPreset: choice, ...(theme.einkPreset === choice ? {} : EINK_RESET) } };
 }

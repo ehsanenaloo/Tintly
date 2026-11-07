@@ -19,6 +19,7 @@ export const MODULES = Object.freeze({
   sitetheme: 'content/engine/sitetheme.js',
   shadowroots: 'content/engine/shadowroots.js',
   leftovers: 'content/core/leftovers.js',
+  float: 'content/core/float.js',
 });
 
 /**
@@ -28,7 +29,7 @@ export const MODULES = Object.freeze({
 const RANK = Object.freeze({
   schedule: 0, leftovers: 0, sitetheme: 0, einkpalette: 0, cvd: 0, filter: 0, static: 0, shadowroots: 0,
   calm: 1, extras: 1,
-  images: 2, imagebg: 2, backdrop: 2, readability: 2,
+  images: 2, imagebg: 2, backdrop: 2, readability: 2, float: 2,
 });
 
 export const LIMITS = Object.freeze({

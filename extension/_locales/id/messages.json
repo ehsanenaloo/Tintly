@@ -31,5 +31,29 @@
   },
   "menuToggleSite": {
     "message": "Aktifkan atau nonaktifkan Tintly di situs ini"
+  },
+  "floatOpen": {
+    "message": "Ubah mode Tintly"
+  },
+  "floatPinned": {
+    "message": "Aturan menetapkan mode halaman ini"
+  },
+  "floatHide": {
+    "message": "Sembunyikan di situs ini"
+  },
+  "floatDark": {
+    "message": "Gelap"
+  },
+  "floatLight": {
+    "message": "Terang"
+  },
+  "floatPaper": {
+    "message": "Kertas"
+  },
+  "floatEink": {
+    "message": "E-ink"
+  },
+  "floatOriginal": {
+    "message": "Warna asli"
   }
 }

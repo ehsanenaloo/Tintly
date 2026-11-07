@@ -31,5 +31,29 @@
   },
   "menuToggleSite": {
     "message": "このサイトでTintlyをオンまたはオフにする"
+  },
+  "floatOpen": {
+    "message": "Tintly のモードを変更"
+  },
+  "floatPinned": {
+    "message": "ルールによりこのページのモードは固定されています"
+  },
+  "floatHide": {
+    "message": "このサイトでは非表示"
+  },
+  "floatDark": {
+    "message": "ダーク"
+  },
+  "floatLight": {
+    "message": "ライト"
+  },
+  "floatPaper": {
+    "message": "ペーパー"
+  },
+  "floatEink": {
+    "message": "E-ink"
+  },
+  "floatOriginal": {
+    "message": "元の色"
   }
 }

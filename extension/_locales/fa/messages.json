@@ -3,7 +3,7 @@
     "message": "Tintly - تاریک، روشن، کاغذ، E-ink و دید رنگ"
   },
   "extDescription": {
-    "message": "حالت‌های تاریک، روشن، کاغذ و E-ink و فیلترهای دید رنگ برای همه سایت‌ها. سریع و خصوصی، بدون جمع‌آوری اطلاعات."
+    "message": "حالت‌های تاریک، روشن، کاغذ و E-ink و فیلترهای دید رنگ برای همهٔ سایت‌ها. سریع و خصوصی، بدون جمع‌آوری اطلاعات."
   },
   "cmdToggleExtension": {
     "message": "روشن یا خاموش کردن Tintly"
@@ -31,5 +31,29 @@
   },
   "menuToggleSite": {
     "message": "روشن یا خاموش کردن Tintly برای این سایت"
+  },
+  "floatOpen": {
+    "message": "تغییر حالت Tintly"
+  },
+  "floatPinned": {
+    "message": "یک قانون حالت این صفحه را تعیین می‌کند"
+  },
+  "floatHide": {
+    "message": "در این سایت پنهان شود"
+  },
+  "floatDark": {
+    "message": "تاریک"
+  },
+  "floatLight": {
+    "message": "روشن"
+  },
+  "floatPaper": {
+    "message": "کاغذ"
+  },
+  "floatEink": {
+    "message": "E-ink"
+  },
+  "floatOriginal": {
+    "message": "رنگ‌های اصلی"
   }
 }

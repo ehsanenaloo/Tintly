@@ -6,7 +6,7 @@
   if (!dk || dk.imagebg) return;
   const images = /** @type {any} */ (dk.images);
   if (!images || !images.kit) return;
-  const { ATTR, BG_ATTR, MIN_SIDE, MAX_SIDE, MAX_CACHE, HIDE, WALL, TILE_CSS, classify, toneOf, kindOf } = images.kit;
+  const { ATTR, BG_ATTR, MIN_SIDE, MAX_SIDE, MAX_CACHE, HIDE, WALL, TILE_CSS, classify, toneOf, kindOf, glareOf, mixedOf, isWide } = images.kit;
 
   const CANVAS_LOOKS = 30;
   const CANVAS_GAP = 1000;
@@ -19,11 +19,26 @@
   const BG_BUDGET_MS = 10;
   const BG_MAX_ELEMENTS = 40000;
   const BG_REQUERY_MS = 4000;
+  const BG_LOAD_WAIT_MS = 1500;
+  const BG_THEME_WAIT_MS = 4000;
+  const BG_HOVER_MS = 200;
+  const BG_HOVER_GAP_MS = 1000;
+  const BG_HOVER_TARGETS = 'nav,header,li,[role=menu],[role=menubar],[role=navigation],[aria-haspopup],[aria-expanded]';
+  const BG_RETRY_MS = 1500;
+  const BG_RETRIES = 2;
+  const PAGE_VEIL_ALPHA = 0.4;
+  const PAGE_VEIL_LUM = 0.25;
+  const BAND_ROWS = [16, 40, 64];
+  const BAND_STEP = 64;
+  const BG_CLICK_REQUERY_MS = 400;
+  const BG_CLICK_MS = 40;
+  const BG_CLICK_AGAIN_MS = 350;
   const BG_MAX_SIDE = 640;
   const STAR_MAX_HEIGHT = 64;
   const STAR_MAX_WIDTH = 320;
   const BG_PHOTO_MIN = [160, 80];
   const BG_TEXT_MAX = 40;
+  const ONLY_PICTURE_CHILDREN = 3;
 
   /**
    * The part of a picture that a small box shows, when the picture is a sprite sheet (the box shows less than a quarter of it).
@@ -80,6 +95,8 @@
   const bgSeen = new Set();
   /** @type {string[]} */
   let bgList = [];
+  /** Pictures that are mostly clear: what shows behind text on them is the page. @type {Set<string>} */
+  const thin = new Set();
   let bgVersion = 0;
   /** @type {(() => void) | null} */
   let bgNudge = null;
@@ -186,6 +203,14 @@
     });
   }
 
+  /** The page already darkens the picture with a layer of its own. @param {string} image */
+  function darkLayer(image) {
+    return [...flat(image).replace(URL_CALL, '').matchAll(/rgba?\(([^)]+)\)/g)].some(([, v]) => {
+      const p = v.split(/[,\s/]+/).map(Number);
+      return (p[3] ?? 1) >= PAGE_VEIL_ALPHA && (0.2126 * p[0] + 0.7152 * p[1] + 0.0722 * p[2]) / 255 < PAGE_VEIL_LUM;
+    });
+  }
+
   /** @param {string} image @returns {string[]} */
   function urlsOf(image) {
     /** @type {string[]} */
@@ -223,8 +248,13 @@
     const bgHandled = new WeakMap();
     /** @type {Set<Element>} */
     const bgMarked = new Set();
-    const bgState = { more: false, at: 0, lastSweep: 0, jobs: 0, urls: 0, startedAt: performance.now() };
+    const bgState = { more: false, at: 0, lastSweep: 0, jobs: 0, urls: 0, startedAt: performance.now(), band: '' };
     const legacyEls = new WeakSet();
+    /** @type {Map<string, number>} */
+    const bgRetries = new Map();
+    let hoverAt = 0;
+    /** @type {ReturnType<typeof setTimeout> | null} */
+    let hoverTimer = null;
     const surfaces = session.surfaces;
     let ground = '';
     /** @type {Map<ShadowRoot, HTMLStyleElement>} */
@@ -276,6 +306,32 @@
       bgTimer = setTimeout(bgSweep, at - performance.now());
     }
     bgNudge = () => bgLater(400);
+
+    // A click opens menus: a picture that was hidden or just built shows now, and it must not wait for the next look.
+    let bgSoon = false;
+    /** @type {ReturnType<typeof setTimeout> | null} */
+    let clickTimer = null;
+    /** A menu can also open on hover. Most moves of the mouse are not on such a part, and at most one look a second comes of them. @param {Event} e */
+    const onBgHover = (e) => {
+      const now = performance.now();
+      if (now - hoverAt < BG_HOVER_GAP_MS || hoverTimer !== null) return;
+      if (!(e.target instanceof Element) || !e.target.closest(BG_HOVER_TARGETS)) return;
+      hoverAt = now;
+      hoverTimer = setTimeout(() => {
+        hoverTimer = null;
+        bgSoon = true;
+        bgLater(0);
+      }, BG_HOVER_MS);
+    };
+    const onBgClick = () => {
+      bgSoon = true;
+      bgLater(BG_CLICK_MS);
+      clickTimer ??= setTimeout(() => {
+        clickTimer = null;
+        bgSoon = true;
+        bgLater(0);
+      }, BG_CLICK_AGAIN_MS);
+    };
     legacyNudge = () => bgLater(150);
 
     /** @param {Element} el */
@@ -343,14 +399,28 @@
       return true;
     }
 
+    /** The top of the window is seen first, and a logo is there. The look through the selectors can take seconds on a big page. */
+    function topBand() {
+      for (const y of BAND_ROWS) {
+        for (let x = BAND_STEP / 2; x < innerWidth; x += BAND_STEP) {
+          for (const el of doc.elementsFromPoint(x, y)) {
+            if (bgFound.size >= BG_MAX_FOUND) return;
+            if (el === doc.body || el === doc.documentElement || bgFound.has(el)) continue;
+            if (getComputedStyle(el).backgroundImage.includes('url(')) bgFound.add(el);
+          }
+        }
+      }
+    }
+
     function bgSweep() {
       bgTimer = null;
       if (dead || !doc.body) return;
       const root = doc.documentElement;
       const themed = root.getAttribute('data-dk-state') === 'ready';
-      const settled = themed && doc.readyState === 'complete';
+      // A heavy page can load for many seconds, and a dark logo at the top must not wait for that.
+      const settled = themed && (doc.readyState === 'complete' || performance.now() - bgState.startedAt >= BG_LOAD_WAIT_MS);
       const early = !settled && themed && legacyQueue.size > 0;
-      if (!settled && !early && performance.now() - bgState.startedAt < 10000) {
+      if (!settled && !early && performance.now() - bgState.startedAt < BG_THEME_WAIT_MS) {
         bgLater(300);
         return;
       }
@@ -363,7 +433,13 @@
         if (el.isConnected && bgFound.size < BG_MAX_FOUND) bgFound.add(el);
       }
       legacyQueue.clear();
-      if (!early && !kept.run && (kept.version !== bgVersion || began - kept.at > Math.max(BG_REQUERY_MS, kept.cost * 33))) {
+      if (!early && bgState.band !== doc.readyState) {
+        bgState.band = doc.readyState;
+        topBand();
+      }
+      const gap = bgSoon ? BG_CLICK_REQUERY_MS : BG_REQUERY_MS;
+      bgSoon = false;
+      if (!early && !kept.run && (kept.version !== bgVersion || began - kept.at > Math.max(gap, kept.cost * 33))) {
         Object.assign(kept, { run: true, cursor: 0, at: began, pass: 0 });
       }
       if (!early && !bgState.more) {
@@ -438,8 +514,10 @@
         if (bgHandled.get(el) === key) continue;
         bgHandled.set(el, key);
         const urls = urlsOf(image);
-        // Several layers (a photo under a gradient) are the page's own composition.
-        if (urls.length !== 1 || !fadesOnly(image, cs.backgroundColor) || (skip !== '' && el.matches(skip))) {
+        const fades = urls.length === 1 && fadesOnly(image, cs.backgroundColor);
+        // Several layers (a photo under a gradient) are the page's own composition. It is only darkened, when the page has not done that.
+        const blend = urls.length === 1 && !fades && dark && !eink && !darkLayer(image);
+        if ((!fades && !blend) || (skip !== '' && el.matches(skip))) {
           bgUnmark(el);
           continue;
         }
@@ -448,7 +526,7 @@
           continue;
         }
         bgState.jobs += 1;
-        bgJobs.push({ el, url: urls[0], key, legacy: legacyEls.has(el) && legacyAddress(el) === urls[0] });
+        bgJobs.push({ el, url: urls[0], key, legacy: legacyEls.has(el) && legacyAddress(el) === urls[0], blend });
       }
       bgState.at = at;
       if (bgJobs.length) pump();
@@ -497,7 +575,13 @@
           return null;
         }
         action = classify(pixels);
-        surfaces.set(id, toneOf(pixels));
+        surfaces.set(id, { ...toneOf(pixels), glare: dark && !eink ? glareOf(pixels) : '', mixed: dark && !eink && action === 'invert' && mixedOf(pixels) });
+        let clear = 0;
+        for (let i = 3; i < pixels.length; i += 4) if (pixels[i] < 32) clear += 1;
+        if (clear * 8 >= pixels.length && !thin.has(url)) {
+          thin.add(url);
+          /** @type {any} */ (globalThis).__dk?.backdrop?.release?.();
+        }
       } catch {
         stats.failed += 1;
         return null;
@@ -516,9 +600,9 @@
     /** @type {Map<string, string>} */
     const pseudoRules = new Map();
 
-    /** @param {string} selector @param {'invert' | 'dim' | 'hide' | 'wall' | 'blend' | ''} action  '' takes the rule away @returns {boolean} true when the rule changed */
+    /** @param {string} selector @param {'invert' | 'dim' | 'dusk' | 'hide' | 'wall' | 'blend' | ''} action  '' takes the rule away @returns {boolean} true when the rule changed */
     function pseudoRule(selector, action) {
-      const css = !action ? '' : action === 'hide' ? HIDE : action === 'wall' ? WALL : action === 'blend' ? 'mix-blend-mode:difference!important' : `filter:${action === 'invert' ? 'invert(1) hue-rotate(180deg)' : 'brightness(.9)'}!important`;
+      const css = !action ? '' : action === 'hide' ? HIDE : action === 'wall' ? WALL : action === 'blend' ? 'mix-blend-mode:difference!important' : action === 'dusk' ? 'filter:brightness(.3)!important' : `filter:${action === 'invert' ? 'invert(1) hue-rotate(180deg)' : 'brightness(.9)'}!important`;
       if ((pseudoRules.get(selector) ?? '') === css) return false;
       if (css) pseudoRules.set(selector, css);
       else pseudoRules.delete(selector);
@@ -595,6 +679,10 @@
       const [url] = urls;
       void actionFor(url).then((action) => {
         if (dead || !action) return;
+        if (dark && surfaces.get(url)?.glare && covered.length && isWide(covered[0])) {
+          if (pseudoRule(item.selector, 'dusk')) stats.bgDusk += 1;
+          return;
+        }
         /** @type {'invert' | 'dim' | 'hide' | 'wall' | 'blend' | ''} */
         let todo = '';
         if (!dark) {
@@ -685,29 +773,54 @@
       return true;
     }
 
-    /** @param {{ el: Element, url: string, key: string, legacy?: boolean }} job */
-    async function analyzeBackground({ el, url, key, legacy }) {
+    /** @param {{ el: Element, url: string, key: string, legacy?: boolean, blend?: boolean }} job */
+    async function analyzeBackground({ el, url, key, legacy, blend }) {
       if (dead || !el.isConnected) return;
       const before = getComputedStyle(el);
       const box = el.getBoundingClientRect();
       const spec = Math.max(box.width, box.height) <= BG_MAX_SIDE && box.width >= 1 && box.height >= 1 ? { w: Math.round(box.width), h: Math.round(box.height), size: before.backgroundSize, pos: before.backgroundPosition } : null;
-      const action = await actionFor(url, spec);
-      if (dead || !action || !el.isConnected) return;
+      const action = await actionFor(url, blend ? null : spec);
+      if (dead || !el.isConnected) return;
+      if (!action) {
+        // A read can fail for a moment. The box is looked at again a few times.
+        const tries = bgRetries.get(url) ?? 0;
+        if (tries < BG_RETRIES && bgRetries.size < MAX_CACHE) {
+          bgRetries.set(url, tries + 1);
+          bgHandled.delete(el);
+          bgState.jobs -= 1;
+          bgLater(BG_RETRY_MS);
+        }
+        return;
+      }
       const cs = getComputedStyle(el);
       if (`${cs.backgroundImage}|${cs.backgroundColor}` !== key) {
         bgHandled.delete(el);
         return;
       }
-      const tone = surfaces.get(idOf(url, spec));
+      const tone = surfaces.get(idOf(url, blend ? null : spec));
       const how = legacy ? 2 : /^(?!no-repeat( no-repeat)?$)/.test(cs.backgroundRepeat) && !/cover|contain|100%/.test(cs.backgroundSize) ? 1 : 0;
-      if (tone && surfaceMark(el, kindOf(tone, how), how > 0 || tone.sd < 0.02)) return;
+      if (!blend && tone && surfaceMark(el, kindOf(tone, how), how > 0 || tone.sd < 0.02)) return;
+      // A filter would darken the text in the box too. A blend with the box color and an inner shadow do not, and text on it takes the theme.
+      // The blend needs a picture that fills the box; the shadow covers any box, also its parts with no picture and a layer over the picture.
+      if (dark && !eink && tone?.glare && cs.filter === 'none' && isWide(el)) {
+        const whole = /cover|100%/.test(cs.backgroundSize) && !cs.backgroundImage.includes('gradient(');
+        el.setAttribute(BG_ATTR, whole ? 'dusk' : 'veil');
+        bgMarked.add(el);
+        stats.bgDusk += 1;
+        /** @type {any} */ (globalThis).__dk?.backdrop?.release?.();
+        return;
+      }
+      if (blend) {
+        bgUnmark(el);
+        return;
+      }
       if (options.light || cs.backgroundImage.includes('gradient(')) {
         bgUnmark(el);
         return;
       }
       if (eink && options.einkMark === true) {
         // The calm filter replaces the page's own, as it does on `<img>`: a filter such as `brightness(1)` must not send the box to the blend.
-        const alone = el.childElementCount === 0 && !hasText(el) && alphaOf(cs.backgroundColor) < 0.02;
+        const alone = onlyPicture(el, cs, box) && alphaOf(cs.backgroundColor) < 0.02;
         if (alone) {
           el.setAttribute(BG_ATTR, 'gray');
           bgMarked.add(el);
@@ -726,9 +839,9 @@
       const rect = el.getBoundingClientRect();
       if (!dark) bgUnmark(el);
       if (dark && (action === 'invert' || action === 'dim')) {
-        const alone = el.childElementCount === 0 && !hasText(el) && alphaOf(cs.backgroundColor) < 0.02 && (cs.filter === 'none' || el.hasAttribute(BG_ATTR)) && Math.max(rect.width, rect.height) <= BG_MAX_SIDE;
+        const alone = onlyPicture(el, cs, rect) && alphaOf(cs.backgroundColor) < 0.02 && (cs.filter === 'none' || el.hasAttribute(BG_ATTR)) && Math.max(rect.width, rect.height) <= BG_MAX_SIDE;
         if (alone) {
-          el.setAttribute(BG_ATTR, action);
+          el.setAttribute(BG_ATTR, action === 'invert' && tone?.mixed ? session.mixedMark(el) : action);
           bgMarked.add(el);
           if (action === 'invert') stats.bgInvert += 1;
           else stats.bgDim += 1;
@@ -752,10 +865,25 @@
       return false;
     }
 
+    /**
+     * Nothing in the box shows but its picture. A logo often keeps its name as text for screen readers and pushes it out of the box.
+     * @param {Element} el @param {CSSStyleDeclaration} cs @param {DOMRect} rect
+     */
+    function onlyPicture(el, cs, rect) {
+      if (hasText(el) && !(parseFloat(cs.textIndent) <= -rect.width)) return false;
+      if (el.childElementCount > ONLY_PICTURE_CHILDREN) return false;
+      for (const child of el.children) {
+        const r = child.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0 && r.right > rect.left && r.left < rect.right && r.bottom > rect.top && r.top < rect.bottom) return false;
+      }
+      return true;
+    }
+
     /** @param {Element} box */
     function keepTextOn(box) {
       const backdrop = /** @type {any} */ (globalThis).__dk?.backdrop;
       if (!backdrop || typeof backdrop.adopt !== 'function') return;
+      if (isThin(getComputedStyle(box).backgroundImage)) return;
       /** @type {Element[]} */
       const found = [];
       const walker = doc.createTreeWalker(box, NodeFilter.SHOW_TEXT);
@@ -781,6 +909,8 @@
     }
 
     const onBgScroll = () => bgLater(300);
+    doc.addEventListener('click', onBgClick, { capture: true, passive: true });
+    doc.addEventListener('mouseover', onBgHover, { capture: true, passive: true });
     addEventListener('scroll', onBgScroll, { passive: true });
     addEventListener('resize', onBgScroll, { passive: true });
     addEventListener('load', onBgScroll, { once: true });
@@ -798,6 +928,10 @@
         bgNudge = null;
         if (bgTimer !== null) clearTimeout(bgTimer);
         for (const t of bgTimers) clearTimeout(t);
+        doc.removeEventListener('click', onBgClick, { capture: true });
+        doc.removeEventListener('mouseover', onBgHover, { capture: true });
+        if (hoverTimer !== null) clearTimeout(hoverTimer);
+        if (clickTimer !== null) clearTimeout(clickTimer);
         removeEventListener('scroll', onBgScroll);
         removeEventListener('resize', onBgScroll);
         removeEventListener('load', onBgScroll);
@@ -814,9 +948,16 @@
     };
   }
 
+  /** Is the first picture of this computed `background-image` mostly clear? @param {string} image */
+  function isThin(image) {
+    const url = /url\("?([^")]+)/.exec(image)?.[1];
+    return url !== undefined && thin.has(url);
+  }
+
   /** @type {ReturnType<typeof attach> | null} */
   let active = null;
   dk.imagebg = Object.freeze({
+    isThin,
     noteBackground,
     noteLegacy,
     cropOf,

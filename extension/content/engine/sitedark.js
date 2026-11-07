@@ -1,6 +1,6 @@
 // @ts-check
 // Pure string helpers for the site's own dark theme. Dark rules come as `@media (prefers-color-scheme: dark)` rules,
-// rules behind a theme state of the root or body (`.dark`, `[data-theme=dark]`), and `color-scheme` or `light-dark()`.
+// rules behind a theme state of the root or body (`.dark`, `.night-mode`, `[data-theme=dark]`), and `color-scheme` or `light-dark()`.
 // The Dynamic engine uses these to write a second copy where the dark rules apply without that state. No DOM.
 (() => {
   'use strict';
@@ -8,11 +8,11 @@
   if (!dk) return;
 
   /** Cheap pre-check: only a selector that holds this word can hold a dark state. */
-  const MAYBE_DARK = /dark/i;
+  const MAYBE_DARK = /dark|night/i;
   /** The attribute names a page uses for its theme. */
   const STATE_ATTR_NAME = /(?:theme|mode|scheme)/i;
   /** The class names a page uses for its dark theme. */
-  const STATE_CLASS = /^(?:dark|darkmode|darktheme|dark[-_](?:mode|theme|scheme)|(?:theme|mode|color|is)[-_]dark)$/i;
+  const STATE_CLASS = /^(?:dark|darkmode|darktheme|nightmode|nighttheme|(?:dark|night)[-_](?:mode|theme|scheme)|(?:theme|mode|color|is)[-_](?:dark|night))$/i;
   /** A condition that is always true (no element has this class) and weighs the same as a class or an attribute selector. */
   const ALWAYS = ':not(.dk-x)';
   const DARK_QUERY = /\(\s*prefers-color-scheme\s*:\s*dark\s*\)/i;
@@ -140,7 +140,7 @@
     const m = /^\s*([\w-]+)\s*([~|]?=)\s*("[^"]*"|'[^']*'|[^\s"'\]]+)\s*(?:[is]\s*)?$/i.exec(t.args);
     if (!m || !STATE_ATTR_NAME.test(m[1])) return false;
     const value = m[3].replace(/^["']|["']$/g, '').trim().toLowerCase();
-    return value === 'dark';
+    return value === 'dark' || value === 'night';
   }
 
   /** The tokens of a `:where()` or `:is()` item such as `.dark`, `:root.dark` or `[data-theme=dark] *`, when it is a state. @param {string} item */

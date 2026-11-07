@@ -348,7 +348,7 @@ export function createRegister({ scripting, tabs, read, schedule = (fn, ms) => s
 
   /**
    * Put the files into the frames of an open tab that the plan covers and that do not have them yet. A frame of a site the plan
-   * leaves out gets nothing, also inside a page that is on.
+   * leaves out gets its files from `fillFrames`, when the top page is on.
    * @param {number} tabId @param {Plan} plan
    */
   async function injectInto(tabId, plan) {
@@ -533,6 +533,31 @@ export function createRegister({ scripting, tabs, read, schedule = (fn, ms) => s
       await chain;
       const plan = applied;
       if (plan) await injectWhere(plan, (url) => covers(plan, url));
+    },
+    /**
+     * Only listed sites: a page that is on asks for this, as what shows in its frames is part of it. A frame of a host the plan leaves
+     * out has no registered script, so it gets the files here and takes the rule of the top page.
+     * @param {number} tabId
+     */
+    fillFrames(tabId) {
+      // In the queue, so two questions cannot give a frame the files twice.
+      const work = async () => {
+        const plan = applied;
+        if (!plan || plan.matches.includes(ALL)) return;
+        let missing;
+        let probe;
+        try {
+          missing = (await framesOf(tabId)).filter((f) => f.site !== null && !covers(plan, f.site));
+          if (missing.length === 0) return;
+          probe = await inFrames(tabId, missing, (target) => scripting.executeScript({ target, world: 'ISOLATED', injectImmediately: true, func: engineReady }));
+        } catch {
+          return;
+        }
+        const ready = new Set(probe.filter((/** @type {any} */ r) => r.result === true).map((/** @type {any} */ r) => r.frameId));
+        await inject(tabId, missing.filter((f) => !ready.has(f.frameId)));
+      };
+      chain = chain.then(work, work);
+      return chain;
     },
     /**
      * A page that is loading while the registration is refused. The files go into the documents of the tab whose top address is the one that

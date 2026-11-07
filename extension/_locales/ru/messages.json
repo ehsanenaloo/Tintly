@@ -31,5 +31,29 @@
   },
   "menuToggleSite": {
     "message": "Включить или выключить Tintly на этом сайте"
+  },
+  "floatOpen": {
+    "message": "Сменить режим Tintly"
+  },
+  "floatPinned": {
+    "message": "Режим этой страницы задан правилом"
+  },
+  "floatHide": {
+    "message": "Скрыть на этом сайте"
+  },
+  "floatDark": {
+    "message": "Тёмный"
+  },
+  "floatLight": {
+    "message": "Светлый"
+  },
+  "floatPaper": {
+    "message": "Бумага"
+  },
+  "floatEink": {
+    "message": "E-ink"
+  },
+  "floatOriginal": {
+    "message": "Исходные цвета"
   }
 }

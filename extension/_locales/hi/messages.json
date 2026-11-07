@@ -31,5 +31,29 @@
   },
   "menuToggleSite": {
     "message": "इस साइट पर Tintly चालू या बंद करें"
+  },
+  "floatOpen": {
+    "message": "Tintly का मोड बदलें"
+  },
+  "floatPinned": {
+    "message": "एक नियम इस पेज का मोड तय करता है"
+  },
+  "floatHide": {
+    "message": "इस साइट पर छिपाएँ"
+  },
+  "floatDark": {
+    "message": "डार्क"
+  },
+  "floatLight": {
+    "message": "लाइट"
+  },
+  "floatPaper": {
+    "message": "पेपर"
+  },
+  "floatEink": {
+    "message": "E-ink"
+  },
+  "floatOriginal": {
+    "message": "मूल रंग"
   }
 }

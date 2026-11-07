@@ -1217,6 +1217,15 @@
     return L < REPAIR_BG_L || (C >= REPAIR_ACCENT_C && L <= REPAIR_ACCENT_L);
   }
 
+  /** A background of the whole page from this much chroma and lightness shows as a color. Deep navy stays under them: it reads as near black. */
+  const LOUD_CANVAS_C = 0.03;
+  const LOUD_CANVAS_L = 0.27;
+  /** @param {Rgba} c @returns {boolean} */
+  function loudCanvas(c) {
+    const [L, C] = toOklch(c);
+    return C >= LOUD_CANVAS_C && L >= LOUD_CANVAS_L;
+  }
+
   /** The page color and a card color of a theme, as the engine paints them. @type {WeakMap<object, { page: Rgba, card: Rgba }>} */
   const surfaces = new WeakMap();
 
@@ -1380,7 +1389,7 @@
 
   // An empty box with its picture in its inline style (a photo or a video cover in a feed). The picture filters of the modes reach it
   // from its first frame, before any script looks at it; a box that imagebg.js marked follows its mark.
-  const INLINE_PICTURE = `:is(${['background-image: url(', 'background-image:url(', 'background: url(', 'background:url('].map((s) => `[style*="${s}"]`).join(',')}):empty:not([data-dk-bg],[style*="gradient("])`;
+  const INLINE_PICTURE = `:is(${['background-image: url(', 'background-image:url(', 'background: url(', 'background:url('].map((s) => `[style*="${s}"]`).join(',')}):empty:not(iframe,[data-dk-bg],[style*="gradient("])`;
 
   dk.color = Object.freeze({
     INLINE_PICTURE,
@@ -1394,6 +1403,7 @@
     ensureContrast,
     contrastFloor,
     surfaceColors,
+    loudCanvas,
     FLOORS: Object.freeze({ text: TEXT_MIN, edge: EDGE_MIN, recess: RECESS, card: CARD_STEP }),
     createTheme,
     createTransformer,
@@ -1405,6 +1415,7 @@
       eink ??= parts;
     },
     cvdWanted,
+    cvdPlain: (/** @type {Record<string, any>} */ t) => cvdWanted(t) && PLAIN_KINDS.includes(t.cvdType),
     hasCvd: () => cvdParts !== null,
     useCvd: (/** @type {NonNullable<typeof cvdParts>} */ parts) => {
       cvdParts ??= parts;

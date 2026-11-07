@@ -2,17 +2,18 @@
 import { numberFormat } from '../../shared/numbers.js';
 import { initI18n, applyUiTheme, loadCatalog } from '../../shared/i18n.js';
 import { L } from '../../shared/limits.js';
-import { hydrateIcons, openUrl } from '../../shared/dom.js';
+import { hydrateIcons, icon, openUrl } from '../../shared/dom.js';
 import { browserBlocks } from '../../shared/blocked.js';
 import { LINKS, loadInstallType } from '../../shared/footer-config.js';
 import { mountFooter } from '../../shared/footer.js';
 import { mountThemeSwitch } from '../../shared/theme-switch.js';
 import { engineHints, radioGroup, syncRange } from '../../shared/widgets.js';
-import { EINK_RESET, einkValues } from '../../shared/settings.js';
+import { mountInfo } from '../../shared/info.js';
+import { defaultTheme, einkValues, modePatch } from '../../shared/settings.js';
 import { isTransient, saveErrorKind, sendWithRetry } from '../../shared/save-error.js';
 import { createWriteOrder } from '../../shared/write-order.js';
 import { STATE_KEYS, readState } from '../../shared/store.js';
-import { patternFor, siteEnabled } from '../../shared/match.js';
+import { candidates, parsePage, patternFor, siteEnabled } from '../../shared/match.js';
 
 const SLIDERS = /** @type {const} */ ({
   brightness: L.BRIGHTNESS,
@@ -40,8 +41,6 @@ let t = (key) => key;
 let numbers = numberFormat();
 /** @type {{ select: (value: string) => void } | null} */
 let modeGroup = null;
-/** @type {{ select: (value: string) => void } | null} */
-let scopeGroup = null;
 // Where the changes of the window go: the settings of all sites, or the rule of this site (`siteRules[pattern]`).
 /** @type {'all' | 'site'} */
 let scope = 'all';
@@ -113,12 +112,8 @@ function choiceOf(theme) {
   return theme.mode === 'light' || theme.mode === 'original' ? theme.mode : 'dark';
 }
 
-/** The change one choice makes, in one patch: the mode and, for Paper and E-ink, the style. A new style starts from its own defaults. @param {string} choice */
-function patchFor(choice) {
-  if (choice === 'dark' || choice === 'light' || choice === 'original') return { theme: { mode: choice } };
-  const same = view().theme.einkPreset === choice;
-  return { theme: { mode: 'eink', einkPreset: choice, ...(same ? {} : EINK_RESET) } };
-}
+/** The change one choice makes, in one patch. @param {string} choice */
+const patchFor = (choice) => modePatch(choice, view().theme);
 
 function showError(/** @type {string} */ text) {
   const notice = $('notice');
@@ -140,7 +135,9 @@ let showEngineHint = () => {};
 
 /** The title of the main switch says what the switch shows now, one literal key per state. */
 function renderMaster() {
-  $('master-label').textContent = input('master').checked ? t('popup.masterOn') : t('popup.masterOff');
+  const text = input('master').checked ? t('popup.masterOn') : t('popup.masterOff');
+  $('master-label').textContent = text;
+  $('master').title = text;
 }
 
 function renderControls() {
@@ -161,7 +158,50 @@ function renderControls() {
     $(`${name}-out`).textContent = numbers.format(theme[name]);
   }
   setControlsOff(!settings.enabled);
-  $('hero').toggleAttribute('data-on', settings.enabled);
+  renderHero();
+  markPresets();
+}
+
+/** The switch of the floating button is about this site. All sites have their own switch in Settings. */
+function renderFloat() {
+  const pattern = state.site?.pattern;
+  const can = !!pattern && !browserBlocks(/** @type {any} */ (tab).url);
+  $('floatRow').hidden = !can;
+  if (!can) return;
+  const page = parsePage(tab.url);
+  const all = state.settings.floatButton === true;
+  const listed = !!page && candidates(page.host, '/').some((c) => state.settings.floatSites.includes(c));
+  const on = (all || listed) && state.ui?.float?.[pattern]?.hide !== true;
+  input('floatButton').checked = on;
+  if (all) $('floatNote').textContent = on ? t('popup.floatAllOn') : t('popup.floatExcept');
+  else $('floatNote').textContent = on ? t('popup.floatOnly') : t('popup.floatOff');
+}
+
+/** On, the button shows here. Off, it leaves this site, and stays away when all sites are turned on later. @param {boolean} on */
+function setFloat(on) {
+  const pattern = state.site?.pattern;
+  if (!pattern) return;
+  const rest = state.settings.floatSites.filter((/** @type {string} */ p) => p !== pattern);
+  const next = on && !state.settings.floatButton ? [...rest, pattern].slice(-L.FLOAT_ON_SITES) : rest;
+  if (next.length !== state.settings.floatSites.length) {
+    state.settings.floatSites = next;
+    queue({ floatSites: next });
+    void flush();
+  }
+  const { hide: _gone, ...place } = state.ui?.float?.[pattern] ?? {};
+  state.ui.float = { ...state.ui.float, [pattern]: on ? place : { ...place, hide: true } };
+  void saveUi({ float: state.ui.float });
+  renderFloat();
+}
+
+/** The main card shows the site: it is lit when Tintly works here. */
+function renderHero() {
+  const master = input('master').checked;
+  $('hero').toggleAttribute('data-on', master && !!state.site?.enabled);
+  input('site').disabled = !master || !state.site?.pattern || browserBlocks(/** @type {any} */ (tab).url);
+  const off = !master || !state.site?.enabled;
+  input('scopeSite').disabled = off;
+  input('floatButton').disabled = off;
 }
 
 /** The two sliders of Paper and E-ink replace the five sliders while one of them is chosen. Original colors has no slider, only the engine. */
@@ -203,10 +243,8 @@ function renderCvd() {
 
 function renderSite() {
   const site = state.site;
-  const siteSwitch = input('site');
-  siteSwitch.disabled = !site || !site.pattern || browserBlocks(/** @type {any} */ (tab).url);
-  siteSwitch.checked = !!site && site.enabled;
-  select('listMode').value = state.settings.listMode === 'onlyListed' ? 'onlyListed' : 'allExcept';
+  input('site').checked = !!site && site.enabled;
+  renderHero();
   $('host').textContent = site && site.pattern ? site.pattern : t('popup.siteNone');
   const fixes = /** @type {HTMLAnchorElement} */ (document.querySelector('a[href*="fixes.html"]'));
   fixes.href = `../fixes/fixes.html${site && site.pattern ? `?site=${encodeURIComponent(site.pattern)}` : ''}`;
@@ -227,7 +265,7 @@ function renderPin() {
   // In the scope of this site the window writes the rule itself, so the mode field shows.
   const show = !!pin && !blocked && !!state.site?.pattern && scope !== 'site';
   $('pin').hidden = !show;
-  // The notice takes the place of the mode buttons only: the scope switch above it stays, so this site can still be chosen.
+  // The notice takes the place of the mode buttons only: the box under it stays, so this site can still be given its own mode.
   $('mode').hidden = show;
   if (!show) return;
   const schedule = pin.kind === 'schedule';
@@ -305,18 +343,56 @@ async function releasePin() {
   setTimeout(() => void refreshStatus(), STATUS_REFRESH_MS);
 }
 
-/** The scope switch: only a page with a site of its own can have a rule. */
+/** The switch of a mode for this site: only a page with a site of its own can have a rule. */
 function renderScope() {
   const can = !!state.site?.pattern && !browserBlocks(/** @type {any} */ (tab).url);
   if (!can) scope = 'all';
-  $('scope').hidden = !can;
-  scopeGroup?.select(scope);
+  $('scopeRow').hidden = !can;
+  input('scopeSite').checked = scope === 'site';
+  $('scopeNote').textContent = scope === 'site' ? t('popup.ownOn') : t('popup.ownOff');
+}
+
+/** On, this site takes the mode it shows now into its rule. Off, the look leaves the rule and the site follows all sites again. @param {boolean} own */
+async function setScope(own) {
+  await flush();
+  const pattern = state.site?.pattern;
+  if (!pattern) return;
+  if (own) {
+    const choice = choiceOf(view().theme);
+    scope = 'site';
+    queue(patchFor(choice));
+    await flush();
+  } else {
+    const rule = ruleOf() ?? {};
+    const look = Object.keys(rule.theme ?? {}).filter((k) => k !== 'useSiteDark').map((k) => `theme.${k}`);
+    if (typeof rule.engine === 'string') look.push('engine');
+    const key = `mode:${pattern}`;
+    const id = writeOrder.begin(key);
+    const pageUrl = typeof tab.url === 'string' && tab.url.length <= 4096 ? { url: tab.url } : {};
+    const reply = /** @type {any} */ (await sendWithRetry(writeOrder.guard(key, id, () => send({ type: 'dk.site.patch', pattern, patch: {}, remove: look, ...pageUrl }))));
+    if (reply?.code === 'superseded') return;
+    if (!reply?.ok) {
+      input('scopeSite').checked = true;
+      showError(saveErrorText(reply));
+      return;
+    }
+    if (reply.rule === null) delete state.siteRules[pattern];
+    else state.siteRules[pattern] = reply.rule;
+    scope = 'all';
+    state.pin = null;
+    showError('');
+  }
+  renderScope();
+  renderControls();
+  renderPin();
+  setTimeout(() => void refreshStatus(), STATUS_REFRESH_MS);
 }
 
 function render() {
   renderScope();
   renderControls();
   renderSite();
+  renderFloat();
   renderPin();
   renderSiteTheme();
   renderPresets();
@@ -331,6 +407,85 @@ function renderStatus() {
   $('status-dot').dataset.state = protectedPage ? '' : dotState(state.tab?.status);
 }
 
+/** @type {Record<string, string>} */
+const PRESET_ICONS = { dark: 'moon', light: 'sun', paper: 'book', eink: 'tablet', original: 'drop' };
+/** @type {Record<string, string[]>} */
+const PRESET_COLORS = { paper: ['#f5f0e6', '#2b251e'], eink: ['#ffffff', '#000000'] };
+
+/** @param {string} hex @returns {number} relative luminance */
+function luminance(hex) {
+  const full = hex.length === 4 ? hex.replace(/[^#]/g, '$&$&') : hex;
+  const part = (/** @type {number} */ at) => {
+    const v = parseInt(full.slice(at, at + 2), 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * part(1) + 0.7152 * part(3) + 0.0722 * part(5);
+}
+
+/** @param {number} a @param {number} b */
+const contrast = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+
+/** The colors a preset gives its chip. Text the user chose too faint on that background becomes black or white. @param {any} theme */
+function presetColors(theme) {
+  const choice = choiceOf(theme);
+  if (choice === 'original') return null;
+  const now = view().theme;
+  const dark = choice === 'dark';
+  const [bg, ink] = PRESET_COLORS[choice] ?? [theme[dark ? 'darkBackground' : 'lightBackground'] ?? now[dark ? 'darkBackground' : 'lightBackground'], theme[dark ? 'darkText' : 'lightText'] ?? now[dark ? 'darkText' : 'lightText']];
+  const back = luminance(bg);
+  if (contrast(back, luminance(ink)) >= 4.5) return { bg, ink };
+  return { bg, ink: contrast(back, 0) >= contrast(back, 1) ? '#000000' : '#ffffff' };
+}
+
+const sameValue = (/** @type {unknown} */ a, /** @type {unknown} */ b) => JSON.stringify(a) === JSON.stringify(b);
+
+// The Default chip puts the look back. The chosen mode, the person's own CSS and the switch for a site's own dark theme stay.
+const DEFAULT_LOOK = Object.fromEntries(Object.entries(defaultTheme()).filter(([key]) => !['mode', 'einkPreset', 'css', 'useSiteDark'].includes(key)));
+
+/** A chip shows that its look is the one in use. */
+function markPresets() {
+  const now = view().theme;
+  const holds = (/** @type {Record<string, unknown>} */ theme) => Object.entries(theme).every(([key, value]) => sameValue(value, now[key]));
+  state.presets.forEach((/** @type {any} */ preset, /** @type {number} */ i) => {
+    $('presets').children[i]?.firstElementChild?.setAttribute('aria-pressed', String(holds(preset.theme)));
+  });
+  $('preset-default').setAttribute('aria-pressed', String(holds(DEFAULT_LOOK)));
+}
+
+/** A site keeps only what the preset changes from all sites, so a later change in Settings still reaches the site. @param {Record<string, any>} theme */
+async function applyPreset(theme) {
+  const pattern = state.site?.pattern;
+  if (scope !== 'site' || !pattern) {
+    queue({ theme });
+    renderControls();
+    void flush();
+    return;
+  }
+  await flush();
+  const own = Object.fromEntries(Object.entries(theme).filter(([key, value]) => key === 'mode' || !sameValue(value, state.settings.theme[key])));
+  const remove = Object.keys(ruleOf()?.theme ?? {}).filter((key) => key !== 'useSiteDark' && !(key in own)).map((key) => `theme.${key}`);
+  const key = `mode:${pattern}`;
+  const id = writeOrder.begin(key);
+  const reply = /** @type {any} */ (await sendWithRetry(writeOrder.guard(key, id, () => send({ type: 'dk.site.patch', pattern, patch: { theme: own }, remove }))));
+  if (reply?.code === 'superseded') return;
+  showError(reply?.ok ? '' : saveErrorText(reply));
+  if (!reply?.ok) return;
+  state.siteRules[pattern] = reply.rule;
+  renderControls();
+  setTimeout(() => void refreshStatus(), STATUS_REFRESH_MS);
+}
+
+/** On a site with its own look, Default gives the site back to all sites. @returns {void} */
+function applyDefault() {
+  if (scope === 'site') {
+    void setScope(false);
+    return;
+  }
+  queue({ theme: DEFAULT_LOOK });
+  renderControls();
+  void flush();
+}
+
 function renderPresets() {
   const list = $('presets');
   list.replaceChildren();
@@ -338,17 +493,55 @@ function renderPresets() {
     const item = document.createElement('li');
     const button = document.createElement('button');
     button.type = 'button';
-    button.textContent = preset.name;
+    const name = document.createElement('span');
+    name.textContent = preset.name;
+    button.append(icon(PRESET_ICONS[choiceOf(preset.theme)], 13), name);
     button.dir = 'auto';
-    button.addEventListener('click', () => {
-      queue({ theme: preset.theme });
-      renderControls();
-      void flush();
-    });
+    const look = presetColors(preset.theme);
+    if (look) {
+      button.style.setProperty('--chip-bg', look.bg);
+      button.style.setProperty('--chip-ink', look.ink);
+    }
+    button.addEventListener('click', () => void applyPreset(preset.theme));
     item.append(button);
     list.append(item);
   }
   $('presets-none').hidden = state.presets.length > 0;
+  renderPresetNav();
+  markPresets();
+}
+
+/** The row of presets is wider than the window when there are many: the arrows show only then. */
+function renderPresetNav() {
+  const list = $('presets');
+  const end = list.scrollWidth - list.clientWidth;
+  const at = Math.abs(list.scrollLeft);
+  $('presets-nav').hidden = end <= 1;
+  list.toggleAttribute('data-scrolled', at > 1);
+  /** @type {HTMLButtonElement} */ ($('presets-prev')).disabled = at <= 1;
+  /** @type {HTMLButtonElement} */ ($('presets-next')).disabled = at >= end - 1;
+}
+
+/** @param {number} way 1 toward the end of the row, -1 toward its start @param {number} by */
+function movePresets(way, by) {
+  const list = $('presets');
+  const rtl = getComputedStyle(list).direction === 'rtl';
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  list.scrollBy({ left: (rtl ? -way : way) * by, behavior: calm ? 'auto' : 'smooth' });
+}
+
+function wirePresets() {
+  const list = $('presets');
+  list.addEventListener('scroll', renderPresetNav, { passive: true });
+  new ResizeObserver(renderPresetNav).observe(list);
+  $('presets-prev').addEventListener('click', () => movePresets(-1, list.clientWidth * 0.8));
+  $('presets-next').addEventListener('click', () => movePresets(1, list.clientWidth * 0.8));
+  list.addEventListener('wheel', (e) => {
+    if (list.scrollWidth <= list.clientWidth || e.deltaY === 0) return;
+    e.preventDefault();
+    const rtl = getComputedStyle(list).direction === 'rtl';
+    list.scrollLeft += rtl ? -e.deltaY : e.deltaY;
+  }, { passive: false });
 }
 
 /* ----- saving: changes apply at once in the page and are saved after a short pause ----- */
@@ -396,6 +589,7 @@ function queue(/** @type {Record<string, any>} */ patch) {
   }
   merge(pending, patch);
   merge(state.settings, patch);
+  markPresets();
   clearTimeout(timer);
   timer = setTimeout(() => void flush(), SAVE_DELAY_MS);
 }
@@ -489,28 +683,12 @@ async function setSite(/** @type {boolean} */ enabled) {
     state.siteRules[reply.pattern] = { ...(state.siteRules[reply.pattern] ?? {}), enabled };
     if (state.site) state.site.enabled = reply.enabled;
     input('site').checked = reply.enabled;
+    renderHero();
     showError('');
   } else {
     input('site').checked = !enabled;
     showError(saveErrorText(reply));
   }
-  setTimeout(() => void refreshStatus(), STATUS_REFRESH_MS);
-}
-
-/**
- * Where Tintly works. Choosing "only the sites I turn on" on a site that is on keeps it on: the rule of the site gets `enabled: true`,
- * so the page the person is looking at does not go off.
- * @param {string} value
- */
-async function setListMode(value) {
-  const listMode = value === 'onlyListed' ? 'onlyListed' : 'allExcept';
-  const keep = listMode === 'onlyListed' && !!state.site?.pattern && state.site.enabled && typeof state.siteRules[state.site.pattern]?.enabled !== 'boolean';
-  if (keep) await setSite(true);
-  queue({ listMode });
-  await flush();
-  if (state.site && tab.url !== undefined) state.site.enabled = siteEnabled(state.settings, state.siteRules, tab.url);
-  renderSite();
-  renderStatus();
   setTimeout(() => void refreshStatus(), STATUS_REFRESH_MS);
 }
 
@@ -528,17 +706,16 @@ function wire() {
   input('master').addEventListener('change', () => {
     renderMaster();
     setControlsOff(!input('master').checked);
-    $('hero').toggleAttribute('data-on', input('master').checked);
+    renderHero();
   });
   input('site').addEventListener('change', (e) => void setSite(/** @type {HTMLInputElement} */ (e.target).checked));
-  select('listMode').addEventListener('change', (e) => void setListMode(/** @type {HTMLSelectElement} */ (e.target).value));
   $('pin-use').addEventListener('click', () => void releasePin());
-  scopeGroup = radioGroup($('scope'), (value) => {
-    void flush();
-    scope = value === 'site' ? 'site' : 'all';
-    renderControls();
-    renderPin();
-  });
+  wirePresets();
+  $('preset-default').prepend(icon('drop', 13));
+  $('preset-default').addEventListener('click', applyDefault);
+  mountInfo(() => t);
+  input('floatButton').addEventListener('change', (e) => setFloat(/** @type {HTMLInputElement} */ (e.target).checked));
+  input('scopeSite').addEventListener('change', (e) => void setScope(/** @type {HTMLInputElement} */ (e.target).checked));
   $('stheme-btn').addEventListener('click', () => void toggleSiteTheme());
   // One choice is one change of settings, saved at once: the page should follow without the pause of a slider.
   modeGroup = radioGroup($('mode'), (value) => {
@@ -610,10 +787,48 @@ async function wireLater() {
   void runNudge({
     support: state.ui.support,
     mount: $('nudgeMount'),
-    cover: [$('presets-box'), document.querySelector('.meta'), $('footerMount')].filter((el) => el instanceof HTMLElement),
+    cover: [$('more'), document.querySelector('.meta'), $('footerMount')].filter((el) => el instanceof HTMLElement),
     t,
     save: (support) => saveUi({ support }),
   }).catch(() => undefined);
+}
+
+/**
+ * A page may give a white or a black icon for a tab strip of the other color, and on the tile it would not show.
+ * @param {HTMLImageElement} img @param {string} tileColor @returns {boolean} too few of the drawn pixels stand out from the tile
+ */
+function iconHidden(img, tileColor) {
+  const SIZE = 24;
+  const MIN_CONTRAST = 1.5;
+  const MIN_SHARE = 0.2;
+  const ALPHA_MIN = 64;
+  try {
+    const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+    if (!ctx) return false;
+    ctx.canvas.width = SIZE;
+    ctx.canvas.height = SIZE;
+    ctx.fillStyle = tileColor;
+    ctx.fillRect(0, 0, 1, 1);
+    const [tr, tg, tb] = ctx.getImageData(0, 0, 1, 1).data;
+    ctx.clearRect(0, 0, SIZE, SIZE);
+    ctx.drawImage(img, 0, 0, SIZE, SIZE);
+    const px = ctx.getImageData(0, 0, SIZE, SIZE).data;
+    const luma = (/** @type {number} */ r, /** @type {number} */ g, /** @type {number} */ b) => (0.2126 * (r / 255) ** 2.2 + 0.7152 * (g / 255) ** 2.2 + 0.0722 * (b / 255) ** 2.2);
+    const tile = luma(tr, tg, tb) + 0.05;
+    let drawn = 0;
+    let seen = 0;
+    for (let i = 0; i < px.length; i += 4) {
+      const a = px[i + 3];
+      if (a < ALPHA_MIN) continue;
+      drawn += 1;
+      const k = a / 255;
+      const own = luma(px[i] * k + tr * (1 - k), px[i + 1] * k + tg * (1 - k), px[i + 2] * k + tb * (1 - k)) + 0.05;
+      if (Math.max(own, tile) / Math.min(own, tile) >= MIN_CONTRAST) seen += 1;
+    }
+    return drawn > 0 && seen / drawn < MIN_SHARE;
+  } catch {
+    return false;
+  }
 }
 
 /** Show the icon of the page in the site card; the globe stays when there is none. @param {number} tabId */
@@ -632,6 +847,7 @@ async function showSiteIcon(tabId) {
       () => {
         tile.replaceChildren(img);
         tile.classList.add('has-icon');
+        tile.classList.toggle('icon-swap', iconHidden(img, getComputedStyle(tile).backgroundColor));
       },
       { once: true },
     );

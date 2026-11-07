@@ -31,5 +31,29 @@
   },
   "menuToggleSite": {
     "message": "이 사이트에서 Tintly 켜기 또는 끄기"
+  },
+  "floatOpen": {
+    "message": "Tintly 모드 변경"
+  },
+  "floatPinned": {
+    "message": "규칙이 이 페이지의 모드를 정합니다"
+  },
+  "floatHide": {
+    "message": "이 사이트에서 숨기기"
+  },
+  "floatDark": {
+    "message": "다크"
+  },
+  "floatLight": {
+    "message": "라이트"
+  },
+  "floatPaper": {
+    "message": "페이퍼"
+  },
+  "floatEink": {
+    "message": "E-ink"
+  },
+  "floatOriginal": {
+    "message": "원래 색상"
   }
 }

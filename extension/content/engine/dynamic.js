@@ -11,6 +11,7 @@
   const sheetText = /** @type {any} */ (dk.sheettext);
   const shadowApi = /** @type {any} */ (dk.shadow);
   const siteApi = /** @type {any} */ (dk.sitedark);
+  const keepApi = /** @type {any} */ (dk.keep);
   const matchApi = /** @type {any} */ (dk.match);
   if (!color || !rewrite || !slicer) return;
 
@@ -59,6 +60,8 @@
   const INLINE_MEMO_CHARS = 1024;
   const INLINE_MEMO_MAX = 2000;
   const CODE_COLORS = new Set(['none', 'black', 'white', '#000', '#000000', '#fff', '#ffffff', 'rgb(0,0,0)', 'rgb(255,255,255)']);
+  // Fields the browser fills by itself. Buttons and tick boxes keep the browser's look.
+  const FIELD_SELECTOR = 'textarea:not(:disabled),select:not(:disabled),input:not(:disabled,[type=button],[type=submit],[type=reset],[type=checkbox],[type=radio],[type=range],[type=color],[type=file],[type=image])';
   // Rules that style form controls. Their borders mark where a control is, so they keep a contrast floor (WCAG 1.4.11).
   const CONTROL_SELECTOR = /(?:^|[\s,>+~(:])(?:input|select|textarea|button)\b|\[type=|\[role=["']?(?:textbox|button|combobox|searchbox|checkbox|radio|switch)|\.(?:btn|form-control|form-select|input)\b/i;
   const CHUNK_CHARS = 120000;
@@ -463,7 +466,7 @@
           }
         }
         if (!touched) continue;
-        const now = piece.textContent ?? '';
+        const now = keepApi.textOf(piece);
         if (now.length !== rec.size) {
           templated.delete(piece);
           continue;
@@ -718,7 +721,14 @@
     const waiting = new Set();
     /** The node a waiting piece goes after: the piece before it, or the sheet node. @type {WeakMap<HTMLStyleElement, Node>} */
     const anchors = new WeakMap();
-    const inertNow = () => staged || (options.hold !== false && early !== null && !activated);
+    /**
+     * A repair of the page's dark theme is built out of the document and goes in as one step with the removal of the old copies.
+     * Each piece that goes in by itself makes the browser restyle the whole page, and on a page of 30 sheets that was most of the load.
+     */
+    let gathering = false;
+    /** The copies that the repair replaces. They stay on the page until the new ones go in. @type {Set<HTMLStyleElement>} */
+    const retired = new Set();
+    const inertNow = () => gathering || staged || (options.hold !== false && early !== null && !activated);
     /** Put the waiting pieces into the page, in the order they were made, when they are no longer inert. A piece whose anchor left the page is dropped. */
     function attachWaiting() {
       if (waiting.size === 0 || inertNow()) return;
@@ -733,6 +743,24 @@
       activated = true;
       for (const piece of pieceMedia.keys()) if (piece.isConnected || waiting.has(piece)) setMedia(piece);
       attachWaiting();
+    }
+
+    function flushRepair() {
+      if (!gathering) return;
+      gathering = false;
+      const added = [...waiting].filter((piece) => sitePieces.has(piece));
+      attachWaiting();
+      for (const piece of retired) drop(piece);
+      retired.clear();
+      for (const piece of added) siteMod?.addCover(piece);
+      settleCanvas();
+    }
+
+    /** The repair ends when no sheet is left to read or to fetch. */
+    function settleRepair() {
+      if (pending.size || pumping || fetching.size) return;
+      flushRepair();
+      siteMod?.finishRepair();
     }
 
     /** Take a piece out of the page, or out of the waiting list. @param {HTMLStyleElement} piece */
@@ -757,7 +785,7 @@
     const owned = new Set();
     /** When each of them was put back, so a page that removes them again and again is given up on. @type {WeakMap<Element, number[]>} */
     const restoreTimes = new WeakMap();
-    const RESTORE_MAX = 3;
+    const RESTORE_MAX = 300;
     const RESTORE_WINDOW_MS = 2000;
     const RESTORE_RETRY_MAX_MS = 32000;
     /** The newest run for each sheet node. A run that finds a different token stops and removes its pieces. @type {Map<Node, object>} */
@@ -821,12 +849,42 @@
       // `:where()` gives no specificity, so any page rule beats it. The scheme is also set with `!important` on the root,
       // so a page with `light-dark()` colors shows its dark side.
       const strong = themeSettings.systemControls === false ? '' : `html{color-scheme:${dark ? 'dark' : 'light'}!important}`;
-      base.textContent = `@media screen{:where(html){${scheme}background-color:${page};color:${text}}${strong}}`;
+      // A field with no background of its own is white on a light page, so it melts into a white box around it. Under the dark scheme
+      // the browser fills it gray instead, and a borderless field shows as a gray block inside that box. It takes the color white maps to.
+      const fields = scheme && dark ? `:where(${FIELD_SELECTOR}){background-color:${page}}` : '';
+      base.textContent = `@media screen{:where(html){${scheme}background-color:${page};color:${text}}${fields}${strong}}`;
     }
     if (staged) base.media = 'not all';
     (doc.head ?? root).append(base);
     owned.add(base);
     if (!staged) root.setAttribute(STATE, 'starting');
+
+    /** @type {HTMLStyleElement | null} */
+    let canvasStyle = null;
+    /**
+     * A dark page keeps its color for cards and accents, and the background of the whole page is neutral: a blue or green page around
+     * gray cards looks like two themes. This holds for the page's own dark theme too. Read from the computed colors, so a variable or
+     * a class of the page counts. A frame is left alone: there the same color is a box of the parent page.
+     */
+    function settleCanvas() {
+      if (dead || staged || siteState === 'pending' || !theme.dark || theme.original || theme.eink || window !== window.top) return;
+      /** @type {string[]} */
+      const loud = [];
+      for (const [name, el] of /** @type {[string, Element | null][]} */ ([['html', root], ['body', doc.body]])) {
+        if (!el) continue;
+        const style = getComputedStyle(el);
+        const c = style.backgroundImage === 'none' ? color.parseColor(style.backgroundColor) : null;
+        if (c && c.a >= 0.5 && color.loudCanvas(c)) loud.push(`${name}:not(.dk-x)`);
+      }
+      if (!loud.length) return;
+      if (!canvasStyle) {
+        canvasStyle = doc.createElement('style');
+        canvasStyle.setAttribute('data-dk', 'canvas');
+        (doc.head ?? root).append(canvasStyle);
+        owned.add(canvasStyle);
+      }
+      canvasStyle.textContent = `@media screen{${loud.join(',')}{background-color:${color.pageColors(theme).page}!important}}`;
+    }
 
     /* ---------------- early paint ---------------- */
 
@@ -1629,7 +1687,7 @@
       try {
         await buildCopy(node);
       } finally {
-        if (old) for (const piece of old) drop(piece);
+        if (old) for (const piece of old) if (gathering) retired.add(piece); else drop(piece);
       }
     }
 
@@ -1715,17 +1773,18 @@
       // A big sheet of another origin that the CSSOM shows is read from its text too: the text path costs a quarter of the CSSOM walk, and a
       // walk of such a sheet that finds a shorthand with `var()` is followed by a second one with the text. The worker's answer is asked for
       // once (six at a time); the sheet is looked at again when it is there, and a refusal leaves the CSSOM walk as it was. Only while the
-      // quick dark version is up: a sheet that arrives after it was let go is applied by the browser at once, and a wait for the worker would
-      // show the page's own light colors for a frame.
-      if (rules !== null && remoteText === null && stats.released === null && reader && !edited.has(node) && node instanceof HTMLLinkElement && bigSheet(rules) && otherOrigin(node.href)) {
+      // quick dark version is up or during a repair: a sheet that arrives after the quick version was let go is applied by the browser at
+      // once, and a wait for the worker would show the page's own light colors for a frame.
+      if (rules !== null && remoteText === null && reader && !edited.has(node) && node instanceof HTMLLinkElement && bigSheet(rules) && otherOrigin(node.href)) {
         const answer = remoteCache.get(node);
-        if (!answer || answer.href !== node.href) {
+        const known = answer?.href === node.href ? answer : null;
+          if (!known && (stats.released === null || repairing)) {
           startFetch(node);
           return;
         }
-        if (answer.text !== null) {
-          remoteText = answer.text;
-          remoteHref = answer.url;
+        if (known && known.text !== null) {
+          remoteText = known.text;
+          remoteHref = known.url;
           stats.fetched += 1;
         }
       }
@@ -2101,6 +2160,7 @@
           fetching.delete(node);
           if (!dead && node.isConnected) enqueue(node);
           pumpFetches();
+          if (!dead) settleRepair();
           maybeRelease();
           markReady();
         });
@@ -2163,7 +2223,7 @@
       if (pending.size) void pump();
       else {
         fillMarkers();
-        siteMod?.finishRepair();
+        settleRepair();
         dropParked();
         maybeRelease();
         markReady();
@@ -2174,7 +2234,10 @@
       if (dead) return;
       if (stats.readyAt !== null) {
         // A sheet that was loading at ready ends the wait for the page's dark theme when it arrives.
-        if (siteState === 'pending' && !pending.size && !pumping && !fetching.size && !loadListeners.size && !rootPasses) decideSite(true);
+        if (siteState === 'pending' && !pending.size && !pumping && !fetching.size && !loadListeners.size && !rootPasses) {
+          decideSite(true);
+          settleCanvas();
+        }
         return;
       }
       if (!inlineDone || !scanDone || pending.size || pumping || fetching.size || rootPasses || probeNeeded()) return;
@@ -2189,6 +2252,7 @@
       if (staged) commit();
       else {
         decideSite(true);
+        settleCanvas();
         root.setAttribute(STATE, 'ready');
       }
       try {
@@ -2216,6 +2280,7 @@
         rs.attrs?.removeAttribute('media');
       }
       decideSite(true);
+      settleCanvas();
       rootsMod?.writeAll();
       root.setAttribute(STATE, 'ready');
     }
@@ -2339,6 +2404,7 @@
       rewriteAdopted: () => rootsMod?.rewriteAll(),
       setRepairing: (/** @type {boolean} */ on) => {
         repairing = on;
+        gathering = on;
       },
       repairing: () => repairing,
       rw,
@@ -2371,6 +2437,7 @@
       }
       for (const node of nodes) if (node.isConnected) pending.add(node);
       if (pending.size) void pump();
+      else flushRepair();
       return pending.size > 0;
     }
 
@@ -2705,16 +2772,26 @@
     }
 
     const RESTORE = {};
+    /** Cancels the put-back that waits for the next frame. @type {(() => void) | null} */
+    let restorePaint = null;
     /** The page removed something (a script that rebuilds the head, a component that clears its tree). Put back what is ours. */
     function restoreOwned() {
+      restorePaint = null;
       if (dead) return;
       restoreRefused = false;
       for (const el of owned) {
         if (el.isConnected || !allowRestore(el)) continue;
         if (el === early) root.append(el);
         else if (el === attrStyle) (doc.head ?? root).prepend(el);
-        else if (el === inlineStyle) placeInline(el);
-        else (doc.head ?? root).append(el);
+        else if (el === inlineStyle) {
+          placeInline(el);
+          // The rules added through the CSSOM left with the old sheet.
+          if (inlinePatched) {
+            inlineRebuild = true;
+            inlineDirty = true;
+            flushInline();
+          }
+        } else keepApi.put(el, () => (doc.head ?? root).append(el));
       }
       for (const [node, pieces] of copies) {
         if (!node.isConnected) continue;
@@ -2722,7 +2799,7 @@
           const piece = pieces[i];
           if (piece.isConnected || waiting.has(piece)) continue;
           const anchor = i > 0 ? pieces[i - 1] : node;
-          if (anchor.isConnected && allowRestore(piece)) /** @type {ChildNode} */ (anchor).after(piece);
+          if (anchor.isConnected && allowRestore(piece)) keepApi.put(piece, () => /** @type {ChildNode} */ (anchor).after(piece));
         }
       }
       for (const rs of rootInline.values()) {
@@ -2770,15 +2847,12 @@
         // Only a change of the document's own nodes asks for the look at switched sheets (a `disabled` set by script leaves no
         // record, a re-render of the body does): a busy component in a shadow root must not keep that pass running.
         let touched = false;
+        let removed = false;
         for (const r of records) {
           if (r.type === 'childList') {
             for (const n of r.addedNodes) if (consider(n)) touched = true;
             for (const n of r.removedNodes) if (forget(n)) touched = true;
-            if (r.removedNodes.length) {
-              clearTimeout(timers.get(RESTORE));
-              timers.delete(RESTORE);
-              later(RESTORE, restoreOwned, 0);
-            }
+            if (r.removedNodes.length) removed = true;
             if (isSheetNode(r.target)) {
               touchSheet(r.target);
               touched = true;
@@ -2795,6 +2869,12 @@
               touched = true;
             }
           }
+        }
+        // A removal now outranks a waiting retry. All removals of a frame cost one put-back, and the page paints with its theme.
+        if (removed) {
+          clearTimeout(timers.get(RESTORE));
+          timers.delete(RESTORE);
+          restorePaint ??= keepApi.beforePaint(restoreOwned);
         }
         watchHeadAndBody();
         maybeRelease();
@@ -3038,6 +3118,8 @@
     /** @type {string[]} */
     let inlineAdded = [];
     let inlineRebuild = false;
+    /** Rules went into the inline style through the CSSOM since its last full write. */
+    let inlinePatched = false;
     let inlineStale = 0;
     let inlineCounter = 0;
     /** @type {MutationObserver | null} */
@@ -3104,6 +3186,29 @@
       return true;
     }
 
+    /** @type {WeakMap<SVGElement, { n: number, value: boolean }>} */
+    const drawings = new WeakMap();
+    /** A bright colored part with dark details on it (a face, a mascot) is a picture. A one color icon is text. @param {SVGElement} svg */
+    function isDrawing(svg) {
+      const n = svg.childElementCount;
+      const known = drawings.get(svg);
+      if (known && known.n === n) return known.value;
+      let bright = false;
+      let dark = false;
+      let seen = 0;
+      for (const e of svg.querySelectorAll('[fill]')) {
+        if (++seen > 500 || (bright && dark)) break;
+        const parsed = color.parseColor(/** @type {string} */ (e.getAttribute('fill')).trim());
+        if (!parsed || parsed.a <= 0) continue;
+        const [l, c] = color.toOklch(parsed);
+        bright ||= l > 0.7 && c > 0.1;
+        dark ||= l < 0.5;
+      }
+      const value = bright && dark;
+      drawings.set(svg, { n, value });
+      return value;
+    }
+
     const MARKER_STROKE = 6;
     /** @param {SVGElement} el @returns {number} the stroke width of a shape, from the attribute or the inline style, or 0 */
     function strokeWidthOf(el) {
@@ -3121,7 +3226,7 @@
       if (!(el instanceof SVGElement)) return '';
       let out = '';
       const owner = el.ownerSVGElement ?? (el instanceof SVGSVGElement ? el : null);
-      if (owner && isCodeSvg(owner)) return '';
+      if (owner && (isCodeSvg(owner) || isDrawing(owner))) return '';
       let icon = true;
       if (owner) {
         const dims = [owner.getAttribute('width'), owner.getAttribute('height')].map((v) => (v ? parseFloat(v) : NaN));
@@ -3433,6 +3538,7 @@
             const value = inlineValues.get(id);
             if (value) for (const rule of inlineRule(id, value.text)) block.insertRule(rule, block.cssRules.length);
           }
+          if (inlineAdded.length) inlinePatched = true;
           inlineAdded = [];
           return;
         } catch {
@@ -3443,6 +3549,7 @@
       for (const [id, value] of inlineValues) css += inlineRule(id, value.text).join('');
       inlineStyle.textContent = `@media screen{${css}}`;
       inlineAdded = [];
+      inlinePatched = false;
       inlineRebuild = false;
       inlineStale = 0;
     }
@@ -3760,10 +3867,13 @@
       copies.clear();
       for (const piece of parked) drop(piece);
       parked.clear();
+      for (const piece of retired) drop(piece);
+      retired.clear();
       waiting.clear();
       tokens.clear();
       pending.clear();
       base.remove();
+      canvasStyle?.remove();
       dropFreeze();
       relProbe?.remove();
       if (early) release('stopped');

@@ -18,6 +18,7 @@
 <link rel="modulepreload" href="../../shared/store-link.js">
 <link rel="modulepreload" href="../../shared/footer.js">
 <link rel="modulepreload" href="../../shared/widgets.js">
+<link rel="modulepreload" href="../../shared/info.js">
 <link rel="modulepreload" href="../../shared/theme-switch.js">
 <link rel="modulepreload" href="../../shared/settings.js">
 <link rel="modulepreload" href="../../shared/palettes.js">
@@ -38,6 +39,8 @@
     <div class="head-actions">
       <div id="themeMount"></div>
       <button id="supportBtn" class="icon-btn icon-btn-heart" type="button" data-icon="heart" data-i18n-aria-label="menu.support" data-i18n-title="menu.support" hidden></button>
+      <label id="master-label" class="sr-only" for="master" data-i18n="popup.master"></label>
+      <input id="master" class="power" type="checkbox" role="switch">
       <div class="menu-wrap">
         <button id="overflowBtn" class="icon-btn" type="button" data-icon="more" data-i18n-aria-label="menu.open" data-i18n-title="menu.open"></button>
         <div id="overflowMenu" class="menu" role="menu" data-i18n-aria-label="menu.open" hidden></div>
@@ -46,50 +49,23 @@
   </header>
 
   <main class="main">
-    <section id="hero" class="card hero" aria-labelledby="master-label">
-      <span id="hero-tile" class="tile hero-tile" data-icon="moon" data-icon-size="20"></span>
-      <div class="hero-text">
-        <label id="master-label" class="hero-title" for="master" data-i18n="popup.master"></label>
-        <div class="status-line"><span id="status-dot" class="dot"></span><p id="status" role="status"></p></div>
+    <section id="hero" class="card hero">
+      <div class="hero-top">
+        <span id="siteTile" class="tile hero-tile" data-icon="globe" data-icon-size="20"></span>
+        <div class="hero-text">
+          <label class="hero-title" for="site"><span class="sr-only" data-i18n="popup.site"></span><span id="host" class="host" dir="auto"></span></label>
+          <div class="status-line"><span id="status-dot" class="dot"></span><p id="status" role="status"></p></div>
+        </div>
+        <input id="site" class="toggle toggle-lg" type="checkbox" role="switch">
       </div>
-      <input id="master" class="toggle toggle-lg" type="checkbox" role="switch">
+      <label id="scopeRow" class="site-row"><span class="site-row-text"><span data-i18n="popup.onlySite"></span><small id="scopeNote"></small></span><input id="scopeSite" class="toggle toggle-sm" type="checkbox" role="switch"></label>
+      <label id="floatRow" class="site-row"><span class="site-row-text"><span data-i18n="popup.floatButton"></span><small id="floatNote"></small></span><input id="floatButton" class="toggle toggle-sm" type="checkbox" role="switch"></label>
     </section>
 
     <div id="controls" class="controls">
-      <section class="card site">
-        <span class="tile" id="siteTile" data-icon="globe" data-icon-size="17"></span>
-        <div class="site-text">
-          <label for="site" class="sr-only" data-i18n="popup.site"></label>
-          <select id="listMode" class="list-mode" data-i18n-aria-label="opt.listMode">
-            <option value="allExcept" data-i18n="popup.listAll"></option>
-            <option value="onlyListed" data-i18n="popup.listOnly"></option>
-          </select>
-          <p id="host" class="host" dir="auto"></p>
-        </div>
-        <input id="site" class="toggle" type="checkbox" role="switch">
-      </section>
-
       <section class="card theme">
         <div id="modeField" class="field">
-          <div class="mode-head">
-            <span id="mode-label" class="sr-only" data-i18n="popup.mode"></span>
-            <div id="scope" class="seg scope" role="radiogroup" data-i18n-aria-label="popup.scope">
-              <button id="scope-all" type="button" role="radio" aria-checked="true" data-value="all" data-i18n="popup.scopeAll"></button>
-              <button id="scope-site" type="button" role="radio" aria-checked="false" data-value="site" data-i18n="popup.scopeSite"></button>
-            </div>
-            <span id="cvdField" class="cvd-cell">
-              <label for="cvd" data-i18n="popup.cvd"></label>
-              <select id="cvd">
-                <option value="none" data-i18n="cvd.none"></option>
-                <option value="protan" data-i18n="cvd.protan"></option>
-                <option value="deutan" data-i18n="cvd.deutan"></option>
-                <option value="tritan" data-i18n="cvd.tritan"></option>
-                <option value="grayscale" data-i18n="cvd.grayscale"></option>
-                <option value="grayscaleInverted" data-i18n="cvd.grayscaleInverted"></option>
-                <option value="inverted" data-i18n="cvd.inverted"></option>
-              </select>
-            </span>
-          </div>
+          <span id="mode-label" class="sr-only" data-i18n="popup.mode"></span>
           <div id="pin" class="pin" hidden>
             <span class="pin-icon" data-icon="info" data-icon-size="15"></span>
             <p id="pin-text" class="pin-text" role="status"></p>
@@ -104,6 +80,19 @@
             <button id="mode-original" type="button" role="radio" aria-checked="false" data-value="original" data-icon="drop" data-icon-size="13"><span data-i18n="popup.modeOriginal"></span></button>
           </div>
         </div>
+        <div id="more" class="more-body">
+            <div id="cvdField" class="cvd-cell">
+              <span class="label-info"><label for="cvd" data-i18n="popup.cvd"></label><button type="button" class="info-btn" data-i18n-info="info.cvd" data-icon="info" data-icon-size="13" aria-expanded="false" data-i18n-aria-label="info.label" data-i18n-title="info.label"></button></span>
+              <select id="cvd">
+                <option value="none" data-i18n="cvd.none"></option>
+                <option value="protan" data-i18n="cvd.protan"></option>
+                <option value="deutan" data-i18n="cvd.deutan"></option>
+                <option value="tritan" data-i18n="cvd.tritan"></option>
+                <option value="grayscale" data-i18n="cvd.grayscale"></option>
+                <option value="grayscaleInverted" data-i18n="cvd.grayscaleInverted"></option>
+                <option value="inverted" data-i18n="cvd.inverted"></option>
+              </select>
+            </div>
         <div id="einkBox" class="eink-box" hidden>
           <div class="sliders">
             <div class="slider"><label for="whiteCap" data-i18n="eink.whiteCap"></label><output id="whiteCap-out" for="whiteCap"></output><input id="whiteCap" type="range" step="1"></div>
@@ -115,9 +104,9 @@
           <div class="slider"><label for="contrast" data-i18n="theme.contrast"></label><output id="contrast-out" for="contrast"></output><input id="contrast" type="range" step="1"></div>
           <div class="slider"><label for="sepia" data-i18n="theme.sepia"></label><output id="sepia-out" for="sepia"></output><input id="sepia" type="range" step="1"></div>
           <div class="slider"><label for="grayscale" data-i18n="theme.grayscale"></label><output id="grayscale-out" for="grayscale"></output><input id="grayscale" type="range" step="1"></div>
-          <div class="slider"><label for="warmth" data-i18n="popup.warmth"></label><output id="warmth-out" for="warmth"></output><input id="warmth" type="range" step="1"></div>
+          <div class="slider"><span class="label-info"><label for="warmth" data-i18n="popup.warmth"></label><button type="button" class="info-btn" data-i18n-info="info.warmth" data-icon="info" data-icon-size="13" aria-expanded="false" data-i18n-aria-label="info.label" data-i18n-title="info.label"></button></span><output id="warmth-out" for="warmth"></output><input id="warmth" type="range" step="1"></div>
           <div id="engineField" class="field engine-cell">
-            <label class="label" for="engine" data-i18n="popup.engine"></label>
+            <span class="label-info"><label class="label" for="engine" data-i18n="popup.engine"></label><button type="button" class="info-btn" data-i18n-info="info.engine" data-icon="info" data-icon-size="13" aria-expanded="false" data-i18n-aria-label="info.label" data-i18n-title="info.label"></button></span>
             <select id="engine">
               <option value="auto" data-i18n="engine.auto"></option>
               <option value="dynamic" data-i18n="engine.dynamic"></option>
@@ -128,15 +117,25 @@
           </div>
         </div>
         <div id="originalBox" class="sliders" hidden></div>
+        <div id="presets-box" class="presets-box">
+          <div class="presets-head">
+            <span class="label-info"><h2 id="presets-title" class="label" data-i18n="popup.presets"></h2><button type="button" class="info-btn" data-i18n-info="info.presets" data-icon="info" data-icon-size="13" aria-expanded="false" data-i18n-aria-label="info.label" data-i18n-title="info.label"></button></span>
+            <div id="presets-nav" class="presets-nav" hidden>
+              <button id="presets-prev" type="button" data-i18n-aria-label="popup.presetsPrev" data-i18n-title="popup.presetsPrev">‹</button>
+              <button id="presets-next" type="button" data-i18n-aria-label="popup.presetsNext" data-i18n-title="popup.presetsNext">›</button>
+            </div>
+          </div>
+          <div class="presets-row">
+            <button id="preset-default" class="preset-default" type="button" aria-pressed="false"><span data-i18n="popup.presetDefault"></span></button>
+            <ul id="presets" class="presets" aria-labelledby="presets-title"></ul>
+            <p id="presets-none" class="hint presets-none" data-i18n="popup.presetsNone"></p>
+          </div>
+        </div>
+        </div>
         <div id="stheme" class="pin stheme" hidden>
           <span class="pin-icon" data-icon="info" data-icon-size="15"></span>
           <p id="stheme-text" class="pin-text" role="status"></p>
           <button id="stheme-btn" class="btn btn-sm" type="button" data-i18n="popup.siteThemeOff"></button>
-        </div>
-        <div id="presets-box" class="presets-box">
-          <h2 id="presets-title" class="label" data-i18n="popup.presets"></h2>
-          <ul id="presets" class="presets" aria-labelledby="presets-title"></ul>
-          <p id="presets-none" class="hint presets-none" data-i18n="popup.presetsNone"></p>
         </div>
       </section>
     </div>

@@ -2,6 +2,7 @@
 // The message router. Every message is checked three times: who sent it, whether that sender may send this type,
 // and whether the payload has exactly the expected shape. Anything else gets a fixed code and changes nothing.
 import { L } from '../../shared/limits.js';
+import { MODE_CHOICES, modePatch } from '../../shared/settings.js';
 import { candidates, parsePage, patternFor, siteEnabled } from '../../shared/match.js';
 import { tabReports } from './loading.js';
 
@@ -16,6 +17,7 @@ const STATUSES = new Set(['on', 'off', 'site-off', 'dark-detected', 'page-scheme
 const isString = (/** @type {number} */ max) => (/** @type {unknown} */ v) => typeof v === 'string' && v.length <= max;
 const isObject = (/** @type {unknown} */ v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isBool = (/** @type {unknown} */ v) => typeof v === 'boolean';
+const isPlace = (/** @type {unknown} */ v) => Number.isInteger(v) && /** @type {number} */ (v) >= 0 && /** @type {number} */ (v) <= 1000;
 const isTabId = (/** @type {unknown} */ v) => Number.isInteger(v) && /** @type {number} */ (v) >= 0;
 const IMPORT_CHARS = 1024 * 1024 + 4096;
 
@@ -29,7 +31,7 @@ const IMPORT_CHARS = 1024 * 1024 + 4096;
  *   data: { forHost: (host: string, pathname: string, userFixes: any) => Promise<any> },
  *   ondemand?: { inject: (name: unknown, who: { tabId: number, frameId: number }) => Promise<Reply> },
  *   sync?: { replace: (confirmed: boolean) => Promise<{ ok: boolean, code?: string }> },
- *   register?: { sync: () => Promise<void>, readonly failed: boolean, readonly plan: { matches: string[], excludeMatches: string[] } | null | undefined },
+ *   register?: { sync: () => Promise<void>, fillFrames: (tabId: number) => Promise<void>, readonly failed: boolean, readonly plan: { matches: string[], excludeMatches: string[] } | null | undefined },
  *   tabs?: { get: (tabId: number) => Promise<{ url?: string, favIconUrl?: string }> },
  * }} deps
  */
@@ -78,6 +80,26 @@ export function createRouter({ runtimeId, extensionOrigin, state, net, icon, dat
     // The top page names the part of the proxy's stores the frame uses (net.js `partitionOf`).
     const where = top !== null ? { top } : {};
     return { kind: 'content', who: { tabId: sender.tab.id, frameId: sender.frameId, pageUrl, host, pathname, rights, ...where, ...(typeof sender.documentId === 'string' ? { documentId: sender.documentId } : {}) } };
+  }
+
+  /** @type {Map<string, Record<string, string>>} */
+  const floatWords = new Map();
+  /** The words of the floating button in the language of the settings. A content script reads only the language of the browser. @param {string} [locale] */
+  async function floatLabels(locale) {
+    if (!locale || locale === 'auto') return null;
+    const known = floatWords.get(locale);
+    if (known) return known;
+    const folder = { pt: 'pt_BR', zh: 'zh_CN', 'zh-TW': 'zh_TW' }[locale] ?? locale;
+    try {
+      const catalog = await (await fetch(chrome.runtime.getURL('_locales/' + folder + '/messages.json'))).json();
+      /** @type {Record<string, string>} */
+      const words = { dir: ['fa', 'ar', 'he'].includes(locale) ? 'rtl' : 'ltr' };
+      for (const key of Object.keys(catalog)) if (key.startsWith('float')) words[key] = catalog[key].message;
+      floatWords.set(locale, words);
+      return words;
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -264,6 +286,68 @@ export function createRouter({ runtimeId, extensionOrigin, state, net, icon, dat
     },
     'dk.net.text': { from: 'content', fields: { url: isString(2048), charset: isString(64) }, optional: ['charset'], run: (m, who) => net.text(m.url, who, m.charset) },
     'dk.net.image': { from: 'content', fields: { url: isString(2048), sample: isBool }, optional: ['sample'], run: (m, who) => net.image(m.url, who, m.sample === true) },
+    'dk.frame.page': {
+      from: 'content',
+      fields: {},
+      run: (_m, who) => {
+        try {
+          return { ok: true, host: who.top ? new URL(who.top).host : null };
+        } catch {
+          return { ok: true, host: null };
+        }
+      },
+    },
+    'dk.frames.fill': {
+      from: 'content',
+      topFrame: true,
+      fields: {},
+      async run(_m, who) {
+        if (!register) return { ok: false, code: 'unavailable' };
+        await register.fillFrames(who.tabId);
+        return { ok: true };
+      },
+    },
+    'dk.float.get': {
+      from: 'content',
+      topFrame: true,
+      fields: {},
+      async run(_m, who) {
+        const read = await state.read();
+        if (!read.ok) return read;
+        const pattern = patternFor(who.pageUrl) ?? '';
+        const pin = await pinFor(who.pageUrl, read.state);
+        // A click on the button changes the mode of a site that has its own mode. Any other rule keeps the page as it is.
+        const own = typeof read.state.siteRules?.[pattern]?.theme?.mode === 'string';
+        return { ok: true, place: read.state.ui.float?.[pattern] ?? null, labels: await floatLabels(read.state.ui.locale), pinned: !!pin && !own };
+      },
+    },
+    'dk.float.place': {
+      from: 'content',
+      topFrame: true,
+      fields: { x: isPlace, y: isPlace, hide: isBool },
+      optional: ['x', 'y', 'hide'],
+      async run(m, who) {
+        const pattern = patternFor(who.pageUrl);
+        if (!pattern) return { ok: false, code: 'invalid' };
+        const { x, y, hide } = m;
+        return state.setFloat(pattern, { ...(x === undefined ? {} : { x }), ...(y === undefined ? {} : { y }), ...(hide === undefined ? {} : { hide }) });
+      },
+    },
+    'dk.float.mode': {
+      from: 'content',
+      topFrame: true,
+      fields: { choice: (v) => MODE_CHOICES.includes(/** @type {string} */ (v)) },
+      async run(m, who) {
+        const read = await state.read();
+        if (!read.ok) return read;
+        const { settings, siteRules } = read.state;
+        const pattern = patternFor(who.pageUrl);
+        const rule = pattern ? siteRules[pattern] : null;
+        // A site with its own mode changes that mode; the others follow all sites.
+        if (pattern && typeof rule?.theme?.mode === 'string') return state.patchSite(pattern, modePatch(m.choice, { ...settings.theme, ...rule.theme }), [], false, who.pageUrl);
+        return state.patchSettings(modePatch(m.choice, settings.theme));
+      },
+    },
     'dk.page.status': {
       from: 'content',
       topFrame: true,

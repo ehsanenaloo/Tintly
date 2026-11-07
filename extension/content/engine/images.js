@@ -14,6 +14,18 @@
   const BLEND_ATTR = 'data-dk-bl';
   /** The empty layer of a rating (a light shape under a colored layer of about its size) is muted: an SVG of it, or a masked box (the BG mark `empty`). */
   const EMPTY_ATTR = 'data-dk-empty';
+  const TILE_MIN = 4;
+  // A dark logo with a bright colored part. The share is of the visible pixels; a bright part is at least half of the colored ones.
+  const GLARE_TONES = 0.4;
+  const GLARE_TONES_MIN = 24;
+  const READ_RETRY_MS = 1500;
+  const READ_RETRIES = 2;
+  const MIXED_FILTER = 'dk-mixed';
+  const MIXED_CHROMA = 64;
+  const MIXED_SHARE = 0.015;
+  const MIXED_LUM = 0.4;
+  const MIXED_BRIGHT = 0.5;
+  const MIXED_MASK = 6;
   const EMPTY_FALLBACK = '#4a4d54';
   const STAR_MAX_SVG = 400;
   const STAR_MAX_SIDE = 64;
@@ -36,6 +48,12 @@
   const FLIP_LIGHTS = 80;
 
   const FLAT_COLORS = 40;
+  const GLARE_LUM = 0.7;
+  const GLARE_SHARE = 0.5;
+  const GLARE_GROUND = 0.5;
+  const GLARE_OPAQUE = 0.9;
+  const GLARE_WIDTH = 0.5;
+  const GLARE_HEIGHT = 200;
   const ALPHA_SHARE = 0.1;
   const CODE_STEPS = 0.22;
 
@@ -60,6 +78,20 @@
     }
     const share = marks / (side * side);
     return share >= 0.2 && share <= 0.7 && steps / pairs >= CODE_STEPS;
+  }
+
+  /**
+   * A map is cut into placed pictures of one size. Judged one by one, the plain ones would show as squares of another shade.
+   * @param {HTMLImageElement} img
+   */
+  function isTile(img) {
+    const parent = img.parentElement;
+    if (!parent || getComputedStyle(img).position !== 'absolute') return false;
+    let same = 0;
+    for (let n = parent.firstElementChild, seen = 0; n && seen < 64; n = n.nextElementSibling, seen++) {
+      if (n.tagName === 'IMG' && /** @type {HTMLElement} */ (n).offsetWidth === img.offsetWidth && /** @type {HTMLElement} */ (n).offsetHeight === img.offsetHeight) same++;
+    }
+    return same >= TILE_MIN;
   }
 
   /** @param {Uint8ClampedArray | number[]} rgba @param {{ square?: boolean }} [shape] @returns {'keep' | 'dim' | 'invert' | 'plate'} */
@@ -111,10 +143,66 @@
     return 'keep';
   }
 
+  /**
+   * A big picture that is mostly bright is a lamp on a dark page. A drawing turns dark and keeps its hues; a photo is dimmed.
+   * @param {Uint8ClampedArray | number[]} rgba @returns {'night' | 'glare' | ''}
+   */
+  function glareOf(rgba) {
+    let opaque = 0;
+    let bright = 0;
+    /** @type {Set<number>} */
+    const bins = new Set();
+    /** @type {Map<number, number>} */
+    const fine = new Map();
+    for (let i = 0; i < rgba.length; i += 4) {
+      if (rgba[i + 3] < 250) continue;
+      const r = rgba[i];
+      const g = rgba[i + 1];
+      const b = rgba[i + 2];
+      opaque += 1;
+      if ((0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > GLARE_LUM) bright += 1;
+      bins.add(((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4));
+      const tone = ((r >> 2) << 12) | ((g >> 2) << 6) | (b >> 2);
+      fine.set(tone, (fine.get(tone) ?? 0) + 1);
+    }
+    if (opaque < (rgba.length >> 2) * GLARE_OPAQUE || bright / opaque < GLARE_SHARE) return '';
+    // A drawing has one ground color. A pale photo has few colors at this coarse grid too, but its tones are spread.
+    const [first = 0, second = 0] = [...fine.values()].sort((a, b) => b - a);
+    // A photo on a white ground has one ground color too. What stands on the ground has many fine tones in a photo and few in a drawing.
+    const figure = opaque - first - second;
+    const tones = fine.size - 2;
+    const drawn = tones < GLARE_TONES_MIN || tones / figure < GLARE_TONES;
+    return drawn && bins.size <= FLAT_COLORS && (first + second) / opaque >= GLARE_GROUND ? 'night' : 'glare';
+  }
+
+  /** Inverting turns a bright color dark, so such a picture needs the `mixed` filter. @param {Uint8ClampedArray | number[]} rgba */
+  function mixedOf(rgba) {
+    let opaque = 0;
+    let colored = 0;
+    let bright = 0;
+    for (let i = 0; i < rgba.length; i += 4) {
+      if (rgba[i + 3] < 32) continue;
+      opaque += 1;
+      const r = rgba[i];
+      const g = rgba[i + 1];
+      const b = rgba[i + 2];
+      if (Math.max(r, g, b) - Math.min(r, g, b) <= MIXED_CHROMA) continue;
+      colored += 1;
+      if ((0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 >= MIXED_LUM) bright += 1;
+    }
+    return opaque > 0 && colored / opaque >= MIXED_SHARE && bright / colored >= MIXED_BRIGHT;
+  }
+
+  /** @param {Element} img */
+  function isWide(img) {
+    const box = img.getBoundingClientRect();
+    return box.width >= innerWidth * GLARE_WIDTH && box.height >= GLARE_HEIGHT;
+  }
+
   const HIDE = 'background-image:none!important';
   const WALL = 'background-color:var(--dk-ground,#888)!important;background-blend-mode:difference!important';
   const TILE_CSS = `[${BG_ATTR}="tile"]{${HIDE}}[${BG_ATTR}="wall"]{${WALL}}[${ATTR}="wall"],[${BG_ATTR}="overlay"]{mix-blend-mode:difference}[${BG_ATTR}="lines"]{background-blend-mode:difference}`;
-  const CSS = `@media screen{${TILE_CSS}[${ATTR}="invert"],[${BG_ATTR}="invert"]{filter:invert(1) hue-rotate(180deg) var(--dk-cvd-media,)!important}[${ATTR}="dim"],[${BG_ATTR}="dim"]{filter:brightness(.9) var(--dk-cvd-media,)!important}[${ATTR}="plate"]{background-color:#fff!important}[${ATTR}="flip"]{filter:var(--dk-cvd-media,none)!important}[${BLEND_ATTR}]{mix-blend-mode:normal!important}[${EMPTY_ATTR}][${EMPTY_ATTR}] :is(${STAR_SHAPES}):is(${STAR_SHAPES}){fill:var(--dk-empty,${EMPTY_FALLBACK})!important}[${BG_ATTR}="empty"]{background-color:var(--dk-empty,${EMPTY_FALLBACK})!important}}`;
+  const CSS = `@media screen{${TILE_CSS}[${ATTR}="invert"],[${ATTR}="night"],[${BG_ATTR}="invert"]{filter:invert(1) hue-rotate(180deg) var(--dk-cvd-media,)!important}[${ATTR}="mixed"],[${BG_ATTR}="mixed"]{filter:url("#${MIXED_FILTER}") var(--dk-cvd-media,)!important}[${BG_ATTR}="veil"]{box-shadow:inset 0 0 0 100vmax rgb(0 0 0/.7)!important}[${ATTR}="glare"]{filter:brightness(.7) var(--dk-cvd-media,)!important}[${BG_ATTR}="dusk"]{background-color:#4d4d4d!important;background-blend-mode:multiply!important}[${ATTR}="dim"],[${BG_ATTR}="dim"]{filter:brightness(.9) var(--dk-cvd-media,)!important}[${ATTR}="plate"]{background-color:#fff!important}[${ATTR}="flip"]{filter:var(--dk-cvd-media,none)!important}[${BLEND_ATTR}]{mix-blend-mode:normal!important}[${EMPTY_ATTR}][${EMPTY_ATTR}] :is(${STAR_SHAPES}):is(${STAR_SHAPES}){fill:var(--dk-empty,${EMPTY_FALLBACK})!important}[${BG_ATTR}="empty"]{background-color:var(--dk-empty,${EMPTY_FALLBACK})!important}}`;
 
   /** @param {Uint8ClampedArray | number[]} rgba @param {string} filter */
   function filtered(rgba, filter) {
@@ -180,7 +268,9 @@
   /** With `eink` only CSS pictures are marked here and `<img>` is calm.js's; with `light` only surfaces. @param {{ ignore?: string[], eink?: boolean, light?: boolean, einkMark?: boolean, fetchImage?: (url: string, sample?: boolean) => Promise<{ mime: string, base64?: string, sample?: string } | null> }} [options] */
   function start(options = {}) {
     const doc = document;
-    /** @type {Map<string, 'keep' | 'dim' | 'invert' | 'plate' | 'flip'>} */
+    /** @type {Map<string, 'night' | 'glare'>} */
+    const glares = new Map();
+    /** @type {Map<string, 'keep' | 'dim' | 'invert' | 'mixed' | 'plate' | 'flip'>} */
     const cache = kept.cache;
     /** @type {Set<HTMLImageElement>} */
     const queue = new Set();
@@ -193,7 +283,7 @@
     /** @type {WeakMap<Element, number>} how often the star pass has judged an SVG */
     const judged = new WeakMap();
     let tone = '';
-    const stats = { analyzed: 0, fetched: 0, failed: 0, invert: 0, dim: 0, keep: 0, plate: 0, flip: 0, batches: 0, bgInvert: 0, bgDim: 0, bgGray: 0, bgTile: 0, bgSkipped: 0, bgPhotos: 0, bgCapped: 0 };
+    const stats = { analyzed: 0, fetched: 0, failed: 0, invert: 0, mixed: 0, night: 0, glare: 0, dim: 0, keep: 0, plate: 0, flip: 0, batches: 0, bgInvert: 0, bgDim: 0, bgDusk: 0, bgGray: 0, bgTile: 0, bgSkipped: 0, bgPhotos: 0, bgCapped: 0 };
     const eink = options.eink === true;
     const dark = !eink && options.light !== true;
     const flip = eink && options.einkMark === true;
@@ -318,10 +408,47 @@
     const keeper = keepApi ? keepApi.create() : null;
     keeper?.track(style, () => (doc.head ?? doc.documentElement).append(style));
 
-    /** @type {{ el: Element, url: string, key: string, legacy?: boolean }[]} */
+    /** @type {{ el: Element, url: string, key: string, legacy?: boolean, blend?: boolean }[]} */
     const bgJobs = [];
+    /** @type {SVGSVGElement | null} */
+    let mixedDefs = null;
+    /** Neutral pixels are inverted and colored pixels stay. The filter is found by a fragment, so a shadow tree gets the plain mark. @param {Element} el */
+    function mixedMark(el) {
+      if (el.getRootNode() !== doc) return 'invert';
+      if (mixedDefs) return 'mixed';
+      const k = MIXED_MASK;
+      const NS = 'http://www.w3.org/2000/svg';
+      /** @param {string} name @param {Record<string, string>} attrs @param {Element[]} [kids] */
+      const node = (name, attrs, kids = []) => {
+        const e = doc.createElementNS(NS, name);
+        for (const [key, value] of Object.entries(attrs)) e.setAttribute(key, value);
+        e.append(...kids);
+        return e;
+      };
+      /** @param {string} result @param {string} alpha */
+      const mask = (result, alpha) => node('feColorMatrix', { in: 'SourceGraphic', type: 'matrix', values: `1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 ${alpha} 0 0`, result });
+      /** @param {string[]} layers @param {string} [result] */
+      const merge = (layers, result) => node('feMerge', result ? { result } : {}, layers.map((name) => node('feMergeNode', { in: name })));
+      const svg = /** @type {SVGSVGElement} */ (/** @type {unknown} */ (node('svg', { 'data-dk': 'mixed-defs', 'aria-hidden': 'true', width: '0', height: '0', style: 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none' }, [
+        node('filter', { id: MIXED_FILTER, 'color-interpolation-filters': 'sRGB', x: '0', y: '0', width: '100%', height: '100%' }, [
+          node('feColorMatrix', { in: 'SourceGraphic', type: 'matrix', values: '-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0', result: 'flip' }),
+          mask('a', `${k} 0 ${-k}`),
+          mask('b', `${-k} 0 ${k}`),
+          mask('c', `${-k} ${k} 0`),
+          mask('d', `${k} ${-k} 0`),
+          merge(['a', 'b', 'c', 'd'], 'all'),
+          node('feComposite', { in: 'all', in2: 'SourceAlpha', operator: 'in', result: 'color' }),
+          merge(['flip', 'color']),
+        ]),
+      ])));
+      mixedDefs = svg;
+      keeper?.track(svg, () => doc.documentElement.append(svg));
+      doc.documentElement.append(svg);
+      return 'mixed';
+    }
     /** @type {any} */
     const session = {
+      mixedMark,
       doc, dark, eink, options, skip, cache, surfaces: kept.surfaces, stats, keeper, sheet, jobs: bgJobs,
       read: (/** @type {HTMLImageElement} */ img, /** @type {string} */ src, /** @type {Crop | null} */ crop) => read(img, src, crop),
       pixelsOf: (/** @type {ImageBitmapSource} */ source, /** @type {number} */ width, /** @type {number} */ height) => pixelsOf(source, width, height),
@@ -448,11 +575,26 @@
           if (dead) return;
           if (!pixels) {
             stats.failed += 1;
+            const tries = readRetries.get(src) ?? 0;
+            if (tries < READ_RETRIES && readRetries.size < MAX_CACHE) {
+              readRetries.set(src, tries + 1);
+              setTimeout(() => {
+                if (!dead && img.isConnected) consider(img);
+              }, READ_RETRY_MS);
+            }
             return;
           }
           const shape = { square: Math.abs(w - h) <= 0.04 * Math.max(w, h) };
+          if (dark && !eink && !flip && filter === 'none') {
+            const glare = glareOf(pixels);
+            if (glare) {
+              if (glares.size >= MAX_CACHE) glares.delete(/** @type {string} */ (glares.keys().next().value));
+              glares.set(key, glare);
+            }
+          }
           // A light mark on a clear ground is the candidate of `flip`.
           action = flip ? (classify(/** @type {Uint8ClampedArray} */ (filtered(pixels, 'invert(1)')), shape) === 'invert' ? 'flip' : 'keep') : classify(pixels, shape);
+          if (action === 'invert' && dark && !eink && filter === 'none' && mixedOf(pixels)) action = 'mixed';
           if (flip && action === 'flip') {
             if (lights.size >= FLIP_LIGHTS) lights.delete(/** @type {string} */ (lights.keys().next().value));
             lights.set(src, pixels);
@@ -478,8 +620,14 @@
           flipTimer ||= setTimeout(flushFlip, 400);
         }
       } else if (img.isConnected && (img.currentSrc || img.src) === src) {
-        if (action === 'keep') img.removeAttribute(ATTR);
-        else img.setAttribute(ATTR, action);
+        const glare = action === 'keep' || action === 'dim' ? glares.get(key) : undefined;
+        if (glare && isWide(img) && !isTile(img)) {
+          img.setAttribute(ATTR, glare);
+          stats[glare] += 1;
+          // Text on a picture that turned dark is themed like any text on a dark page.
+          if (glare === 'night') ns.backdrop?.release?.();
+        } else if (action === 'keep' || (action === 'dim' && isTile(img))) img.removeAttribute(ATTR);
+        else img.setAttribute(ATTR, action === 'mixed' ? session.mixedMark(img) : action);
         marked.add(img);
       }
     }
@@ -507,15 +655,20 @@
       if (pending.size) flipTimer = setTimeout(flushFlip, 400);
     }
 
+    let bgTurn = false;
+    /** @type {Map<string, number>} */
+    const readRetries = new Map();
     function pump() {
       while (!dead && running < CONCURRENT && (queue.size || (bgJobs.length && session.runJob))) {
         running += 1;
         let job;
-        if (queue.size) {
+        // Taking turns: a page with many pictures must not hold back the CSS pictures, a logo among them.
+        bgTurn = !bgTurn;
+        if (queue.size && !(bgTurn && bgJobs.length && session.runJob)) {
           const img = /** @type {HTMLImageElement} */ (queue.values().next().value);
           queue.delete(img);
           job = analyze(img);
-        } else job = session.runJob(/** @type {{ el: Element, url: string, key: string, legacy?: boolean }} */ (bgJobs.shift()));
+        } else job = session.runJob(/** @type {{ el: Element, url: string, key: string, legacy?: boolean, blend?: boolean }} */ (bgJobs.shift()));
         void job.finally(() => {
           running -= 1;
           pump();
@@ -610,6 +763,7 @@
         bgJobs.length = 0;
         keeper?.stop();
         style.remove();
+        mixedDefs?.remove();
         for (const img of marked) img.removeAttribute(ATTR);
         for (const img of doc.querySelectorAll(`[${ATTR}]`)) img.removeAttribute(ATTR);
         marked.clear();
@@ -632,7 +786,7 @@
     kindOf,
     toneOf,
     bytesOf,
-    kit: Object.freeze({ ATTR, BG_ATTR, MIN_SIDE, MAX_SIDE, MAX_CACHE, HIDE, WALL, TILE_CSS, classify, toneOf, kindOf }),
+    kit: Object.freeze({ ATTR, BG_ATTR, MIN_SIDE, MAX_SIDE, MAX_CACHE, HIDE, WALL, TILE_CSS, classify, toneOf, kindOf, glareOf, mixedOf, isWide }),
     session: () => active?.session ?? null,
     start(/** @type {Parameters<typeof start>[0]} */ options) {
       active?.end();

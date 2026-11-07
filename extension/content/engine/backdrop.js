@@ -10,6 +10,8 @@
   const ATTR = 'data-dk-k';
   const NONE_ATTR = 'data-dk-ph';
   const MAX_NONE = 300;
+  const DIMMED_TEXT = 55;
+  const DIMMED_TEXT_LUM = 0.5;
   const SCAN_TTL_MS = 15000;
   const COLS = 24;
   const ROWS = 16;
@@ -19,6 +21,9 @@
   const REFRESH_MS = 250;
   const PICTURES = 'img,video,picture,object,embed,svg,canvas,iframe,[style*="url("],[style*="image-set("]';
   const MAX_KEPT = 600;
+  // Kept text that left the page: how long new text that looks the same can still take its rule.
+  const GONE_MS = 1000;
+  const MAX_ADDED = 3000;
   const BUDGET_MS = 14;
   const OVERRIDE_MAX_ELEMENTS = 5000;
   const MAX_ELEMENTS = 15000;
@@ -47,13 +52,23 @@
 
   /** @param {Element} e @returns {'media' | 'paint' | 'none'} */
   function painting(e) {
+    if (e.tagName === 'IMG' || e.tagName === 'PICTURE') {
+      const img = e.tagName === 'IMG' ? e : e.querySelector('img');
+      if (img?.getAttribute('data-dk-img') === 'night') return 'none';
+      // A page can keep a second copy of a picture invisible on top of the first. It paints nothing.
+      if (img && getComputedStyle(img).opacity === '0') return 'none';
+    }
     if (MEDIA_TAGS.has(e.tagName)) return 'media';
-    if (e.tagName === 'CANVAS') return 'none';
+    const bg = e.getAttribute('data-dk-bg');
+    if (e.tagName === 'CANVAS' || bg === 'dusk' || bg === 'veil') return 'none';
     if (e.tagName === 'IFRAME') return 'paint';
     const cs = getComputedStyle(e);
     if (clipsText(cs)) return 'none';
     const image = cs.backgroundImage;
-    if (image && image !== 'none') return /url\(/.test(image) && !/gradient\(/.test(image) ? 'media' : 'paint';
+    if (image && image !== 'none') {
+      if (/url\(/.test(image) && /** @type {any} */ (dk).imagebg?.isThin?.(image)) return alphaOf(cs.backgroundColor) > 0.5 ? 'paint' : 'none';
+      return /url\(/.test(image) && !/gradient\(/.test(image) ? 'media' : 'paint';
+    }
     return alphaOf(cs.backgroundColor) > 0.5 ? 'paint' : 'none';
   }
 
@@ -83,6 +98,8 @@
     let cursor = 0;
     let gridSize = 0;
     let emptyPasses = 0;
+    // A timed look at a page with nothing new: one full pass is enough to go back to sleep.
+    let oneLook = false;
     let stride = 1;
     let phase = 0;
     // Passes done in the present round of a strided sweep: a round has to test every cell once, which takes stride squared passes.
@@ -91,11 +108,16 @@
     let hitSamples = 0;
     /** @type {number | null} */
     let sleepingOn = null;
+    let sleptAtY = 0;
+    /** Kept text that was out of view when a picture turned out mostly clear: it is tested once it shows. @type {Set<Element>} */
+    const unsure = new Set();
     /** @type {Set<Element>} */
     const toKeep = new Set();
     let keepTimer = 0;
     /** The elements that compute to `pointer-events: none` ({ list }), complete once `count` is set. @type {{ list: Element[], at: number, count: number, time: number, wide: boolean } | null} */
     let scan = null;
+    /** The last whole list: a pass uses it while a new one is read, so text that scrolls in does not wait for the read. @type {{ list: Element[], at: number, count: number, time: number, wide: boolean } | null} */
+    let spare = null;
 
     /** @param {number} until @returns {NonNullable<typeof scan> | null} the list when it is complete */
     function scanNone(until) {
@@ -130,20 +152,21 @@
     /**
      * Does the text of `e` lie on a picture where it is drawn? Hit tested at the middle of its first line: what is above it
      * must paint nothing, and the first thing below it that paints must be a picture.
-     * @param {Element} e
+     * @param {Element} e @param {boolean} [unknown] the answer when the test cannot see the text
      */
-    function onPicture(e) {
+    function onPicture(e, unknown = false) {
       const own = painting(e);
       if (own !== 'none') return own === 'media';
       const line = textBoxes(e)[0];
-      if (!line) return false;
+      if (!line) return unknown;
       const x = line.left + line.width / 2;
       const y = line.top + line.height / 2;
-      if (x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) return false;
+      if (x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) return unknown;
       const stack = doc.elementsFromPoint(x, y);
       const at = stack.indexOf(e);
-      if (at < 0) return false;
-      for (let i = 0; i < at; i++) if (painting(stack[i]) !== 'none') return false;
+      // Outside a pass `pointer-events: none` is in force, and such text is not in the stack.
+      if (at < 0) return unknown;
+      for (let i = 0; i < at; i++) if (painting(stack[i]) !== 'none') return unknown;
       for (let i = at + 1; i < stack.length; i++) {
         const s = stack[i];
         if (s === doc.documentElement || s === doc.body) return false;
@@ -168,13 +191,35 @@
       /** @type {Element | null} */
       let scope = candidate.parentElement;
       for (let hops = 0; scope && hops < 8 && !scope.contains(media); hops++) scope = scope.parentElement;
-      if (!scope || scope === doc.body || scope === doc.documentElement || !scope.contains(media) || scopes.has(scope)) return;
+      if (scope?.contains(media)) testScope(scope, candidate, found, scopes);
+    }
+
+    /**
+     * A grid point fell on a picture with no text over it. Text between two grid points, in a box of about the size of the picture, is tested here.
+     * @param {Element} media @param {Set<Element>} found @param {Set<Element>} scopes
+     */
+    function around(media, found, scopes) {
+      const box = media.getBoundingClientRect();
+      const most = box.width * box.height * 1.5;
+      let scope = null;
+      let next = media.parentElement;
+      for (let hops = 0; next && next !== doc.body && hops < 4; hops++, next = next.parentElement) {
+        const r = next.getBoundingClientRect();
+        if (r.width * r.height > most) break;
+        scope = next;
+      }
+      if (scope) testScope(scope, null, found, scopes);
+    }
+
+    /** @param {Element} scope @param {Element | null} skip @param {Set<Element>} found @param {Set<Element>} scopes */
+    function testScope(scope, skip, found, scopes) {
+      if (scope === doc.body || scope === doc.documentElement || scopes.has(scope)) return;
       scopes.add(scope);
       const all = scope.getElementsByTagName('*');
       if (all.length > NEIGHBOR_SCOPE) return;
       let tests = 0;
       for (const n of all) {
-        if (n === candidate || kept.has(n) || found.has(n) || !hasOwnText(n)) continue;
+        if (n === skip || kept.has(n) || found.has(n) || !hasOwnText(n)) continue;
         if (++tests > NEIGHBOR_TESTS) break;
         if (onPicture(n)) found.add(n);
       }
@@ -199,10 +244,12 @@
       const w = innerWidth;
       const h = innerHeight;
       if (w * h < MIN_AREA) return;
+      if (unsure.size > 0) testUnsure();
       const pictures = pictureCount();
       if (pictures === 0) return;
       if (sleepingOn !== null) {
-        if (pictures === sleepingOn) return;
+        // Half a screen of scrolling shows text that no pass has seen, with no new picture to say so.
+        if (pictures === sleepingOn && Math.abs(scrollY - sleptAtY) < h / 2) return;
         sleepingOn = null;
         emptyPasses = 0;
       }
@@ -226,17 +273,16 @@
       }
       // Hit testing skips `pointer-events: none`. Those elements are listed once (15 s, while the element count holds) and marked inside a
       // slice for a rule; a rule on every element would restyle the page twice in each slice (above 300 of them it is used anyway).
-      if (scan && scan.count > 0 && (scan.count !== elements || pass - scan.time > SCAN_TTL_MS)) scan = null;
-      const sc = scan?.count ? scan : scanNone(performance.now() + BUDGET_MS);
-      if (!sc) {
-        lastSpent = performance.now() - pass;
-        spent += lastSpent;
-        later(Math.min(2000, Math.max(60, lastSpent * 5)));
-        return;
+      if (scan && scan.count > 0 && (scan.count !== elements || pass - scan.time > SCAN_TTL_MS)) {
+        spare = scan;
+        scan = null;
       }
-      if (!sc.count) [sc.count, sc.time] = [elements, pass];
-      const wide = sc.wide;
-      const marked = wide ? [] : sc.list;
+      const sc = scan?.count ? scan : scanNone(performance.now() + BUDGET_MS);
+      // The first list can take many seconds on a busy page. Text on a picture must not stay unreadable that long, so a pass runs without it.
+      const list = sc ?? spare ?? { list: [], wide: false };
+      if (sc && !sc.count) [sc.count, sc.time] = [elements, pass];
+      const wide = list.wide;
+      const marked = wide ? [] : list.list;
       for (const e of marked) e.setAttribute(NONE_ATTR, '');
       const hit = doc.createElement('style');
       hit.setAttribute('data-dk', 'probe');
@@ -268,6 +314,7 @@
               if (e === doc.documentElement || e === doc.body) break;
               if (candidate === null) {
                 if (kept.has(e)) break;
+                if (MEDIA_TAGS.has(e.tagName)) around(e, found, scopes);
                 if (hasOwnText(e) || isShape(e)) {
                   const own = painting(e);
                   if (own === 'media') found.add(e);
@@ -309,11 +356,46 @@
       }
       passes += 1;
       spent += performance.now() - pass;
+      if (!sc) later(Math.min(2000, Math.max(60, lastSpent * 5)));
       // A find that cannot be kept (the budget is full, or the element is kept already) is no progress: the scan may sleep.
       const progress = kept.size < MAX_KEPT && [...found].some((e) => !kept.has(e));
-      if (done && !progress) {
-        if (++emptyPasses >= EMPTY_PASSES * stride * stride) sleepingOn = pictures;
-      } else emptyPasses = 0;
+      if (done && !progress && sc) {
+        if (++emptyPasses >= EMPTY_PASSES * stride * stride || (oneLook && stride === 1)) {
+          oneLook = false;
+          sleepingOn = pictures;
+          sleptAtY = scrollY;
+        }
+      } else {
+        emptyPasses = 0;
+        if (progress) oneLook = false;
+      }
+    }
+
+    /** @param {Element} el */
+    function drop(el) {
+      const id = kept.get(el);
+      if (id === undefined) return;
+      kept.delete(el);
+      rules.delete(id);
+      el.removeAttribute(ATTR);
+    }
+
+    /** @param {Element} el */
+    function inView(el) {
+      const line = textBoxes(el)[0];
+      return !line || (line.right > 0 && line.bottom > 0 && line.left < innerWidth && line.top < innerHeight);
+    }
+
+    function testUnsure() {
+      let dropped = false;
+      for (const el of unsure) {
+        if (el.isConnected && !inView(el)) continue;
+        unsure.delete(el);
+        if (el.isConnected && onPicture(el, true)) continue;
+        drop(el);
+        dropped = true;
+      }
+      if (dropped) writeRules();
     }
 
     /** @param {Set<Element>} found */
@@ -328,7 +410,20 @@
         rules.set(id, `[${ATTR}="${id}"]${text}`);
         watched.observe(el, { attributes: true, attributeFilter: ['class', 'style'] });
       }
+      rebuilt.observe(doc.documentElement, { childList: true, subtree: true });
       writeRules();
+    }
+
+    /**
+     * A picture dimmed for the dark mode has less contrast with the dark or colored text the page wrote for it.
+     * @param {Element} el @param {string} color
+     */
+    function onDimmed(el, color) {
+      if (!doc.querySelector('img[data-dk-img="glare"]')) return false;
+      const c = /** @type {any} */ (dk).color?.parseColor(color);
+      if (!c || 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b >= DIMMED_TEXT_LUM) return false;
+      const line = textBoxes(el)[0];
+      return !!line && doc.elementsFromPoint(line.left + line.width / 2, line.top + line.height / 2).some((e) => e.getAttribute('data-dk-img') === 'glare');
     }
 
     /**
@@ -346,7 +441,7 @@
           // Text painted by a background clipped to it keeps that background and its fill. The E-ink mode replaces both with
           // weighted rules, so this rule weighs as an id.
           else if (clipsText(cs)) reads.push({ el, text: `:not(#dk-none){color:${cs.color}!important;background-image:${cs.backgroundImage}!important;-webkit-text-fill-color:${cs.webkitTextFillColor}!important;}` });
-          else reads.push({ el, text: `{color:${cs.color}!important;}` });
+          else reads.push({ el, text: `{color:${onDimmed(el, cs.color) ? `color-mix(in srgb,${cs.color} ${DIMMED_TEXT}%,#000)` : cs.color}!important;}` });
         }
       }, keepRules ? (/** @type {HTMLStyleElement} */ el) => el.getAttribute('data-dk') === 'keep' : null);
       return reads;
@@ -372,8 +467,108 @@
     const watched = new MutationObserver((records) => {
       if (dead) return;
       for (const r of records) if (r.target instanceof Element && kept.has(r.target)) changed.add(r.target);
-      if (changed.size && refreshTimer === null) refreshTimer = setTimeout(refresh, Math.max(0, lastRefresh + REFRESH_MS - performance.now()));
+      refreshSoon();
     });
+
+    function refreshSoon() {
+      if (changed.size && refreshTimer === null) refreshTimer = setTimeout(refresh, Math.max(0, lastRefresh + REFRESH_MS - performance.now()));
+    }
+
+    /** Kept text that left the DOM, by its look. A page that renders a part again takes it out and puts new nodes in. @type {Map<string, { el: Element, id: string }[]>} */
+    const gone = new Map();
+    /** @type {ReturnType<typeof setTimeout> | null} */
+    let goneTimer = null;
+
+    /** @param {Element} el */
+    function lookOf(el) {
+      let text = '';
+      for (const n of el.childNodes) if (n.nodeType === Node.TEXT_NODE) text += n.nodeValue;
+      text = text.trim();
+      return text && `${el.tagName}|${el.getAttribute('class') ?? ''}|${text}`;
+    }
+
+    /** @param {NodeList} nodes */
+    const hasElement = (nodes) => [...nodes].some((n) => n.nodeType === Node.ELEMENT_NODE);
+
+    /** Text in a filled box that holds no picture is not on a picture, however much it looks like kept text. @param {Element} el */
+    function onPlainBox(el) {
+      for (let e = /** @type {Element | null} */ (el), hops = 0; e && e !== doc.body && hops < 8; e = e.parentElement, hops++) {
+        const p = painting(e);
+        if (p === 'media') return false;
+        if (p === 'paint') return !e.querySelector(PICTURES);
+      }
+      return false;
+    }
+
+    /** @param {Element} el @returns {boolean} true when nothing is left to match */
+    function takeRule(el) {
+      if (kept.has(el)) return false;
+      const look = lookOf(el);
+      const list = gone.get(look);
+      if (!list || onPlainBox(el)) return false;
+      const was = list.shift();
+      if (!was) return false;
+      if (list.length === 0) gone.delete(look);
+      kept.set(el, was.id);
+      el.setAttribute(ATTR, was.id);
+      watched.observe(el, { attributes: true, attributeFilter: ['class', 'style'] });
+      if (unsure.delete(was.el)) unsure.add(el);
+      // Two texts can look the same and differ in color: the read that follows puts the page color of this node in the rule.
+      changed.add(el);
+      return gone.size === 0;
+    }
+
+    // Runs before the next paint, so new text has its color in its first frame.
+    const rebuilt = new MutationObserver((records) => {
+      if (dead) return;
+      guarded(() => {
+        if (records.some((r) => hasElement(r.removedNodes))) {
+          for (const [el, id] of kept) {
+            if (el.isConnected) continue;
+            kept.delete(el);
+            const look = lookOf(el);
+            const list = gone.get(look);
+            if (list) list.push({ el, id });
+            else gone.set(look, [{ el, id }]);
+          }
+        }
+        if (gone.size === 0) return;
+        goneTimer ??= setTimeout(forget, GONE_MS);
+        let budget = MAX_ADDED;
+        for (const r of records) {
+          for (const n of r.addedNodes) {
+            if (n.nodeType !== Node.ELEMENT_NODE || !n.isConnected) continue;
+            const walk = doc.createTreeWalker(n, NodeFilter.SHOW_ELEMENT);
+            for (let e = walk.currentNode; e; e = /** @type {Node} */ (walk.nextNode())) {
+              if (budget-- <= 0 || takeRule(/** @type {Element} */ (e))) {
+                refreshSoon();
+                return;
+              }
+            }
+          }
+        }
+        refreshSoon();
+      });
+    });
+
+    function forget() {
+      goneTimer = null;
+      if (dead) return;
+      let dropped = false;
+      for (const list of gone.values()) {
+        for (const { el, id } of list) {
+          if (el.isConnected && !kept.has(el)) {
+            kept.set(el, id);
+            continue;
+          }
+          rules.delete(id);
+          if (!kept.has(el)) el.removeAttribute(ATTR);
+          dropped = true;
+        }
+      }
+      gone.clear();
+      if (dropped) guarded(writeRules);
+    }
 
     function refresh() {
       refreshTimer = null;
@@ -414,9 +609,23 @@
     addEventListener('resize', onScroll, { passive: true });
     const onLoad = () => later(400);
     addEventListener('load', onLoad, { once: true });
-    const nudges = [600, 1500, 3500].map((t) => setTimeout(() => later(0), t));
+    // A page can take a placeholder off its pictures long after the load, and that changes nothing the scan counts.
+    const nudges = [600, 1500, 3500, 7000, 12000].map((t) => setTimeout(() => {
+      sleepingOn = null;
+      emptyPasses = 0;
+      oneLook = true;
+      later(0);
+    }, t));
 
     return {
+      /** A picture turned out to be mostly clear: text that is no longer on a picture takes the theme. */
+      release() {
+        toKeep.clear();
+        for (const el of kept.keys()) unsure.add(el);
+        testUnsure();
+        sleepingOn = null;
+        emptyPasses = 0;
+      },
       stats: () => ({ kept: kept.size, since: startedAt, passes, spent: Math.round(spent), hitTests, sleeping: sleepingOn !== null, refreshed }),
       /** @param {Element[]} list */
       adopt(list) {
@@ -433,12 +642,18 @@
         removeEventListener('load', onLoad);
         for (const t of nudges) clearTimeout(t);
         watched.disconnect();
+        rebuilt.disconnect();
+        if (goneTimer !== null) clearTimeout(goneTimer);
+        for (const list of gone.values()) for (const { el } of list) el.removeAttribute(ATTR);
+        gone.clear();
         if (refreshTimer !== null) clearTimeout(refreshTimer);
         keeper?.stop();
         style?.remove();
+        unsure.clear();
         for (const el of kept.keys()) el.removeAttribute(ATTR);
         for (const el of doc.querySelectorAll(`[${ATTR}]`)) el.removeAttribute(ATTR);
         scan = null;
+        spare = null;
         for (const el of doc.querySelectorAll(`[${NONE_ATTR}]`)) el.removeAttribute(NONE_ATTR);
         kept.clear();
         rules.clear();
@@ -461,6 +676,9 @@
     stats: () => (active ? active.stats() : null),
     adopt(/** @type {Element[]} */ list) {
       active?.adopt(list);
+    },
+    release() {
+      active?.release();
     },
   });
 })();

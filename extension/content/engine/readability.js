@@ -151,7 +151,12 @@
         style.setAttribute('data-dk', 'read');
         sheet = { style, texts: [] };
         sheets.set(root, sheet);
-        const place = () => (root === doc ? doc.head ?? doc.documentElement : root).append(style);
+        const own = sheet;
+        const place = () => {
+          (root === doc ? doc.head ?? doc.documentElement : root).append(style);
+          // The rules added through the CSSOM left with the old sheet.
+          if (own.texts.length && !style.textContent) style.textContent = own.texts.join('');
+        };
         place();
         if (root === doc) keeper?.track(style, place);
       }
@@ -238,7 +243,7 @@
     function examine(el) {
       if (seen.get(el) === pass) return;
       seen.set(el, pass);
-      if (SKIP_TAGS.has(el.tagName.toUpperCase()) || el instanceof SVGElement || (!theme.eink && el.hasAttribute('data-dk-k')) || el.hasAttribute('data-dk')) return;
+      if (SKIP_TAGS.has(el.tagName.toUpperCase()) || el instanceof SVGElement || el.hasAttribute('data-dk-k') || el.hasAttribute('data-dk')) return;
       // Editors: the engine's own list of editable areas (some editors mark them with a class, not the attribute).
       if (/** @type {HTMLElement} */ (el).isContentEditable || el.closest(editable)) return;
       // Hidden from view, or a disabled control (which WCAG leaves out of the contrast rules): left alone. Text that only assistive tools skip (`aria-hidden`) still shows, so it is checked.

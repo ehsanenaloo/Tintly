@@ -31,5 +31,29 @@
   },
   "menuToggleSite": {
     "message": "הפעלה או כיבוי של Tintly באתר זה"
+  },
+  "floatOpen": {
+    "message": "החלפת מצב של Tintly"
+  },
+  "floatPinned": {
+    "message": "כלל קובע את המצב של דף זה"
+  },
+  "floatHide": {
+    "message": "הסתרה באתר הזה"
+  },
+  "floatDark": {
+    "message": "כהה"
+  },
+  "floatLight": {
+    "message": "בהיר"
+  },
+  "floatPaper": {
+    "message": "נייר"
+  },
+  "floatEink": {
+    "message": "E-ink"
+  },
+  "floatOriginal": {
+    "message": "צבעים מקוריים"
   }
 }

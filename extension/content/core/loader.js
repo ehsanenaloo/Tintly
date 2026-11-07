@@ -45,6 +45,10 @@
     links(false);
     dk?.cvd?.media(null);
     stopped = true;
+    rimOn = false;
+    fillOn = false;
+    clearTimeout(fillTimer);
+    clearTimeout(rimTimer);
     for (const r of recovery.values()) {
       clearTimeout(r.timer);
       r.timer = undefined;
@@ -345,6 +349,96 @@
     else at(() => dk?.cvd?.media(null));
     return Promise.all([calm, extras, palette]).then(() => {});
   }
+
+  /** The worker named the top page of this frame (Firefox, prefetch.js). */
+  dk.pageAnswer = async () => {
+    const answer = await dk.askedPage;
+    dk.askedPage = undefined;
+    if (typeof answer?.host === 'string' && answer.host !== location.host) {
+      dk.pageHost = answer.host;
+      // The read of prefetch.js did not know this host: it lacks the slice of its data.
+      dk.stored = undefined;
+    }
+  };
+
+  // A page left alone in its own dark theme can give a frame padding and a light background: a light rim around a dark frame.
+  // That color stays behind the frame and leaves the padding, and only a page that has such a frame gets this rule.
+  const FRAME_RIM = 'iframe{background-clip:content-box!important}';
+  let rimOn = false;
+  let rimFound = false;
+  let fillOn = false;
+  let framesWatched = false;
+  /** @type {MutationObserver | null} */
+  let frameWatch = null;
+  /** @type {any} */
+  let fillTimer;
+  /** @type {any} */
+  let rimTimer;
+  /** Waits between the questions to the worker. A frame can be reached once its document exists, which no event tells the page. */
+  const FILL_WAITS = [50, ...Array(15).fill(100), 600, 1200];
+  /** Only listed sites: a frame of another host has no registered script. The worker gives it the files. */
+  function askFill(step = 0) {
+    clearTimeout(fillTimer);
+    fillTimer = setTimeout(() => {
+      // With its extension gone this call throws at once, so its catch never runs.
+      if (!fillOn || !chrome.runtime?.id) return;
+      void chrome.runtime.sendMessage({ type: 'dk.frames.fill' }).catch(() => {});
+      if (step + 1 < FILL_WAITS.length) askFill(step + 1);
+    }, FILL_WAITS[step]);
+  }
+  /** A new frame starts the questions at once, as it shows light until the files reach it. @param {MutationRecord[]} records */
+  function newFrames(records) {
+    if (!fillOn) return;
+    for (const r of records) {
+      for (const n of r.addedNodes) {
+        if (n instanceof Element && (n.localName === 'iframe' || n.getElementsByTagName('iframe').length > 0)) {
+          askFill();
+          return;
+        }
+      }
+    }
+  }
+  /** @param {HTMLIFrameElement} frame */
+  function lightRim(frame) {
+    const s = getComputedStyle(frame);
+    const [r, g, b, a = 1] = (s.backgroundColor.match(/[\d.]+/g) ?? []).map(Number);
+    return a !== 0 && r + g + b >= 384 && [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft].some((p) => parseFloat(p) > 0);
+  }
+  /**
+   * What the page does about its frames, after each decision. Returns the rim rule when the page needs it.
+   * @param {boolean} rim the page is left alone in a dark mode @param {boolean} fill only listed sites, and the page is on
+   * @param {AbortSignal} signal @param {(css: string) => void} setCss
+   */
+  dk.frameCare = (rim, fill, signal, setCss) => {
+    rimOn = rim;
+    fillOn = fill && window === window.top;
+    if ((!rimOn || rimFound) && !fillOn) return rimOn && rimFound ? FRAME_RIM : '';
+    const check = (/** @type {HTMLIFrameElement} */ frame) => {
+      if (!rimOn || rimFound || !lightRim(frame)) return;
+      rimFound = true;
+      setCss(FRAME_RIM);
+    };
+    if (!framesWatched) {
+      framesWatched = true;
+      document.addEventListener('load', (e) => {
+        if (!(e.target instanceof HTMLIFrameElement)) return;
+        if (fillOn) askFill();
+        check(e.target);
+      }, { capture: true, signal });
+    }
+    if (fillOn && !frameWatch) {
+      frameWatch = new MutationObserver(newFrames);
+      frameWatch.observe(document, { childList: true, subtree: true });
+      signal.addEventListener('abort', () => frameWatch?.disconnect());
+    }
+    if (fillOn) askFill();
+    // The look at the frames waits for the engine to leave, as its colors are still on them during this decision.
+    if (rimOn) {
+      clearTimeout(rimTimer);
+      rimTimer = setTimeout(() => document.querySelectorAll('iframe').forEach(check), 200);
+    }
+    return rimOn && rimFound ? FRAME_RIM : '';
+  };
 
   dk.need = need;
   dk.optional = Object.freeze({ sync, engineReady, wantBackgrounds: startBackgrounds, whenLoaded, whenGivenUp, stop, stats: () => ({ ...stats, ms: { ...stats.ms } }) });

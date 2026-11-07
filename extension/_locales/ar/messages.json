@@ -31,5 +31,29 @@
   },
   "menuToggleSite": {
     "message": "تشغيل Tintly أو إيقافه لهذا الموقع"
+  },
+  "floatOpen": {
+    "message": "تغيير وضع Tintly"
+  },
+  "floatPinned": {
+    "message": "قاعدة تحدد وضع هذه الصفحة"
+  },
+  "floatHide": {
+    "message": "إخفاء في هذا الموقع"
+  },
+  "floatDark": {
+    "message": "داكن"
+  },
+  "floatLight": {
+    "message": "فاتح"
+  },
+  "floatPaper": {
+    "message": "ورق"
+  },
+  "floatEink": {
+    "message": "E-ink"
+  },
+  "floatOriginal": {
+    "message": "الألوان الأصلية"
   }
 }

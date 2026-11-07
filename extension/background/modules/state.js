@@ -1,6 +1,7 @@
 // @ts-check
 // The one writer of the stored settings. Every change goes through a serial queue, is checked strictly, and is
 // written in a single call. Short-lived data (tab status, watchdog marks) lives in `storage.session`.
+import { L } from '../../shared/limits.js';
 import { STATE_KEYS, ensureMigrated, planRemote, readState, writeState } from '../../shared/store.js';
 import { applyPatch, defaultState, fixCss, heldCss, holdIncoming, keepHold, normalizePattern, parseImport, ruleCss, serializeExport } from '../../shared/settings.js';
 import { candidates, siteEnabled, switchKey } from '../../shared/match.js';
@@ -400,6 +401,19 @@ export function createState({ local, session, now = () => Date.now(), newId = ra
         if (!ui || typeof ui !== 'object' || Array.isArray(ui)) return { ok: /** @type {const} */ (false), code: 'invalid' };
         const state = await load();
         return save({ ui: { ...state.ui, ...ui } });
+      }).catch(failure),
+
+    /** The place of the floating button on one site, or its hiding there. The oldest site goes when the list is full. @param {string} pattern @param {{ x?: number, y?: number, hide?: boolean }} value */
+    setFloat: (pattern, value) =>
+      queue(async () => {
+        const state = await load();
+        const float = { ...state.ui.float };
+        const had = float[pattern];
+        delete float[pattern];
+        float[pattern] = { ...had, ...value };
+        const keys = Object.keys(float);
+        if (keys.length > L.FLOAT_SITES) delete float[keys[0]];
+        return save({ ui: { ...state.ui, float } });
       }).catch(failure),
 
     /** Back to the defaults for everything except the language and look of the pages. */

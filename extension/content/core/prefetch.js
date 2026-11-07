@@ -16,17 +16,41 @@
     const labels = h.split('.');
     return labels.length <= 2 ? h : labels.slice(-2).join('.');
   };
+  /**
+   * The host of the top page of a frame, when it is not the frame's own. What shows in a frame is part of that page, so a frame
+   * with no rule of its own takes that page's rule. Firefox gets the answer from the worker (`askedPage`): some of its versions have no
+   * `ancestorOrigins`, and in others a read from a content script breaks later reads by the page.
+   */
+  const firefoxFrame = (() => {
+    try {
+      return window !== window.top && chrome.runtime.getURL('').startsWith('moz-extension:');
+    } catch {
+      return false;
+    }
+  })();
+  dk.pageHost = (() => {
+    try {
+      if (window === window.top || firefoxFrame) return null;
+      const origins = /** @type {any} */ (location).ancestorOrigins;
+      const top = origins?.length ? new URL(origins[origins.length - 1]) : null;
+      return top && (top.protocol === 'http:' || top.protocol === 'https:') && top.host !== location.host ? top.host : null;
+    } catch {
+      return null;
+    }
+  })();
   try {
     // The settings and the slice of the site data for this host, which the worker keeps in keys of their own; the gate reads the whole data only when that copy is missing or behind.
     const web = location.protocol === 'http:' || location.protocol === 'https:';
     dk.storedKey = web ? `gb:${dk.bucketOf(location.host)}` : '';
-    dk.stored = chrome.storage.local.get(web ? ['settings', 'updatedAt', 'gb.meta', dk.storedKey] : ['settings', 'updatedAt', 'gb.meta']);
+    const outerKey = dk.pageHost === null ? '' : `gb:${dk.bucketOf(dk.pageHost)}`;
+    dk.stored = chrome.storage.local.get(['settings', 'updatedAt', 'gb.meta', ...(web ? [dk.storedKey] : []), ...(outerKey ? [outerKey] : [])]);
+    if (firefoxFrame) dk.askedPage = chrome.runtime.sendMessage({ type: 'dk.frame.page' }).catch(() => null);
     // The gate awaits it; this keeps a failed read from being reported as unhandled.
     /** @type {Promise<unknown>} */ (dk.stored).catch(() => {});
     // A change that lands between this read and the gate's own listener would be lost, so it is noted here and the gate reads again.
     dk.changedSince = false;
     const note = (/** @type {Record<string, unknown>} */ changes, /** @type {string} */ area) => {
-      if (area === 'local' && ['settings', 'siteRules', 'userFixes', 'darkSites', 'gb.meta'].some((k) => k in changes) || (dk.storedKey && dk.storedKey in changes)) dk.changedSince = true;
+      if (area === 'local' && ['settings', 'siteRules', 'userFixes', 'darkSites', 'gb.meta'].some((k) => k in changes) || (dk.storedKey && dk.storedKey in changes) || (outerKey && outerKey in changes)) dk.changedSince = true;
     };
     chrome.storage.onChanged.addListener(note);
     dk.dropNote = () => chrome.storage.onChanged.removeListener(note);
