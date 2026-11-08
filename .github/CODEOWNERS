@@ -15,7 +15,6 @@
 /data-src/ @ehsanenaloo
 
 # Privacy policy and public docs.
-/docs/ @ehsanenaloo
 
 # Build, validation and release automation.
 /scripts/ @ehsanenaloo

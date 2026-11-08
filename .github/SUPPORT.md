@@ -32,7 +32,7 @@ Do not open a public issue. Use the [private vulnerability report](https://githu
 
 ## Privacy questions
 
-Read the [privacy policy](../docs/PRIVACY.md). If it does not answer your question, ask in Discussions. Do not include personal data.
+Read the [privacy policy](PRIVACY.md). If it does not answer your question, ask in Discussions. Do not include personal data.
 
 ## Please never post
 

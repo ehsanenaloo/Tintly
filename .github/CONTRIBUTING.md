@@ -125,7 +125,7 @@ These need an issue first.
 - Anything that reads more of a page than its styles and pictures.
 - Analytics, remote code or a third-party service. These are not accepted.
 
-If a change is accepted, the same pull request updates [docs/PRIVACY.md](../docs/PRIVACY.md). The maintainer's checks fail when a declared permission is unused or has no row there.
+If a change is accepted, the same pull request updates [PRIVACY.md](PRIVACY.md). The maintainer's checks fail when a declared permission is unused or has no row there.
 
 Storage keys and message names are a contract. People have data under those names. A rename needs a migration.
 
@@ -152,7 +152,7 @@ The maintainer's checks fail on a missing key, an extra key, an empty value, a c
 
 Write natural text for the people who speak the language. Do not translate word by word. Keep the product terms (Tintly, E-ink, Paper) and the names of the browser features as they are.
 
-You can also open the [translation fix form](https://github.com/ehsanenaloo/Tintly/issues/new?template=translation_fix.yml) if you do not want to edit code. [TRANSLATING.md](../docs/TRANSLATING.md) has the same steps in one page.
+You can also open the [translation fix form](https://github.com/ehsanenaloo/Tintly/issues/new?template=translation_fix.yml) if you do not want to edit code. [TRANSLATING.md](TRANSLATING.md) has the same steps in one page.
 
 A fix from a native speaker is the most useful contribution here.
 

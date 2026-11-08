@@ -8,4 +8,3 @@ corpus/
 .DS_Store
 Thumbs.db
 tests/perf/results/
-docs/ARCHITECTURE.md

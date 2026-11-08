@@ -35,7 +35,7 @@ This is a volunteer project, so replies are best effort. The maintainer will ack
 In scope:
 
 - code in this repository that ships in the extension,
-- ways to make Tintly read, change, store or send more than its documented permissions and behavior allow (see [docs/PRIVACY.md](../docs/PRIVACY.md)),
+- ways to make Tintly read, change, store or send more than its documented permissions and behavior allow (see [PRIVACY.md](PRIVACY.md)),
 - ways for a web page, a style sheet or a picture to make the extension run code, fetch an address it should not (for example a private network address), or act on a site that is switched off,
 - injection or script execution through page text, stored settings, imported settings files, sync data, fixes, custom CSS or translated strings,
 - ways to make custom CSS from a file or from sync run without the user turning it on,
@@ -51,7 +51,7 @@ Out of scope:
 
 ## Design notes for researchers
 
-- Permissions are `storage` and `scripting`, access to all sites, and the optional `contextMenus` and `alarms`. See [docs/PRIVACY.md](../docs/PRIVACY.md). In Firefox `menus` and `alarms` are part of the package because Firefox does not offer them as optional.
+- Permissions are `storage` and `scripting`, access to all sites, and the optional `contextMenus` and `alarms`. See [PRIVACY.md](PRIVACY.md). In Firefox `menus` and `alarms` are part of the package because Firefox does not offer them as optional.
 - The extension makes no network request of its own except to fetch the style sheets and pictures of the page the user is on. It has no analytics, no account and no remote configuration, and it loads no remote code.
 - Extension pages have a strict content security policy. Text from pages, settings and translations is shown as text, never as HTML.
 - Custom CSS that comes from an imported file or from sync stays off until the user reads it and turns it on.

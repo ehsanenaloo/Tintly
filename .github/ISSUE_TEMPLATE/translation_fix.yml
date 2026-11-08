@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for helping people read Tintly in their own language. You can also send a pull request. [TRANSLATING.md](https://github.com/ehsanenaloo/Tintly/blob/main/docs/TRANSLATING.md) explains how.
+        Thanks for helping people read Tintly in their own language. You can also send a pull request. [TRANSLATING.md](https://github.com/ehsanenaloo/Tintly/blob/main/.github/TRANSLATING.md) explains how.
   - type: dropdown
     id: kind
     attributes:

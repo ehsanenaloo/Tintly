@@ -141,7 +141,7 @@ Paper and E-ink turn a busy page into something that feels like a book.
 | `contextMenus`, optional | To show a menu item, only if you turn it on |
 | `alarms`, optional | To switch pages on and off at the times of your schedule, only if you allow it |
 
-Full text: [Privacy policy](docs/PRIVACY.md).
+Full text: [Privacy policy](.github/PRIVACY.md).
 
 ---
 
@@ -156,9 +156,9 @@ Full text: [Privacy policy](docs/PRIVACY.md).
 
 ## Languages
 
-The interface is in English, Persian, Arabic, Hebrew, Spanish, Portuguese (Brazil), Russian, German, French, Chinese (Simplified), Chinese (Traditional), Korean, Japanese, Hindi, Indonesian, Italian and Turkish. Persian, Arabic and Hebrew are right to left, and the whole window mirrors. To fix a text or add a language, read [TRANSLATING.md](docs/TRANSLATING.md) or use the [translation fix form](https://github.com/ehsanenaloo/Tintly/issues/new?template=translation_fix.yml).
+The interface is in English, Persian, Arabic, Hebrew, Spanish, Portuguese (Brazil), Russian, German, French, Chinese (Simplified), Chinese (Traditional), Korean, Japanese, Hindi, Indonesian, Italian and Turkish. Persian, Arabic and Hebrew are right to left, and the whole window mirrors. To fix a text or add a language, read [TRANSLATING.md](.github/TRANSLATING.md) or use the [translation fix form](https://github.com/ehsanenaloo/Tintly/issues/new?template=translation_fix.yml).
 
-Every translation except English is machine-made, and no native speaker has checked it yet. If you are a native speaker and you improve the texts of your language, we will publish your work under your name. Start with [TRANSLATING.md](docs/TRANSLATING.md) or the translation fix form.
+Every translation except English is machine-made, and no native speaker has checked it yet. If you are a native speaker and you improve the texts of your language, we will publish your work under your name. Start with [TRANSLATING.md](.github/TRANSLATING.md) or the translation fix form.
 
 ---
 
@@ -195,7 +195,6 @@ extension/            the extension exactly as it ships (no build step)
   data/               site data built from data-src/
   _locales/           browser-level strings
 data-src/             source of the site data (fixes and the dark-site list)
-docs/                 privacy policy and translating notes
 .github/              community files, issue forms, README images
 ```
 
@@ -206,8 +205,8 @@ docs/                 privacy policy and translating notes
 | | |
 |---|---|
 | [User guide](https://enaloo.com/apps/tintly/) | Every feature and setting |
-| [Privacy policy](docs/PRIVACY.md) | What is read, kept and sent |
-| [Translating](docs/TRANSLATING.md) | How to fix a text or add a language |
+| [Privacy policy](.github/PRIVACY.md) | What is read, kept and sent |
+| [Translating](.github/TRANSLATING.md) | How to fix a text or add a language |
 | [Changelog](CHANGELOG.md) | What changed |
 | [Contributing](.github/CONTRIBUTING.md) | Setup, rules, fixes, translations |
 | [Support](.github/SUPPORT.md) | Where to ask |

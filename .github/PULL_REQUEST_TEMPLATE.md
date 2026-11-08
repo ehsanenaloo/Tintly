@@ -42,6 +42,6 @@ For a change to the engine, the gate or the manifest, say how much work it adds 
 - [ ] The change works with the keyboard and in a right-to-left language
 - [ ] If I touched the engine, the gate or the manifest, I said how the change affects page speed
 - [ ] `CHANGELOG.md` and the docs are updated if a user can see the change
-- [ ] `docs/PRIVACY.md` is updated if data handling or permissions changed
+- [ ] `.github/PRIVACY.md` is updated if data handling or permissions changed
 - [ ] Screenshots and test files contain no private data
 - [ ] I wrote this change or I have the right to submit it under the MIT License
