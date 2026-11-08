@@ -184,7 +184,7 @@ Every translation except English is machine-made, and no native speaker has chec
 
 ## Develop
 
-There is no build step and nothing to install. Load the `extension/` folder in Chrome or Edge as shown in [Install](#install), make your change, and choose the reload button of the extension. The maintainer runs the checks and the tests and builds the store packages. More in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+There is no build step and nothing to install. Load the `extension/` folder in Chrome or Edge as shown in [Install](#install), make your change, and choose the reload button of the extension. The maintainer runs the checks and the tests and builds the store packages. More in [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
 ```text
 extension/            the extension exactly as it ships (no build step)
@@ -195,7 +195,7 @@ extension/            the extension exactly as it ships (no build step)
   data/               site data built from data-src/
   _locales/           browser-level strings
 data-src/             source of the site data (fixes and the dark-site list)
-docs/                 privacy policy, architecture and translating notes
+docs/                 privacy policy and translating notes
 .github/              community files, issue forms, README images
 ```
 
@@ -208,7 +208,6 @@ docs/                 privacy policy, architecture and translating notes
 | [User guide](https://enaloo.com/apps/tintly/) | Every feature and setting |
 | [Privacy policy](docs/PRIVACY.md) | What is read, kept and sent |
 | [Translating](docs/TRANSLATING.md) | How to fix a text or add a language |
-| [Architecture](docs/ARCHITECTURE.md) | Engines, worlds, worker and data flow |
 | [Changelog](CHANGELOG.md) | What changed |
 | [Contributing](.github/CONTRIBUTING.md) | Setup, rules, fixes, translations |
 | [Support](.github/SUPPORT.md) | Where to ask |
